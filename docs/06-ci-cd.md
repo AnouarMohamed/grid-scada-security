@@ -19,13 +19,13 @@ and cloud deployment targets.
    - Python CI automatically runs when `*.py` files exist.
    - The gate installs requirements files, runs Ruff, runs Bandit SAST, and
      runs pytest once tests exist.
-   - Expected source surface: `gridguard/power-sim/`.
+   - Expected source surface: `power-sim/`.
 
 3. **DevSecOps track code lands**
    - Terraform CI automatically runs when `*.tf` or `*.tf.json` files exist.
    - The gate runs `terraform fmt`, `terraform init -backend=false`, and
      `terraform validate`.
-   - Expected source surface: `gridguard/infra/`.
+   - Expected source surface: `infra/`.
 
 4. **Containers and local integration land**
    - Docker CI automatically validates Compose files and builds Dockerfiles.

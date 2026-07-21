@@ -53,7 +53,7 @@ The protocol emulator to cloud ingestion link is the main simulated OT/IT
 boundary. That boundary must stay explicit through network segmentation,
 controlled connectivity, and eventually mTLS.
 
-Full architecture notes live in [gridguard/docs/02-architecture.md](gridguard/docs/02-architecture.md).
+Full architecture notes live in [docs/02-architecture.md](docs/02-architecture.md).
 
 ## Repository Layout
 
@@ -71,11 +71,11 @@ Full architecture notes live in [gridguard/docs/02-architecture.md](gridguard/do
 │   ├── validate-python.sh
 │   ├── validate-repo-hygiene.sh
 │   └── validate-terraform.sh
-├── gridguard/
-│   ├── README.md
-│   ├── docs/
-│   ├── power-sim/
-│   └── infra/
+├── docs/
+│   ├── devsecops-track/
+│   └── power-track/
+├── infra/
+├── power-sim/
 ├── Makefile
 └── README.md
 ```
@@ -84,15 +84,15 @@ Important entry points:
 
 | Need | Start Here |
 | --- | --- |
-| Project overview | [gridguard/README.md](gridguard/README.md) |
-| Scope and guardrails | [gridguard/docs/01-project-scope.md](gridguard/docs/01-project-scope.md) |
-| Architecture and stack | [gridguard/docs/02-architecture.md](gridguard/docs/02-architecture.md) |
-| Timeline | [gridguard/docs/03-timeline.md](gridguard/docs/03-timeline.md) |
-| Integration checkpoints | [gridguard/docs/04-integration-checkpoints.md](gridguard/docs/04-integration-checkpoints.md) |
-| Attack-run template | [gridguard/docs/05-attack-log-template.md](gridguard/docs/05-attack-log-template.md) |
-| CI/CD plan | [gridguard/docs/06-ci-cd.md](gridguard/docs/06-ci-cd.md) |
-| Power track plan | [gridguard/docs/power-track/execution-plan.md](gridguard/docs/power-track/execution-plan.md) |
-| DevSecOps track plan | [gridguard/docs/devsecops-track/execution-plan.md](gridguard/docs/devsecops-track/execution-plan.md) |
+| Project overview | [README.md](README.md) |
+| Scope and guardrails | [docs/01-project-scope.md](docs/01-project-scope.md) |
+| Architecture and stack | [docs/02-architecture.md](docs/02-architecture.md) |
+| Timeline | [docs/03-timeline.md](docs/03-timeline.md) |
+| Integration checkpoints | [docs/04-integration-checkpoints.md](docs/04-integration-checkpoints.md) |
+| Attack-run template | [docs/05-attack-log-template.md](docs/05-attack-log-template.md) |
+| CI/CD plan | [docs/06-ci-cd.md](docs/06-ci-cd.md) |
+| Power track plan | [docs/power-track/execution-plan.md](docs/power-track/execution-plan.md) |
+| DevSecOps track plan | [docs/devsecops-track/execution-plan.md](docs/devsecops-track/execution-plan.md) |
 
 ## Tracks
 
@@ -106,7 +106,7 @@ The Power Systems track owns the physics and telemetry source:
 - Build baseline bad-data detection.
 - Design naive and stealthy false data injection attacks.
 
-Source will live in [gridguard/power-sim](gridguard/power-sim).
+Source will live in [power-sim](power-sim).
 
 ### DevSecOps And Cloud Infrastructure
 
@@ -119,7 +119,7 @@ The DevSecOps track owns the cloud pipeline and defenses:
 - Add IDS, anomaly detection, SIEM alerting, and secrets management.
 - Maintain CI/CD quality and security gates.
 
-Source will live in [gridguard/infra](gridguard/infra).
+Source will live in [infra](infra).
 
 ## Current Status
 
@@ -210,7 +210,7 @@ GridGuard succeeds only when both tracks meet at defined handoff points.
 4. **Final review**: validate the full system, report, and demo path.
 
 Details are in
-[gridguard/docs/04-integration-checkpoints.md](gridguard/docs/04-integration-checkpoints.md).
+[docs/04-integration-checkpoints.md](docs/04-integration-checkpoints.md).
 
 ## Security Principles
 
@@ -229,7 +229,7 @@ Near-term:
 
 - Add Python project structure for `power-sim`.
 - Add a minimal Modbus telemetry server and client test.
-- Add Terraform provider/backend skeleton under `gridguard/infra`.
+- Add Terraform provider/backend skeleton under `infra`.
 - Add Docker Compose for local fake telemetry, database, and dashboard smoke
   testing.
 
@@ -260,4 +260,4 @@ Before opening or merging a change:
    infrastructure assumptions, or attack-run behavior.
 5. Use pull requests into `main` once branch protection is enabled.
 
-For shared vocabulary, see [gridguard/docs/00-glossary.md](gridguard/docs/00-glossary.md).
+For shared vocabulary, see [docs/00-glossary.md](docs/00-glossary.md).

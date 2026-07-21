@@ -5,6 +5,8 @@ dockerfiles=()
 compose_files=()
 
 while IFS= read -r file; do
+  [[ -f "${file}" ]] || continue
+
   case "${file}" in
     Dockerfile|*/Dockerfile|Dockerfile.*|*/Dockerfile.*)
       dockerfiles+=("${file}")

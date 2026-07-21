@@ -3,7 +3,13 @@ set -euo pipefail
 
 mapfile -t markdown_files < <(git ls-files --cached --others --exclude-standard -- '*.md')
 
-if [[ "${#markdown_files[@]}" -eq 0 ]]; then
+existing_markdown_files=()
+for markdown_file in "${markdown_files[@]}"; do
+  [[ -f "${markdown_file}" ]] || continue
+  existing_markdown_files+=("${markdown_file}")
+done
+
+if [[ "${#existing_markdown_files[@]}" -eq 0 ]]; then
   echo "No Markdown files found; skipping docs validation."
   exit 0
 fi
@@ -41,7 +47,7 @@ markdown_files = [
         ],
         text=True,
     ).splitlines()
-    if line.strip()
+    if line.strip() and Path(line.strip()).is_file()
 ]
 
 for path in markdown_files:

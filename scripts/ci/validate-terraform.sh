@@ -5,6 +5,13 @@ mapfile -t terraform_files < <(
   git ls-files --cached --others --exclude-standard -- '*.tf' '*.tf.json'
 )
 
+existing_terraform_files=()
+for terraform_file in "${terraform_files[@]}"; do
+  [[ -f "${terraform_file}" ]] || continue
+  existing_terraform_files+=("${terraform_file}")
+done
+terraform_files=("${existing_terraform_files[@]}")
+
 if [[ "${#terraform_files[@]}" -eq 0 ]]; then
   echo "No Terraform files found; skipping Terraform validation."
   exit 0
