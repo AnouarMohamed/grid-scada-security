@@ -91,6 +91,7 @@ Important entry points:
 | Integration checkpoints | [docs/04-integration-checkpoints.md](docs/04-integration-checkpoints.md) |
 | Attack-run template | [docs/05-attack-log-template.md](docs/05-attack-log-template.md) |
 | CI/CD plan | [docs/06-ci-cd.md](docs/06-ci-cd.md) |
+| Local fake-data pipeline | [docs/07-local-fake-data-pipeline.md](docs/07-local-fake-data-pipeline.md) |
 | Power track plan | [docs/power-track/execution-plan.md](docs/power-track/execution-plan.md) |
 | DevSecOps track plan | [docs/devsecops-track/execution-plan.md](docs/devsecops-track/execution-plan.md) |
 
@@ -123,10 +124,10 @@ Source will live in [infra](infra).
 
 ## Current Status
 
-The repository currently contains the project documentation, source tree
-skeleton, and CI/CD foundation. Application code, Terraform modules, container
-definitions, and cloud deployment targets are expected to land as the two tracks
-move through the execution plans.
+The repository currently contains the project documentation, CI/CD foundation,
+Terraform skeleton, and a local fake-data pipeline with InfluxDB and Grafana.
+The fake-data stack gives the DevSecOps track a working dashboard and telemetry
+store before the real Modbus simulator exists.
 
 Current CI is intentionally future-ready:
 
@@ -162,6 +163,19 @@ make docker
 
 The local suite is designed to skip surfaces that do not exist yet, while still
 becoming strict as new source files are added.
+
+Start the local fake-data stack:
+
+```bash
+cp .env.example .env
+make stack-up
+make stack-smoke
+```
+
+Grafana is available on `http://127.0.0.1:3000`. InfluxDB is available on
+`http://127.0.0.1:8086`. See
+[docs/07-local-fake-data-pipeline.md](docs/07-local-fake-data-pipeline.md) for
+the full runbook.
 
 ## CI/CD
 
@@ -229,9 +243,8 @@ Near-term:
 
 - Add Python project structure for `power-sim`.
 - Add a minimal Modbus telemetry server and client test.
-- Add Terraform provider/backend skeleton under `infra`.
-- Add Docker Compose for local fake telemetry, database, and dashboard smoke
-  testing.
+- Map the Terraform contract modules to a real AWS sandbox environment.
+- Add the first real Modbus ingestion service beside the fake-data ingestor.
 
 Mid-term:
 

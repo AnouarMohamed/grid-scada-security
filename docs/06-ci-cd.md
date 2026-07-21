@@ -28,9 +28,12 @@ and cloud deployment targets.
    - Expected source surface: `infra/`.
 
 4. **Containers and local integration land**
-   - Docker CI automatically validates Compose files and builds Dockerfiles.
-   - Add a Compose smoke test once the fake-data pipeline exists so every PR
-     proves ingestion, database, and dashboard services can start together.
+   - Docker CI automatically validates Compose files and builds Dockerfiles in
+     GitHub Actions.
+   - Local `make docker` validates Compose by default; set
+     `GRIDGUARD_DOCKER_BUILD=1` to build images locally.
+   - The fake-data pipeline can be smoke-tested with `make stack-smoke` after
+     `make stack-up`.
 
 5. **Cloud deployment**
    - Deployment is manual through `.github/workflows/deploy.yml`.
@@ -82,13 +85,21 @@ make terraform
 make docker
 ```
 
+Run the local fake-data stack:
+
+```bash
+make stack-up
+make stack-smoke
+make stack-down
+```
+
 ## Future Hardening
 
 Add these once the corresponding project surfaces exist:
 
 - Python coverage thresholds for simulation, Modbus, ingestion, and detection
   logic.
-- Terraform plan artifacts on pull requests.
+- Terraform plan artifacts on pull requests once cloud resources exist.
 - Docker image SBOM generation and signed image publishing.
 - A staging environment that deploys from `main` before production.
 - End-to-end attack-run smoke tests using the attack log template.

@@ -12,6 +12,7 @@
 3. **Fake-data pipeline (unblock early)** — stand up the time-series DB and
    Grafana with a synthetic data generator, before real telemetry exists.
    *Done when:* a dashboard shows live-updating fake grid data.
+   *Current implementation:* see `docs/07-local-fake-data-pipeline.md`.
 
 4. **Real ingestion service** — build the service that polls/listens to the
    Power track's Modbus emulator and writes into the time-series DB.
