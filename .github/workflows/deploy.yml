@@ -1,0 +1,101 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Terraform action to run.
+        required: true
+        default: plan
+        type: choice
+        options:
+          - plan
+          - apply
+      environment:
+        description: GitHub environment to target.
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.action }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Guard production applies
+        if: ${{ inputs.action == 'apply' }}
+        run: |
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "::error::Terraform apply is only allowed from main."
+            exit 1
+          fi
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials through OIDC
+        if: ${{ env.AWS_ROLE_TO_ASSUME != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Discover Terraform roots
+        id: terraform-roots
+        run: |
+          mapfile -t roots < <(
+            find gridguard/infra -type f \( -name '*.tf' -o -name '*.tf.json' \) -printf '%h\n' |
+              sort -u
+          )
+
+          if [[ "${#roots[@]}" -eq 0 ]]; then
+            echo "has_roots=false" >> "${GITHUB_OUTPUT}"
+            echo "No Terraform roots found; skipping deployment."
+            exit 0
+          fi
+
+          echo "has_roots=true" >> "${GITHUB_OUTPUT}"
+          {
+            echo "roots<<EOF"
+            printf '%s\n' "${roots[@]}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Terraform plan
+        if: ${{ steps.terraform-roots.outputs.has_roots == 'true' }}
+        run: |
+          while IFS= read -r root; do
+            [[ -n "${root}" ]] || continue
+            terraform -chdir="${root}" init -input=false
+            terraform -chdir="${root}" plan -input=false -out=tfplan
+          done <<< "${{ steps.terraform-roots.outputs.roots }}"
+
+      - name: Terraform apply
+        if: ${{ inputs.action == 'apply' && steps.terraform-roots.outputs.has_roots == 'true' }}
+        run: |
+          while IFS= read -r root; do
+            [[ -n "${root}" ]] || continue
+            terraform -chdir="${root}" apply -input=false -auto-approve tfplan
+          done <<< "${{ steps.terraform-roots.outputs.roots }}"

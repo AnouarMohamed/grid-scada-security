@@ -22,6 +22,7 @@ attacks; the DevSecOps track owns the infrastructure and the defenses.
 | Tracking milestones | `docs/03-timeline.md` |
 | Coordinating a handoff between tracks | `docs/04-integration-checkpoints.md` |
 | Logging an attack/defense test | `docs/05-attack-log-template.md` |
+| Setting up CI/CD | `docs/06-ci-cd.md` |
 
 ## Repo layout
 
@@ -45,7 +46,7 @@ gridguard/
 │   └── README.md
 ├── infra/                           <- DevSecOps track source/IaC lives here
 │   └── README.md
-└── .github/workflows/               <- CI/CD pipelines (DevSecOps track)
+└── .github/workflows/               <- CI/CD pipelines, at repository root
 ```
 
 ## Team roles, one line each
