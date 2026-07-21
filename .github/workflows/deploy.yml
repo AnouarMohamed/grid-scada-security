@@ -65,10 +65,14 @@ jobs:
       - name: Discover Terraform roots
         id: terraform-roots
         run: |
-          mapfile -t roots < <(
-            find infra -type f \( -name '*.tf' -o -name '*.tf.json' \) -printf '%h\n' |
-              sort -u
-          )
+          if [[ ! -d infra/terraform/environments ]]; then
+            roots=()
+          else
+            mapfile -t roots < <(
+              find infra/terraform/environments -mindepth 1 -maxdepth 1 -type d |
+                sort
+            )
+          fi
 
           if [[ "${#roots[@]}" -eq 0 ]]; then
             echo "has_roots=false" >> "${GITHUB_OUTPUT}"
