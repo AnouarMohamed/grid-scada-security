@@ -1,0 +1,10 @@
+[tool.pytest.ini_options]
+testpaths = ["infra/services/fake-telemetry/tests"]
+pythonpath = ["infra/services/fake-telemetry/src"]
+
+[tool.ruff]
+line-length = 96
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
