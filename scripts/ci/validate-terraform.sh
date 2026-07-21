@@ -18,8 +18,13 @@ if [[ "${#terraform_files[@]}" -eq 0 ]]; then
 fi
 
 if ! command -v terraform >/dev/null 2>&1; then
-  echo "::error::Terraform files exist, but terraform is not installed."
-  exit 1
+  if [[ "${CI:-false}" == "true" ]]; then
+    echo "::error::Terraform files exist, but terraform is not installed."
+    exit 1
+  fi
+
+  echo "Terraform files found, but terraform is not installed locally; skipping Terraform validation."
+  exit 0
 fi
 
 terraform fmt -check -recursive

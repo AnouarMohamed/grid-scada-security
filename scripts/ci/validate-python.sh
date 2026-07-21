@@ -20,7 +20,9 @@ if [[ "${#python_files[@]}" -eq 0 ]]; then
   exit 0
 fi
 
-python -m pip install --upgrade pip
+if [[ "${CI:-false}" == "true" ]]; then
+  python -m pip install --upgrade pip
+fi
 
 mapfile -t requirement_files < <(
   git ls-files \
@@ -34,13 +36,39 @@ mapfile -t requirement_files < <(
 
 for requirements_file in "${requirement_files[@]}"; do
   [[ -f "${requirements_file}" ]] || continue
-  python -m pip install -r "${requirements_file}"
+  if [[ "${CI:-false}" == "true" || "${GRIDGUARD_INSTALL_PYTHON_DEPS:-0}" == "1" ]]; then
+    python -m pip install -r "${requirements_file}"
+  else
+    echo "Skipping ${requirements_file}; set GRIDGUARD_INSTALL_PYTHON_DEPS=1 to install locally."
+  fi
 done
 
-python -m pip install bandit pytest ruff
+ensure_python_module() {
+  local module_name="$1"
+  local package_name="${2:-$1}"
 
-python -m ruff check "${python_files[@]}"
-python -m bandit -r . -x '*/tests/*,*/test_*,.git,.venv,venv'
+  if python -c "import ${module_name}" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if [[ "${CI:-false}" == "true" ]]; then
+    python -m pip install "${package_name}"
+    return 0
+  fi
+
+  echo "${package_name} is not installed locally; skipping ${package_name}-based checks."
+  return 1
+}
+
+python -m compileall -q "${python_files[@]}"
+
+if ensure_python_module ruff ruff; then
+  python -m ruff check "${python_files[@]}"
+fi
+
+if ensure_python_module bandit bandit; then
+  python -m bandit -r . -x '*/tests/*,*/test_*,.git,.venv,venv'
+fi
 
 mapfile -t test_files < <(
   git ls-files --cached --others --exclude-standard -- \
@@ -61,4 +89,8 @@ if [[ "${#test_files[@]}" -eq 0 ]]; then
   exit 0
 fi
 
-python -m pytest
+if ensure_python_module pytest pytest; then
+  python -m pytest
+else
+  python -m unittest discover
+fi
