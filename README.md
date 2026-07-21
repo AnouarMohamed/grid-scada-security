@@ -31,23 +31,11 @@ Planned deliverables:
 
 ## Architecture
 
-```text
-[Grid Simulation Engine] -> [Protocol Emulator] -> [Cloud Ingestion] -> [Time-Series DB]
-   pandapower/OpenDSS       Modbus TCP/DNP3        service/queue          InfluxDB/TimescaleDB
-                                                         |
-                                                         v
-                                                  [Grafana Dashboard]
-                                                         |
-                                                         v
-                                             [IDS / Anomaly Detection]
-                                             Suricata/Zeek + stats/ML
-                                                         |
-                                                         v
-                                                   [SIEM / Alerting]
-                                                     Wazuh or ELK
+![GridGuard architecture diagram](docs/assets/gridguard-architecture.svg)
 
-[Attack Simulator] -> false data injection, flooding, or MITM-style tests
-```
+The solid blue path is the running local fake-data pipeline. The dashed blue
+path is the future Modbus/DNP3 handoff from the Power Systems track. Red marks
+the attack exercise loop, and green marks CI/CD and infrastructure guardrails.
 
 The protocol emulator to cloud ingestion link is the main simulated OT/IT
 boundary. That boundary must stay explicit through network segmentation,
