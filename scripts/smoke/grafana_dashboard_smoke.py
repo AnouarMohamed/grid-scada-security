@@ -159,6 +159,31 @@ from(bucket: "{INFLUX_BUCKET}")
         raise RuntimeError("InfluxDB telemetry has no source tag values in the last 15m")
     print(f"influxdb-sources: ok ({', '.join(sources)})")
 
+    required_tags = ("feeder", "bus", "phase", "scenario", "signal", "source")
+    missing_tags = [tag for tag in required_tags if not _has_tag_values(tag)]
+    if missing_tags:
+        raise RuntimeError(
+            "InfluxDB telemetry is missing required tag value(s): "
+            + ", ".join(missing_tags)
+        )
+    print(f"influxdb-tags: ok ({', '.join(required_tags)})")
+
+
+def _has_tag_values(tag: str) -> bool:
+    tag_rows = _query_influx(
+        f'''
+from(bucket: "{INFLUX_BUCKET}")
+  |> range(start: -15m)
+  |> filter(fn: (r) => r._measurement == "grid_telemetry")
+  |> filter(fn: (r) => r._field == "value")
+  |> filter(fn: (r) => exists r.{tag} and r.{tag} != "")
+  |> group(columns: ["{tag}"])
+  |> count()
+  |> keep(columns: ["{tag}", "_value"])
+'''
+    )
+    return any(row.get(tag) for row in tag_rows)
+
 
 def _load_dashboard_file() -> dict[str, Any]:
     dashboard = json.loads(DASHBOARD_PATH.read_text(encoding="utf-8"))
