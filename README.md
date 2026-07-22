@@ -33,9 +33,9 @@ Planned deliverables:
 
 ![GridGuard architecture diagram](docs/assets/gridguard-architecture.svg)
 
-The solid blue path is the running local fake-data pipeline. The dashed blue
-path is the future Modbus/DNP3 handoff from the Power Systems track. Red marks
-the attack exercise loop, and green marks CI/CD and infrastructure guardrails.
+The diagram shows the target end-state architecture. Blue is the telemetry
+path, gray is control/configuration, green is detection and alerting, red is the
+attack exercise path, and dashed gray lines mark CI/CD guardrails.
 
 The protocol emulator to cloud ingestion link is the main simulated OT/IT
 boundary. That boundary must stay explicit through network segmentation,
