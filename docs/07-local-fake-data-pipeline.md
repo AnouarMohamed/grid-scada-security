@@ -26,6 +26,16 @@ The fake source is not published to the host. Only the ingestor is dual-homed.
 That is deliberate: the ingestor is the temporary stand-in for the future
 Modbus/DNP3 ingestion service.
 
+The receiver-side Modbus contract can be exercised separately:
+
+```bash
+make stack-modbus-up
+make stack-modbus-smoke
+```
+
+That profile uses fixture register values and the same `grid_telemetry`
+measurement. See [docs/08-modbus-handoff-contract.md](08-modbus-handoff-contract.md).
+
 ## Why InfluxDB First
 
 The project scope allows InfluxDB or TimescaleDB. This first integration pass

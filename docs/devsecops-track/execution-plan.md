@@ -17,6 +17,8 @@
 4. **Real ingestion service** — build the service that polls/listens to the
    Power track's Modbus emulator and writes into the time-series DB.
    *Done when:* it can read a locally-run Modbus test server correctly.
+   *Current implementation:* receiver-side contract and fixture profile live in
+   `docs/08-modbus-handoff-contract.md`.
 
    **→ Integration checkpoint 1 with Power track — see
    `docs/04-integration-checkpoints.md`.**

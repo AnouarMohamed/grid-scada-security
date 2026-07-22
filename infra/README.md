@@ -8,10 +8,13 @@ configuration.
 
 ```text
 infra/
+├── contracts/
+│   └── register-maps/
 ├── local/
 │   └── grafana/
 ├── services/
-│   └── fake-telemetry/
+│   ├── fake-telemetry/
+│   └── modbus-ingestor/
 └── terraform/
 ```
 
@@ -37,6 +40,24 @@ to `cloud-core`, preserving the same boundary shape the real Modbus ingestion
 service must respect.
 
 Full runbook: `../docs/07-local-fake-data-pipeline.md`.
+
+## Modbus Handoff Contract
+
+The receiver-side Modbus integration is scaffolded under:
+
+```text
+infra/contracts/register-maps/
+infra/services/modbus-ingestor/
+```
+
+Run the fixture-backed contract path with:
+
+```bash
+make stack-modbus-up
+make stack-modbus-smoke
+```
+
+Full handoff notes: `../docs/08-modbus-handoff-contract.md`.
 
 ## Terraform
 

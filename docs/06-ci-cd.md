@@ -93,6 +93,14 @@ make stack-smoke
 make stack-down
 ```
 
+Run the receiver-side Modbus contract fixture:
+
+```bash
+make stack-modbus-up
+make stack-modbus-smoke
+make stack-down
+```
+
 ## Future Hardening
 
 Add these once the corresponding project surfaces exist:
