@@ -71,6 +71,12 @@ Run the smoke test:
 make stack-smoke
 ```
 
+Validate the provisioned dashboard against live InfluxDB data:
+
+```bash
+make stack-dashboard-smoke
+```
+
 Open Grafana at:
 
 ```text

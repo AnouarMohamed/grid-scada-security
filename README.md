@@ -160,6 +160,7 @@ Start the local fake-data stack:
 cp .env.example .env
 make stack-up
 make stack-smoke
+make stack-dashboard-smoke
 ```
 
 Grafana is available on `http://127.0.0.1:3000`. InfluxDB is available on

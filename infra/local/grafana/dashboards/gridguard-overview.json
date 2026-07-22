@@ -23,11 +23,363 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [],
   "liveNow": true,
   "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "green",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> group()\n  |> count()\n  |> yield(name: \"telemetry_rows\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Rows Received",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 4,
+          "mappings": [],
+          "max": 1.06,
+          "min": 0.93,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0.95
+              },
+              {
+                "color": "orange",
+                "value": 1.05
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 5,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "min"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n  |> group()\n  |> min()\n  |> yield(name: \"voltage_min\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Voltage Min",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 4,
+          "mappings": [],
+          "max": 1.06,
+          "min": 0.93,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1.05
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 10,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n  |> group()\n  |> max()\n  |> yield(name: \"voltage_max\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Voltage Max",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 3,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 59.95
+              },
+              {
+                "color": "orange",
+                "value": 60.05
+              }
+            ]
+          },
+          "unit": "hertz"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 15,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"frequency_hz\")\n  |> group()\n  |> mean()\n  |> yield(name: \"frequency_hz\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Frequency",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "Clear"
+                },
+                "1": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "Flagged"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"attack_flag\")\n  |> group()\n  |> max()\n  |> yield(name: \"attack_flag\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Attack State",
+      "type": "stat"
+    },
     {
       "datasource": {
         "type": "influxdb",
@@ -46,7 +398,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 8,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -70,6 +422,7 @@
               "mode": "line"
             }
           },
+          "decimals": 4,
           "mappings": [],
           "max": 1.06,
           "min": 0.93,
@@ -96,11 +449,11 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 16,
+        "w": 15,
         "x": 0,
-        "y": 0
+        "y": 4
       },
-      "id": 1,
+      "id": 6,
       "options": {
         "legend": {
           "calcs": [
@@ -123,11 +476,11 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> group(columns: [\"bus\", \"phase\"])\n  |> yield(name: \"voltage_pu\")",
+          "query": "base = from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n\nunion(tables: [\n  base |> group() |> aggregateWindow(every: v.windowPeriod, fn: min, createEmpty: false) |> set(key: \"stat\", value: \"min\"),\n  base |> group() |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> set(key: \"stat\", value: \"mean\"),\n  base |> group() |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false) |> set(key: \"stat\", value: \"max\")\n])\n  |> group(columns: [\"stat\"])\n  |> yield(name: \"voltage_envelope\")",
           "refId": "A"
         }
       ],
-      "title": "Voltage Profile",
+      "title": "Voltage Envelope",
       "type": "timeseries"
     },
     {
@@ -140,40 +493,45 @@
           "color": {
             "mode": "thresholds"
           },
+          "decimals": 4,
           "mappings": [],
+          "max": 1.06,
+          "min": 0.93,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "orange",
-                "value": 59.95
+                "color": "green",
+                "value": 0.95
               },
               {
-                "color": "red",
-                "value": 60.05
+                "color": "orange",
+                "value": 1.05
               }
             ]
           },
-          "unit": "hertz"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 8,
-        "x": 16,
-        "y": 0
+        "h": 10,
+        "w": 9,
+        "x": 15,
+        "y": 4
       },
-      "id": 2,
+      "id": 7,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "displayMode": "lcd",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -181,8 +539,9 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto",
-        "wideLayout": true
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
       },
       "targets": [
         {
@@ -190,79 +549,12 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"frequency_hz\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> mean()\n  |> yield(name: \"frequency_hz\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n  |> group(columns: [\"bus\", \"phase\", \"source\"])\n  |> last()\n  |> group(columns: [\"bus\", \"source\"])\n  |> mean()\n  |> yield(name: \"latest_voltage\")",
           "refId": "A"
         }
       ],
-      "title": "System Frequency",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "gridguard-influxdb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 0.1
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 8,
-        "x": 16,
-        "y": 5
-      },
-      "id": 3,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "gridguard-influxdb"
-          },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"attack_flag\")\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)\n  |> max()\n  |> yield(name: \"attack_flag\")",
-          "refId": "A"
-        }
-      ],
-      "title": "Attack Flag",
-      "type": "stat"
+      "title": "Latest Voltage by Bus",
+      "type": "bargauge"
     },
     {
       "datasource": {
@@ -278,7 +570,7 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "kW",
+            "axisLabel": "kW / kvar",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
@@ -306,6 +598,7 @@
               "mode": "off"
             }
           },
+          "decimals": 2,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -316,7 +609,7 @@
               }
             ]
           },
-          "unit": "kwatt"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -324,9 +617,9 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 10
+        "y": 14
       },
-      "id": 4,
+      "id": 8,
       "options": {
         "legend": {
           "calcs": [
@@ -347,11 +640,11 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"real_power_kw\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> group(columns: [\"bus\"])\n  |> yield(name: \"real_power_kw\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.signal == \"real_power_kw\" or r.signal == \"reactive_power_kvar\")\n  |> group(columns: [\"source\", \"signal\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"power\")",
           "refId": "A"
         }
       ],
-      "title": "Real Power by Bus",
+      "title": "Power Flow",
       "type": "timeseries"
     },
     {
@@ -372,7 +665,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 8,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -396,6 +689,7 @@
               "mode": "off"
             }
           },
+          "decimals": 2,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -414,9 +708,9 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 10
+        "y": 14
       },
-      "id": 5,
+      "id": 9,
       "options": {
         "legend": {
           "calcs": [
@@ -437,12 +731,262 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"current_a\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> group(columns: [\"bus\", \"phase\"])\n  |> yield(name: \"current_a\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"current_a\")\n  |> group(columns: [\"source\", \"phase\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"current_a\")",
           "refId": "A"
         }
       ],
-      "title": "Current by Bus and Phase",
+      "title": "Current Load",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "clear"
+                },
+                "1": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "flag"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 23
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"attack_flag\")\n  |> group(columns: [\"source\", \"scenario\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)\n  |> yield(name: \"attack_flag\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Attack Marker",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.9
+              },
+              {
+                "color": "green",
+                "value": 0.99
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 23
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"quality\")\n  |> group(columns: [\"source\", \"scenario\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"quality\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Signal Quality",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "last_seen"
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "latest_value"
+              },
+              {
+                "id": "decimals",
+                "value": 4
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 23
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "source"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "format": "table",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> group(columns: [\"feeder\", \"scenario\", \"source\", \"signal\"])\n  |> last()\n  |> keep(columns: [\"_time\", \"feeder\", \"scenario\", \"source\", \"signal\", \"_value\"])\n  |> sort(columns: [\"source\", \"signal\"])\n  |> yield(name: \"source_heartbeat\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Source Heartbeat",
+      "type": "table"
     }
   ],
   "refresh": "5s",
@@ -450,7 +994,8 @@
   "tags": [
     "gridguard",
     "scada",
-    "fake-telemetry"
+    "operations",
+    "security"
   ],
   "templating": {
     "list": []
@@ -459,10 +1004,25 @@
     "from": "now-15m",
     "to": "now"
   },
-  "timepicker": {},
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "24h"
+    ]
+  },
   "timezone": "browser",
-  "title": "GridGuard Local Telemetry Overview",
+  "title": "GridGuard Telemetry Operations",
   "uid": "gridguard-local-overview",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
