@@ -109,6 +109,28 @@ The fixture values live at:
 infra/contracts/register-maps/fixtures/ieee13-baseline-registers.json
 ```
 
+Validate the register-map and fixture contract without starting containers:
+
+```bash
+make modbus-contracts
+```
+
+That check must pass before any register-map change is handed across tracks.
+
+## DevSecOps Pre-Handoff Checklist
+
+Complete this before the Power Systems track delivers the real simulator:
+
+- `make modbus-contracts` passes.
+- `make stack-modbus-up` starts InfluxDB, Grafana, and the fixture ingestor.
+- `make stack-modbus-smoke` observes `source=modbus_fixture` telemetry rows.
+- Grafana shows the provisioned GridGuard dashboard from the shared
+  `grid_telemetry` measurement.
+- Any register-map edits are reviewed by both tracks before merge.
+
+Do not ask the Power Systems track to debug cloud storage, Grafana
+provisioning, or receiver-side scaling issues until this checklist is green.
+
 ## Real Simulator Swap
 
 When the Power Systems simulator is ready:
@@ -121,3 +143,11 @@ When the Power Systems simulator is ready:
 
 The ingestor is intentionally the only component that should cross from the OT
 segment into the cloud telemetry zone.
+
+The simulator handoff is acceptable when the Power Systems track can provide:
+
+- A running Modbus TCP endpoint reachable from the ingestor on the OT segment.
+- The Modbus unit id.
+- A reviewed register map using zero-based PDU addresses.
+- Scaling rules that keep raw register values inside the declared data type.
+- At least one stable baseline run for DevSecOps smoke testing.

@@ -18,7 +18,9 @@
    Power track's Modbus emulator and writes into the time-series DB.
    *Done when:* it can read a locally-run Modbus test server correctly.
    *Current implementation:* receiver-side contract and fixture profile live in
-   `docs/08-modbus-handoff-contract.md`.
+   `docs/08-modbus-handoff-contract.md`; validate the pre-handoff path with
+   `make modbus-contracts`, `make stack-modbus-up`, and
+   `make stack-modbus-smoke`.
 
    **→ Integration checkpoint 1 with Power track — see
    `docs/04-integration-checkpoints.md`.**

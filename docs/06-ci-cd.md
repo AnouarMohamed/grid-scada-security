@@ -81,6 +81,7 @@ Run a focused gate:
 ```bash
 make docs
 make python
+make modbus-contracts
 make terraform
 make docker
 ```
