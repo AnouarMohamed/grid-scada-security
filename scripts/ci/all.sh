@@ -7,6 +7,7 @@ checks=(
   validate-repo-hygiene.sh
   validate-docs.sh
   validate-python.sh
+  validate-modbus-contracts.sh
   validate-terraform.sh
   validate-docker.sh
 )

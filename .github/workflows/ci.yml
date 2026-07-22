@@ -55,6 +55,9 @@ jobs:
       - name: Validate Python
         run: bash scripts/ci/validate-python.sh
 
+      - name: Validate Modbus contracts
+        run: bash scripts/ci/validate-modbus-contracts.sh
+
   terraform:
     name: Terraform Format and Validate
     runs-on: ubuntu-latest
