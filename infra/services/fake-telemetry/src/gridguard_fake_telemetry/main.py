@@ -5,7 +5,9 @@ import json
 import logging
 import signal
 import sys
+import threading
 import time
+import urllib.parse
 import urllib.request
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,15 +25,21 @@ LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s %(message)s"
 LOGGER = logging.getLogger("gridguard.fake_telemetry")
 
 
+def request_path(raw_path: str) -> str:
+    return urllib.parse.urlsplit(raw_path).path
+
+
 class TelemetryHandler(BaseHTTPRequestHandler):
     server_version = "GridGuardFakeTelemetry/0.1"
 
     def do_GET(self) -> None:
-        if self.path == "/healthz":
+        path = request_path(self.path)
+
+        if path == "/healthz":
             self._write_json({"status": "ok"})
             return
 
-        if self.path == "/measurements":
+        if path == "/measurements":
             config: SourceConfig = self.server.config  # type: ignore[attr-defined]
             snapshot = generate_snapshot(
                 feeder_id=config.feeder_id,
@@ -58,10 +66,15 @@ def run_source() -> int:
     config = SourceConfig.from_env()
     server = ThreadingHTTPServer((config.host, config.port), TelemetryHandler)
     server.config = config  # type: ignore[attr-defined]
+    shutdown_started = False
 
     def _stop(_signum: int, _frame: FrameType | None) -> None:
+        nonlocal shutdown_started
+        if shutdown_started:
+            return
+        shutdown_started = True
         LOGGER.info("source_shutdown_requested")
-        server.shutdown()
+        threading.Thread(target=server.shutdown, name="source-shutdown", daemon=True).start()
 
     signal.signal(signal.SIGTERM, _stop)
     signal.signal(signal.SIGINT, _stop)

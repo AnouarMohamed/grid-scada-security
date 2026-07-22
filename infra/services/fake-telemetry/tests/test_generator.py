@@ -66,3 +66,17 @@ def test_line_protocol_contains_tags_fields_and_timestamp() -> None:
     assert "value=" in first_line
     assert "quality=1i" in first_line
     assert first_line.endswith(" 1700000000000000000")
+
+
+def test_line_protocol_strips_line_breaks_from_tag_values() -> None:
+    snapshot = generate_snapshot(
+        feeder_id="test\nfeeder",
+        scenario="unit\rtest",
+        timestamp_ns=1_700_000_000_000_000_000,
+    )
+
+    line_protocol = snapshot_to_line_protocol(snapshot)
+
+    assert line_protocol.count("\n") == snapshot["point_count"] - 1
+    assert "feeder=test\\ feeder" in line_protocol
+    assert "scenario=unit\\ test" in line_protocol

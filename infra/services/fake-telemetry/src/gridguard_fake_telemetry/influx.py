@@ -7,7 +7,12 @@ import urllib.request
 from typing import Any
 
 
+def _line_safe(value: str) -> str:
+    return value.replace("\r", " ").replace("\n", " ").replace("\t", " ")
+
+
 def _escape_key(value: str) -> str:
+    value = _line_safe(value)
     return (
         value.replace("\\", "\\\\")
         .replace(" ", "\\ ")
@@ -23,6 +28,7 @@ def _format_field_value(value: float | int | bool | str) -> str:
         return f"{value}i"
     if isinstance(value, float):
         return repr(value)
+    value = _line_safe(value)
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
     return f'"{escaped}"'
 
