@@ -1,0 +1,15 @@
+{
+  "unit_id": 1,
+  "description": "Deterministic fixture values for DevSecOps contract and CI tests.",
+  "registers": {
+    "0": 10112,
+    "1": 10086,
+    "2": 10093,
+    "10": 7214,
+    "11": 7188,
+    "12": 7242,
+    "20": 60002,
+    "30": 1842,
+    "31": 613
+  }
+}
