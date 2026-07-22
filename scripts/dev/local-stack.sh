@@ -10,11 +10,15 @@ Usage: scripts/dev/local-stack.sh <command>
 
 Commands:
   up       Build and start the fake telemetry, InfluxDB, and Grafana stack.
+  modbus-up
+           Build and start the Modbus fixture ingestor, InfluxDB, and Grafana stack.
   down     Stop containers and keep named volumes.
   reset    Stop containers and remove named volumes.
   logs     Follow stack logs.
   ps       Show stack container status.
   smoke    Run the local pipeline smoke test.
+  modbus-smoke
+           Run the local smoke test against Modbus fixture rows.
 EOF
 }
 
@@ -22,22 +26,29 @@ command="${1:-}"
 
 case "${command}" in
   up)
-    docker compose up -d --build
+    docker compose --profile fake up -d --build
+    ;;
+  modbus-up)
+    docker compose --profile modbus-fixture up -d --build \
+      influxdb grafana modbus-ingestor-fixture
     ;;
   down)
-    docker compose down
+    docker compose --profile fake --profile modbus-fixture down
     ;;
   reset)
-    docker compose down --volumes --remove-orphans
+    docker compose --profile fake --profile modbus-fixture down --volumes --remove-orphans
     ;;
   logs)
-    docker compose logs -f --tail=120
+    docker compose --profile fake --profile modbus-fixture logs -f --tail=120
     ;;
   ps)
-    docker compose ps
+    docker compose --profile fake --profile modbus-fixture ps
     ;;
   smoke)
     python3 scripts/smoke/local_pipeline_smoke.py
+    ;;
+  modbus-smoke)
+    GRIDGUARD_SMOKE_SOURCE=modbus_fixture python3 scripts/smoke/local_pipeline_smoke.py
     ;;
   -h|--help|help|"")
     usage

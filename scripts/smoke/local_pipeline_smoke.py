@@ -39,6 +39,7 @@ GRAFANA_URL = f"http://127.0.0.1:{_env('GRAFANA_PORT', '3000')}"
 INFLUX_ORG = _env("INFLUXDB_ORG", "gridguard")
 INFLUX_BUCKET = _env("INFLUXDB_BUCKET", "gridguard_telemetry")
 INFLUX_TOKEN = _env("INFLUXDB_ADMIN_TOKEN", "change-this-local-influx-token")
+SMOKE_SOURCE = os.getenv("GRIDGUARD_SMOKE_SOURCE")
 
 
 def _get_json(url: str, timeout: float = 3.0) -> dict[str, object]:
@@ -47,12 +48,20 @@ def _get_json(url: str, timeout: float = 3.0) -> dict[str, object]:
         return json.loads(response.read().decode("utf-8"))
 
 
+def _flux_string(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
 def _query_influx() -> list[dict[str, str]]:
+    source_filter = ""
+    if SMOKE_SOURCE:
+        source_filter = f'  |> filter(fn: (r) => r.source == "{_flux_string(SMOKE_SOURCE)}")\n'
+
     flux = f'''
 from(bucket: "{INFLUX_BUCKET}")
   |> range(start: -10m)
   |> filter(fn: (r) => r._measurement == "grid_telemetry")
-  |> filter(fn: (r) => r._field == "value")
+{source_filter}  |> filter(fn: (r) => r._field == "value")
   |> limit(n: 5)
 '''
     query = urllib.parse.urlencode({"org": INFLUX_ORG})

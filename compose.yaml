@@ -20,9 +20,24 @@ x-fake-telemetry-base: &fake-telemetry-base
     - no-new-privileges:true
   logging: *log-policy
 
+x-modbus-ingestor-base: &modbus-ingestor-base
+  build:
+    context: ./infra/services/modbus-ingestor
+  image: gridguard/modbus-ingestor:local
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp:size=16m,mode=1777
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  logging: *log-policy
+
 services:
   fake-grid-source:
     <<: *fake-telemetry-base
+    profiles: ["fake"]
     command: ["source"]
     environment:
       GRIDGUARD_SOURCE_HOST: 0.0.0.0
@@ -64,6 +79,7 @@ services:
 
   telemetry-ingestor:
     <<: *fake-telemetry-base
+    profiles: ["fake"]
     command: ["ingest"]
     depends_on:
       fake-grid-source:
@@ -83,6 +99,38 @@ services:
       - cloud-core
     healthcheck:
       test: ["CMD", "python", "-m", "gridguard_fake_telemetry", "healthcheck-ingestor"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  modbus-ingestor-fixture:
+    <<: *modbus-ingestor-base
+    profiles: ["modbus-fixture"]
+    command: ["ingest"]
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    environment:
+      GRIDGUARD_MODBUS_MODE: fixture
+      GRIDGUARD_MODBUS_SOURCE_ID: ${GRIDGUARD_MODBUS_SOURCE_ID:-modbus_fixture}
+      GRIDGUARD_REGISTER_MAP: /etc/gridguard/register-map.json
+      GRIDGUARD_REGISTER_FIXTURE: /etc/gridguard/register-values.json
+      GRIDGUARD_MODBUS_INGEST_INTERVAL_SECONDS: ${GRIDGUARD_MODBUS_INGEST_INTERVAL_SECONDS:-2}
+      GRIDGUARD_MODBUS_UNIT_ID: ${GRIDGUARD_MODBUS_UNIT_ID:-1}
+      GRIDGUARD_MODBUS_STATUS_FILE: /tmp/gridguard-modbus-ingestor-ready
+      GRIDGUARD_INFLUX_URL: http://influxdb:8086
+      GRIDGUARD_INFLUX_ORG: ${INFLUXDB_ORG:-gridguard}
+      GRIDGUARD_INFLUX_BUCKET: ${INFLUXDB_BUCKET:-gridguard_telemetry}
+      GRIDGUARD_INFLUX_TOKEN: ${INFLUXDB_ADMIN_TOKEN:-change-this-local-influx-token}
+    volumes:
+      - ./infra/contracts/register-maps/ieee13-demo.json:/etc/gridguard/register-map.json:ro
+      - ./infra/contracts/register-maps/fixtures/ieee13-baseline-registers.json:/etc/gridguard/register-values.json:ro
+    networks:
+      - ot-sim
+      - cloud-core
+    healthcheck:
+      test: ["CMD", "python", "-m", "gridguard_modbus_ingestor", "healthcheck"]
       interval: 10s
       timeout: 5s
       retries: 6
