@@ -81,6 +81,7 @@ Important entry points:
 | CI/CD plan | [docs/06-ci-cd.md](docs/06-ci-cd.md) |
 | Local fake-data pipeline | [docs/07-local-fake-data-pipeline.md](docs/07-local-fake-data-pipeline.md) |
 | Modbus handoff contract | [docs/08-modbus-handoff-contract.md](docs/08-modbus-handoff-contract.md) |
+| Detection output contract | [docs/09-detection-output-contract.md](docs/09-detection-output-contract.md) |
 | Power track plan | [docs/power-track/execution-plan.md](docs/power-track/execution-plan.md) |
 | DevSecOps track plan | [docs/devsecops-track/execution-plan.md](docs/devsecops-track/execution-plan.md) |
 
@@ -117,7 +118,7 @@ The repository currently contains the project documentation, CI/CD foundation,
 Terraform skeleton, a local fake-data pipeline with InfluxDB and Grafana, and
 a receiver-side Modbus handoff contract with fixture-backed ingestion. The
 local profiles give the DevSecOps track working telemetry storage, dashboards,
-and register-map validation before the real simulator exists.
+alert guardrails, and register-map validation before the real simulator exists.
 
 Current CI is intentionally future-ready:
 
@@ -162,6 +163,9 @@ make stack-up
 make stack-smoke
 make stack-dashboard-smoke
 ```
+
+The dashboard smoke test also verifies the Grafana alert rules and required
+InfluxDB telemetry tags.
 
 Grafana is available on `http://127.0.0.1:3000`. InfluxDB is available on
 `http://127.0.0.1:8086`. See
