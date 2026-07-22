@@ -276,10 +276,7 @@ def _validate_grafana_alerts() -> None:
         f"{GRAFANA_URL}/api/v1/provisioning/alert-rules",
         headers={"Authorization": _basic_auth_header()},
     )
-    if isinstance(rules, dict):
-        rule_list = rules.get("rules", [])
-    else:
-        rule_list = rules
+    rule_list = rules.get("rules", []) if isinstance(rules, dict) else rules
 
     provisioned_uids = {
         str(rule.get("uid", "")) for rule in rule_list if isinstance(rule, dict)
