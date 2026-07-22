@@ -89,7 +89,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> group()\n  |> count()\n  |> yield(name: \"telemetry_rows\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\")\n  |> group()\n  |> count()\n  |> yield(name: \"telemetry_rows\")",
           "refId": "A"
         }
       ],
@@ -159,7 +159,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n  |> group()\n  |> min()\n  |> yield(name: \"voltage_min\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n  |> group()\n  |> min()\n  |> yield(name: \"voltage_min\")",
           "refId": "A"
         }
       ],
@@ -225,7 +225,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n  |> group()\n  |> max()\n  |> yield(name: \"voltage_max\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n  |> group()\n  |> max()\n  |> yield(name: \"voltage_max\")",
           "refId": "A"
         }
       ],
@@ -293,7 +293,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"frequency_hz\")\n  |> group()\n  |> mean()\n  |> yield(name: \"frequency_hz\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"frequency_hz\")\n  |> group()\n  |> mean()\n  |> yield(name: \"frequency_hz\")",
           "refId": "A"
         }
       ],
@@ -373,7 +373,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"attack_flag\")\n  |> group()\n  |> max()\n  |> yield(name: \"attack_flag\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"attack_flag\")\n  |> group()\n  |> max()\n  |> yield(name: \"attack_flag\")",
           "refId": "A"
         }
       ],
@@ -476,7 +476,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "base = from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n\nunion(tables: [\n  base |> group() |> aggregateWindow(every: v.windowPeriod, fn: min, createEmpty: false) |> set(key: \"stat\", value: \"min\"),\n  base |> group() |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> set(key: \"stat\", value: \"mean\"),\n  base |> group() |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false) |> set(key: \"stat\", value: \"max\")\n])\n  |> group(columns: [\"stat\"])\n  |> yield(name: \"voltage_envelope\")",
+          "query": "base = from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n\nunion(tables: [\n  base |> group() |> aggregateWindow(every: v.windowPeriod, fn: min, createEmpty: false) |> set(key: \"stat\", value: \"min\"),\n  base |> group() |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> set(key: \"stat\", value: \"mean\"),\n  base |> group() |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false) |> set(key: \"stat\", value: \"max\")\n])\n  |> group(columns: [\"stat\"])\n  |> yield(name: \"voltage_envelope\")",
           "refId": "A"
         }
       ],
@@ -549,7 +549,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n  |> group(columns: [\"bus\", \"phase\", \"source\"])\n  |> last()\n  |> group(columns: [\"bus\", \"source\"])\n  |> mean()\n  |> yield(name: \"latest_voltage\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"voltage_pu\")\n  |> group(columns: [\"bus\", \"phase\", \"source\"])\n  |> last()\n  |> group(columns: [\"bus\", \"source\"])\n  |> mean()\n  |> yield(name: \"latest_voltage\")",
           "refId": "A"
         }
       ],
@@ -640,7 +640,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.signal == \"real_power_kw\" or r.signal == \"reactive_power_kvar\")\n  |> group(columns: [\"source\", \"signal\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"power\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\")\n  |> filter(fn: (r) => r.signal == \"real_power_kw\" or r.signal == \"reactive_power_kvar\")\n  |> group(columns: [\"source\", \"signal\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"power\")",
           "refId": "A"
         }
       ],
@@ -731,7 +731,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"current_a\")\n  |> group(columns: [\"source\", \"phase\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"current_a\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\" and r.signal == \"current_a\")\n  |> group(columns: [\"source\", \"phase\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"current_a\")",
           "refId": "A"
         }
       ],
@@ -810,7 +810,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"attack_flag\")\n  |> group(columns: [\"source\", \"scenario\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)\n  |> yield(name: \"attack_flag\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"attack_flag\")\n  |> group(columns: [\"source\", \"scenario\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)\n  |> yield(name: \"attack_flag\")",
           "refId": "A"
         }
       ],
@@ -879,7 +879,7 @@
             "type": "influxdb",
             "uid": "gridguard-influxdb"
           },
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"quality\")\n  |> group(columns: [\"source\", \"scenario\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"quality\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"quality\")\n  |> group(columns: [\"source\", \"scenario\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"quality\")",
           "refId": "A"
         }
       ],
@@ -981,11 +981,289 @@
             "uid": "gridguard-influxdb"
           },
           "format": "table",
-          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> group(columns: [\"feeder\", \"scenario\", \"source\", \"signal\"])\n  |> last()\n  |> keep(columns: [\"_time\", \"feeder\", \"scenario\", \"source\", \"signal\", \"_value\"])\n  |> sort(columns: [\"source\", \"signal\"])\n  |> yield(name: \"source_heartbeat\")",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\")\n  |> group(columns: [\"feeder\", \"scenario\", \"source\", \"signal\"])\n  |> last()\n  |> keep(columns: [\"_time\", \"feeder\", \"scenario\", \"source\", \"signal\", \"_value\"])\n  |> sort(columns: [\"source\", \"signal\"])\n  |> yield(name: \"source_heartbeat\")",
           "refId": "A"
         }
       ],
       "title": "Source Heartbeat",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 31
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\")\n  |> group(columns: [\"source\"])\n  |> last()\n  |> group()\n  |> count()\n  |> yield(name: \"sources_active\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Sources Active",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 31
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> keep(columns: [\"_field\"])\n  |> group()\n  |> distinct(column: \"_field\")\n  |> count()\n  |> yield(name: \"fields_present\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Required Fields",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "dateTimeAsIso"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 31
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\")\n  |> group()\n  |> last()\n  |> keep(columns: [\"_time\", \"_value\"])\n  |> yield(name: \"latest_sample\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Latest Sample",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "gridguard-influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "last_seen"
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 31
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "source"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "gridguard-influxdb"
+          },
+          "format": "table",
+          "query": "from(bucket: \"gridguard_telemetry\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"grid_telemetry\")\n  |> filter(fn: (r) => r.feeder =~ /^${feeder:regex}$/)\n  |> filter(fn: (r) => r.source =~ /^${source:regex}$/)\n  |> filter(fn: (r) => r.scenario =~ /^${scenario:regex}$/)\n  |> filter(fn: (r) => r._field == \"value\")\n  |> group(columns: [\"source\", \"scenario\"])\n  |> last()\n  |> keep(columns: [\"_time\", \"source\", \"scenario\"])\n  |> sort(columns: [\"source\", \"scenario\"])\n  |> yield(name: \"active_scenarios\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Scenarios",
       "type": "table"
     }
   ],
@@ -998,7 +1276,83 @@
     "security"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "gridguard-influxdb"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"gridguard_telemetry\", tag: \"feeder\", predicate: (r) => r._measurement == \"grid_telemetry\", start: -24h)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Feeder",
+        "multi": true,
+        "name": "feeder",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"gridguard_telemetry\", tag: \"feeder\", predicate: (r) => r._measurement == \"grid_telemetry\", start: -24h)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "gridguard-influxdb"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"gridguard_telemetry\", tag: \"source\", predicate: (r) => r._measurement == \"grid_telemetry\", start: -24h)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Source",
+        "multi": true,
+        "name": "source",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"gridguard_telemetry\", tag: \"source\", predicate: (r) => r._measurement == \"grid_telemetry\", start: -24h)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "gridguard-influxdb"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"gridguard_telemetry\", tag: \"scenario\", predicate: (r) => r._measurement == \"grid_telemetry\", start: -24h)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Scenario",
+        "multi": true,
+        "name": "scenario",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"gridguard_telemetry\", tag: \"scenario\", predicate: (r) => r._measurement == \"grid_telemetry\", start: -24h)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-15m",
@@ -1023,6 +1377,6 @@
   "timezone": "browser",
   "title": "GridGuard Telemetry Operations",
   "uid": "gridguard-local-overview",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }

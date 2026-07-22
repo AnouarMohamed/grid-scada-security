@@ -197,12 +197,16 @@ def _validate_grafana_dashboard(dashboard: dict[str, Any]) -> None:
 
         for target in targets:
             ref_id = str(target.get("refId", "A"))
+            resolved_target = {
+                **target,
+                "query": _resolve_dashboard_variables(str(target.get("query", ""))),
+            }
             payload = {
                 "from": "now-15m",
                 "to": "now",
                 "queries": [
                     {
-                        **target,
+                        **resolved_target,
                         "datasource": {
                             "type": "influxdb",
                             "uid": "gridguard-influxdb",
@@ -229,6 +233,17 @@ def _validate_grafana_dashboard(dashboard: dict[str, Any]) -> None:
                 raise RuntimeError(f"{title} query returned no data frames")
 
             print(f"grafana-panel: ok ({title})")
+
+
+def _resolve_dashboard_variables(query: str) -> str:
+    replacements = {
+        "${feeder:regex}": ".*",
+        "${source:regex}": ".*",
+        "${scenario:regex}": ".*",
+    }
+    for placeholder, value in replacements.items():
+        query = query.replace(placeholder, value)
+    return query
 
 
 def main() -> int:
