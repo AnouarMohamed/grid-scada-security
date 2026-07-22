@@ -1,6 +1,12 @@
 [tool.pytest.ini_options]
-testpaths = ["infra/services/fake-telemetry/tests"]
-pythonpath = ["infra/services/fake-telemetry/src"]
+testpaths = [
+    "infra/services/fake-telemetry/tests",
+    "infra/services/modbus-ingestor/tests",
+]
+pythonpath = [
+    "infra/services/fake-telemetry/src",
+    "infra/services/modbus-ingestor/src",
+]
 
 [tool.ruff]
 line-length = 96
