@@ -82,6 +82,9 @@ Validate the provisioned dashboard against live InfluxDB data:
 make stack-dashboard-smoke
 ```
 
+The dashboard smoke also verifies provisioned Grafana alert rules for attack
+flags, out-of-envelope voltage, and stale telemetry.
+
 Open Grafana at:
 
 ```text
@@ -154,8 +157,9 @@ these tags and fields unless there is a documented reason to change them.
 - Host ports bind to `127.0.0.1`, not all interfaces.
 - Grafana suggested plugin preinstall and plugin auto-update are disabled for
   deterministic local startup.
-- Grafana provisioning mounts only the datasource and dashboard directories;
-  default empty provisioning directories from the container image remain intact.
+- Grafana provisioning mounts the datasource, dashboard, and alerting
+  directories; default empty provisioning directories from the container image
+  remain intact.
 - Local credentials are examples only; cloud credentials must use OIDC or a
   secrets manager.
 

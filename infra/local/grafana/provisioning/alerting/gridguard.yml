@@ -1,0 +1,193 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: GridGuard telemetry guardrails
+    folder: GridGuard
+    interval: 30s
+    rules:
+      - uid: gridguard-attack-flag-active
+        title: GridGuard attack flag active
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: gridguard-influxdb
+            model:
+              datasource:
+                type: influxdb
+                uid: gridguard-influxdb
+              intervalMs: 1000
+              maxDataPoints: 43200
+              query: |
+                from(bucket: "gridguard_telemetry")
+                  |> range(start: -5m)
+                  |> filter(fn: (r) => r._measurement == "grid_telemetry")
+                  |> filter(fn: (r) => r._field == "attack_flag")
+                  |> group()
+                  |> max()
+                  |> yield(name: "attack_flag")
+              queryType: flux
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: max
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: Attack flag is present in local telemetry.
+        labels:
+          severity: warning
+          system: gridguard
+
+      - uid: gridguard-voltage-out-of-range
+        title: GridGuard voltage out of range
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: gridguard-influxdb
+            model:
+              datasource:
+                type: influxdb
+                uid: gridguard-influxdb
+              intervalMs: 1000
+              maxDataPoints: 43200
+              query: |
+                from(bucket: "gridguard_telemetry")
+                  |> range(start: -5m)
+                  |> filter(fn: (r) => r._measurement == "grid_telemetry")
+                  |> filter(fn: (r) => r._field == "value")
+                  |> filter(fn: (r) => r.signal == "voltage_pu")
+                  |> map(fn: (r) => ({ r with _value: if r._value < 0.95 or r._value > 1.05 then 1.0 else 0.0 }))
+                  |> group()
+                  |> max()
+                  |> yield(name: "voltage_violation")
+              queryType: flux
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: max
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: Voltage telemetry crossed the 0.95 to 1.05 pu operating envelope.
+        labels:
+          severity: warning
+          system: gridguard
+
+      - uid: gridguard-telemetry-stale
+        title: GridGuard telemetry stale
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: gridguard-influxdb
+            model:
+              datasource:
+                type: influxdb
+                uid: gridguard-influxdb
+              intervalMs: 1000
+              maxDataPoints: 43200
+              query: |
+                from(bucket: "gridguard_telemetry")
+                  |> range(start: -2m)
+                  |> filter(fn: (r) => r._measurement == "grid_telemetry")
+                  |> filter(fn: (r) => r._field == "value")
+                  |> group()
+                  |> count()
+                  |> map(fn: (r) => ({ r with _value: float(v: r._value) }))
+                  |> yield(name: "telemetry_count")
+              queryType: flux
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: classic_conditions
+        noDataState: Alerting
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: No GridGuard telemetry rows have arrived in the last two minutes.
+        labels:
+          severity: critical
+          system: gridguard

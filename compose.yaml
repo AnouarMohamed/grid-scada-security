@@ -162,6 +162,7 @@ services:
       - grafana-data:/var/lib/grafana
       - ./infra/local/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./infra/local/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infra/local/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting:ro
       - ./infra/local/grafana/dashboards:/var/lib/grafana/dashboards/gridguard:ro
     networks:
       - cloud-core

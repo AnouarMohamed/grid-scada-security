@@ -42,6 +42,11 @@ GRAFANA_USER = _env("GRAFANA_ADMIN_USER", "admin")
 GRAFANA_PASSWORD = _env("GRAFANA_ADMIN_PASSWORD", "change-this-local-grafana-password")
 DASHBOARD_PATH = Path("infra/local/grafana/dashboards/gridguard-overview.json")
 DASHBOARD_UID = "gridguard-local-overview"
+REQUIRED_ALERT_UIDS = {
+    "gridguard-attack-flag-active",
+    "gridguard-voltage-out-of-range",
+    "gridguard-telemetry-stale",
+}
 
 
 def _basic_auth_header() -> str:
@@ -260,6 +265,35 @@ def _validate_grafana_dashboard(dashboard: dict[str, Any]) -> None:
             print(f"grafana-panel: ok ({title})")
 
 
+def _validate_grafana_alerts() -> None:
+    _request_json(
+        f"{GRAFANA_URL}/api/admin/provisioning/alerting/reload",
+        headers={"Authorization": _basic_auth_header()},
+        method="POST",
+    )
+
+    rules = _request_json(
+        f"{GRAFANA_URL}/api/v1/provisioning/alert-rules",
+        headers={"Authorization": _basic_auth_header()},
+    )
+    if isinstance(rules, dict):
+        rule_list = rules.get("rules", [])
+    else:
+        rule_list = rules
+
+    provisioned_uids = {
+        str(rule.get("uid", "")) for rule in rule_list if isinstance(rule, dict)
+    }
+    missing = REQUIRED_ALERT_UIDS - provisioned_uids
+    if missing:
+        raise RuntimeError(
+            "Grafana is missing provisioned alert rule(s): "
+            + ", ".join(sorted(missing))
+        )
+
+    print(f"grafana-alerts: ok ({len(REQUIRED_ALERT_UIDS)} rules)")
+
+
 def _resolve_dashboard_variables(query: str) -> str:
     replacements = {
         "${feeder:regex}": ".*",
@@ -276,6 +310,7 @@ def main() -> int:
         dashboard = _load_dashboard_file()
         _validate_influx()
         _validate_grafana_dashboard(dashboard)
+        _validate_grafana_alerts()
     except Exception as exc:
         print(f"dashboard smoke-test failed: {exc}", file=sys.stderr)
         return 1
