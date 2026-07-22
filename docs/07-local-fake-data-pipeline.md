@@ -59,6 +59,11 @@ Copy the example environment if you want to override ports or local passwords:
 cp .env.example .env
 ```
 
+The default InfluxDB bucket retention is `168h`, keeping the local telemetry
+volume bounded during repeated lab runs. Retention is applied when the InfluxDB
+volume is initialized; if you change `INFLUXDB_RETENTION` after first startup,
+run `make stack-reset` before starting the stack again.
+
 Start the stack:
 
 ```bash
@@ -178,7 +183,7 @@ Common issues:
 
 - Port `3000` or `8086` is already in use. Override `GRAFANA_PORT` or
   `INFLUXDB_PORT` in `.env`.
-- InfluxDB credentials changed after the volume was initialized. Run
-  `make stack-reset` to recreate local volumes.
+- InfluxDB retention, bucket, or admin credentials changed after the volume was
+  initialized. Run `make stack-reset` to recreate local volumes.
 - Grafana dashboard is empty. Wait one minute, then run `make stack-smoke` to
   confirm telemetry exists in InfluxDB.
