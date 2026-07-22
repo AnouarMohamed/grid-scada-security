@@ -1,4 +1,4 @@
-.PHONY: ci docs python terraform docker hygiene stack-up stack-modbus-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke
+.PHONY: ci docs python modbus-contracts terraform docker hygiene stack-up stack-modbus-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke
 
 ci:
 	bash scripts/ci/all.sh
@@ -11,6 +11,9 @@ docs:
 
 python:
 	bash scripts/ci/validate-python.sh
+
+modbus-contracts:
+	bash scripts/ci/validate-modbus-contracts.sh
 
 terraform:
 	bash scripts/ci/validate-terraform.sh

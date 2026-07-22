@@ -55,6 +55,9 @@ jobs:
       - name: Validate Python
         run: bash scripts/ci/validate-python.sh
 
+      - name: Validate Modbus contracts
+        run: bash scripts/ci/validate-modbus-contracts.sh
+
   terraform:
     name: Terraform Format and Validate
     runs-on: ubuntu-latest
@@ -93,7 +96,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Scan filesystem for vulnerabilities and IaC risk
-        uses: aquasecurity/trivy-action@0.31.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
