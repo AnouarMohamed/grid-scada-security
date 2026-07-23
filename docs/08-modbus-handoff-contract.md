@@ -151,3 +151,10 @@ The simulator handoff is acceptable when the Power Systems track can provide:
 - A reviewed register map using zero-based PDU addresses.
 - Scaling rules that keep raw register values inside the declared data type.
 - At least one stable baseline run for DevSecOps smoke testing.
+- One intentionally bad-value run before FDIA work starts. It should use the
+  same register map, set `scenario=naive-bad-value`, and either set
+  `attack_flag=1` on affected values or clearly document the affected
+  bus/signal/time window so DevSecOps can validate alerting.
+
+Detector output from DevSecOps-owned rules must follow
+[docs/09-detection-output-contract.md](09-detection-output-contract.md).

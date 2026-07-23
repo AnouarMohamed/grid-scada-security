@@ -19,6 +19,8 @@ Commands:
   smoke    Run the local pipeline smoke test.
   modbus-smoke
            Run the local smoke test against Modbus fixture rows.
+  dashboard-smoke
+           Validate InfluxDB health and every provisioned Grafana dashboard panel.
 EOF
 }
 
@@ -49,6 +51,9 @@ case "${command}" in
     ;;
   modbus-smoke)
     GRIDGUARD_SMOKE_SOURCE=modbus_fixture python3 scripts/smoke/local_pipeline_smoke.py
+    ;;
+  dashboard-smoke)
+    python3 scripts/smoke/grafana_dashboard_smoke.py
     ;;
   -h|--help|help|"")
     usage

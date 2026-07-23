@@ -1,4 +1,4 @@
-.PHONY: ci docs python modbus-contracts terraform docker hygiene stack-up stack-modbus-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke
+.PHONY: ci docs python modbus-contracts terraform docker hygiene stack-up stack-modbus-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke stack-dashboard-smoke
 
 ci:
 	bash scripts/ci/all.sh
@@ -44,3 +44,6 @@ stack-smoke:
 
 stack-modbus-smoke:
 	bash scripts/dev/local-stack.sh modbus-smoke
+
+stack-dashboard-smoke:
+	bash scripts/dev/local-stack.sh dashboard-smoke

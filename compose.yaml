@@ -63,6 +63,7 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG:-gridguard}
       DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET:-gridguard_telemetry}
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_ADMIN_TOKEN:-change-this-local-influx-token}
+      DOCKER_INFLUXDB_INIT_RETENTION: ${INFLUXDB_RETENTION:-168h}
     ports:
       - "127.0.0.1:${INFLUXDB_PORT:-8086}:8086"
     volumes:
@@ -161,6 +162,7 @@ services:
       - grafana-data:/var/lib/grafana
       - ./infra/local/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./infra/local/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infra/local/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting:ro
       - ./infra/local/grafana/dashboards:/var/lib/grafana/dashboards/gridguard:ro
     networks:
       - cloud-core
