@@ -80,6 +80,8 @@ Important entry points:
 | Attack-run template | [docs/05-attack-log-template.md](docs/05-attack-log-template.md) |
 | CI/CD plan | [docs/06-ci-cd.md](docs/06-ci-cd.md) |
 | Local fake-data pipeline | [docs/07-local-fake-data-pipeline.md](docs/07-local-fake-data-pipeline.md) |
+| Modbus handoff contract | [docs/08-modbus-handoff-contract.md](docs/08-modbus-handoff-contract.md) |
+| Detection output contract | [docs/09-detection-output-contract.md](docs/09-detection-output-contract.md) |
 | Power track plan | [docs/power-track/execution-plan.md](docs/power-track/execution-plan.md) |
 | DevSecOps track plan | [docs/devsecops-track/execution-plan.md](docs/devsecops-track/execution-plan.md) |
 
@@ -113,9 +115,10 @@ Source will live in [infra](infra).
 ## Current Status
 
 The repository currently contains the project documentation, CI/CD foundation,
-Terraform skeleton, and a local fake-data pipeline with InfluxDB and Grafana.
-The fake-data stack gives the DevSecOps track a working dashboard and telemetry
-store before the real Modbus simulator exists.
+Terraform skeleton, a local fake-data pipeline with InfluxDB and Grafana, and
+a receiver-side Modbus handoff contract with fixture-backed ingestion. The
+local profiles give the DevSecOps track working telemetry storage, dashboards,
+alert guardrails, and register-map validation before the real simulator exists.
 
 Current CI is intentionally future-ready:
 
@@ -158,12 +161,26 @@ Start the local fake-data stack:
 cp .env.example .env
 make stack-up
 make stack-smoke
+make stack-dashboard-smoke
 ```
+
+The dashboard smoke test also verifies the Grafana alert rules and required
+InfluxDB telemetry tags.
 
 Grafana is available on `http://127.0.0.1:3000`. InfluxDB is available on
 `http://127.0.0.1:8086`. See
 [docs/07-local-fake-data-pipeline.md](docs/07-local-fake-data-pipeline.md) for
 the full runbook.
+
+Exercise the receiver-side Modbus contract with fixture registers:
+
+```bash
+make stack-modbus-up
+make stack-modbus-smoke
+```
+
+See [docs/08-modbus-handoff-contract.md](docs/08-modbus-handoff-contract.md)
+for the register-map contract and simulator handoff rules.
 
 ## CI/CD
 

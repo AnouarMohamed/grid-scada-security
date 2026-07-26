@@ -17,7 +17,9 @@
 
 5. **Expose telemetry over Modbus** — `pymodbus` TCP server, documented
    register map, scaled floating-point values, updates on an interval.
-   *Done when:* a standalone client can read live, changing values.
+   *Done when:* a standalone client can read live, changing values, and
+   DevSecOps can observe them with `make stack-modbus-smoke` and
+   `make stack-dashboard-smoke`.
 
    **→ Integration checkpoint 1 with DevSecOps track — see
    `docs/04-integration-checkpoints.md`. Do not proceed until this works.**
@@ -26,6 +28,9 @@
    weighted least squares state estimator.
    *Done when:* it flags an obviously wrong injected value but stays quiet
    otherwise.
+   *Before FDIA work starts:* provide one stable baseline scenario and one
+   intentionally bad-value scenario using the same Modbus register map, so
+   DevSecOps can validate the alert path before full FDIA work begins.
 
 7. **Design FDIA attacks** — a naive attack (caught by your own detector) and
    a stealthy, topology-consistent attack (not caught).

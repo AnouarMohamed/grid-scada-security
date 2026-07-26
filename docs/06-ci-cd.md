@@ -81,6 +81,7 @@ Run a focused gate:
 ```bash
 make docs
 make python
+make modbus-contracts
 make terraform
 make docker
 ```
@@ -90,6 +91,14 @@ Run the local fake-data stack:
 ```bash
 make stack-up
 make stack-smoke
+make stack-down
+```
+
+Run the receiver-side Modbus contract fixture:
+
+```bash
+make stack-modbus-up
+make stack-modbus-smoke
 make stack-down
 ```
 

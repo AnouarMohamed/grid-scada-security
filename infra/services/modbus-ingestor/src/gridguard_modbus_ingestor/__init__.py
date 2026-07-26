@@ -1,0 +1,2 @@
+"""GridGuard Modbus ingestion service."""
+

@@ -18,10 +18,12 @@ Points where the two tracks must actively sync, not just work in parallel.
 ## Checkpoint 2 — First attack run (week 5–6)
 
 **Power track delivers:** a naive (easily detectable) false data injection
-against the live feed.
+against the live feed, or an intentionally bad-value run using the same Modbus
+contract before the full FDIA implementation is ready.
 
 **DevSecOps track confirms:** the IDS/anomaly detection layer catches it, and
-an alert appears in the SIEM.
+an alert appears in Grafana or the SIEM using the detection output contract in
+`docs/09-detection-output-contract.md`.
 
 This proves the full pipeline works end-to-end before testing anything
 subtle.

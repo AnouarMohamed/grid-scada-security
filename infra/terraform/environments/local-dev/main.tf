@@ -28,6 +28,12 @@ module "network_boundary" {
       connects           = ["ot-sim", "cloud-core"]
       future_replacement = "real-modbus-ingestion-service"
     }
+
+    modbus-ingestor-fixture = {
+      description        = "DevSecOps-owned Modbus register-map fixture ingestor."
+      connects           = ["ot-sim", "cloud-core"]
+      future_replacement = "real-modbus-ingestion-service"
+    }
   }
 }
 
@@ -63,6 +69,15 @@ module "observability_foundation" {
       public      = false
       health_path = "/healthz"
       description = "Synthetic OT-side telemetry source used before the Modbus emulator exists."
+    }
+
+    modbus-ingestor-fixture = {
+      zone        = "cloud-core"
+      protocol    = "tcp"
+      port        = 502
+      public      = false
+      health_path = ""
+      description = "Fixture-backed Modbus register-map ingestor for receiver-side contract tests."
     }
   }
 }
