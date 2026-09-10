@@ -1,9 +1,8 @@
-# Terraform Skeleton
+# Terraform Environments
 
 This directory defines the infrastructure contract for the DevSecOps track.
-It is intentionally provider-light right now: the local fake-data pipeline runs
-with Docker Compose, while Terraform captures the cloud shape we must preserve
-when AWS resources are added.
+The provider-light local environment documents the Compose boundary, while the
+AWS sandbox root maps that boundary to deployable provider resources.
 
 The important early decisions are already represented:
 
@@ -18,6 +17,7 @@ The important early decisions are already represented:
 ```text
 infra/terraform/
 ├── environments/
+│   ├── aws-sandbox/
 │   └── local-dev/
 └── modules/
     ├── network-boundary/
@@ -32,16 +32,20 @@ make terraform
 
 In GitHub Actions, Terraform is installed by the workflow and validation is
 strict. Locally, the validation script will skip Terraform checks if the
-Terraform CLI is not installed.
+Terraform CLI is not installed. Environment roots with a `tests/` directory
+also run `terraform test` through the same command.
 
-## Next Cloud Step
+## AWS Sandbox
 
-When the team is ready for AWS, add a new environment under
-`infra/terraform/environments/aws-sandbox/` and map the existing module
-contracts to concrete resources:
+The [AWS sandbox runbook](environments/aws-sandbox/README.md) accounts for:
 
-- VPC and segmented subnets.
-- Security groups that enforce the OT/cloud boundary.
-- ECS/Fargate or a small Kubernetes target for services.
-- Managed database or persistent volume strategy.
-- IAM roles wired to GitHub OIDC.
+- Two-AZ public ingress, private cloud, and isolated OT subnets.
+- Explicit security-group paths across the OT/cloud boundary.
+- ECS/Fargate services, private ECR, encrypted EFS, and private AWS endpoints.
+- Secrets Manager containers whose values remain outside Terraform state.
+- A tightly scoped GitHub OIDC trust role with no permissions by default.
+- Cost-bearing runtime features disabled by default.
+
+The repository supplies and validates this configuration but does not apply it.
+Account bootstrap, backend creation, secrets, policy authorization, cost
+controls, and final AWS applies remain deliberate operator actions.

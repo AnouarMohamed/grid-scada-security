@@ -52,6 +52,13 @@ Full architecture notes live in [docs/02-architecture.md](docs/02-architecture.m
 │   └── workflows/
 │       ├── ci.yml
 │       └── deploy.yml
+├── infra/
+│   ├── images/
+│   ├── local/
+│   ├── services/
+│   └── terraform/environments/
+│       ├── aws-sandbox/
+│       └── local-dev/
 ├── scripts/ci/
 │   ├── all.sh
 │   ├── validate-docs.sh
@@ -62,7 +69,6 @@ Full architecture notes live in [docs/02-architecture.md](docs/02-architecture.m
 ├── docs/
 │   ├── devsecops-track/
 │   └── power-track/
-├── infra/
 ├── power-sim/
 ├── Makefile
 └── README.md
@@ -82,6 +88,9 @@ Important entry points:
 | Local fake-data pipeline | [docs/07-local-fake-data-pipeline.md](docs/07-local-fake-data-pipeline.md) |
 | Modbus handoff contract | [docs/08-modbus-handoff-contract.md](docs/08-modbus-handoff-contract.md) |
 | Detection output contract | [docs/09-detection-output-contract.md](docs/09-detection-output-contract.md) |
+| Local red/blue lab | [docs/10-local-red-blue-lab.md](docs/10-local-red-blue-lab.md) |
+| AWS cloud handoff | [docs/11-aws-cloud-handoff.md](docs/11-aws-cloud-handoff.md) |
+| AWS Terraform runbook | [infra/terraform/environments/aws-sandbox/README.md](infra/terraform/environments/aws-sandbox/README.md) |
 | Power track plan | [docs/power-track/execution-plan.md](docs/power-track/execution-plan.md) |
 | DevSecOps track plan | [docs/devsecops-track/execution-plan.md](docs/devsecops-track/execution-plan.md) |
 
@@ -119,14 +128,15 @@ the IEEE 13-node feeder runs a deterministic 24-hour demand and PV profile,
 serves live measurements over Modbus TCP, and feeds InfluxDB through the
 receiver-side ingestor. Grafana dashboards and alert rules cover the telemetry,
 while naive and coordinated in-envelope attack replays exercise the detection
-path. Terraform captures the cloud contract but does not create provider
-resources yet.
+path. A tested AWS Terraform environment now maps the same trust boundary to
+concrete VPC, ECS/Fargate, ECR, EFS, ALB, endpoint, logging, secrets-container,
+and OIDC resources. It has not been applied to an AWS account.
 
 Current CI is intentionally future-ready:
 
 - Documentation and repository hygiene checks run immediately.
 - Python validation activates once Python files exist.
-- Terraform validation activates once Terraform files exist.
+- Terraform formatting, validation, and native tests run for applicable roots.
 - Docker and Compose validation activate once container artifacts exist.
 - Gitleaks and Trivy run in GitHub Actions for security coverage.
 
@@ -217,27 +227,31 @@ CI jobs:
 - **Documentation**: Markdown fence balance and relative-link validation.
 - **Python Lint, Test, and SAST**: Ruff, Bandit, dependency installation, and
   pytest when tests exist.
-- **Terraform Format and Validate**: `terraform fmt`, init without backend, and
-  validate.
+- **Terraform Format, Validate, and Test**: `terraform fmt`, init without a
+  backend, validate, and native tests when a root contains `tests/`.
 - **Docker and Compose Validation**: Compose config validation and Docker image
   builds.
 - **Secrets and Dependency Scans**: Gitleaks plus Trivy filesystem, secret, and
   misconfiguration scanning.
 - **CI Gate**: single required status check for branch protection.
 
-Manual deployment is scaffolded in
+Manual deployment is defined in
 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It supports
-Terraform `plan` and `apply`, expects GitHub environments, and is prepared for
-cloud authentication through OIDC instead of static access keys.
+Terraform `plan` and `apply` for one allow-listed environment root at a time,
+expects GitHub environments, and uses cloud authentication through OIDC instead
+of static access keys. AWS applies require an OIDC role and remain manual.
 
-Recommended branch protection:
+The `main` branch is protected with:
 
 - Require pull requests into `main`.
-- Require `CI Gate`.
+- Require an up-to-date, passing `CI Gate`.
+- Enforce the rules for administrators.
+- Require review conversations to be resolved.
 - Require branches to be up to date before merge.
-- Disable force pushes to `main`.
-- Add required review once multiple contributors are pushing implementation
-  code.
+- Disable force pushes and branch deletion.
+
+The approval count remains zero while this is a solo-maintainer repository. Add
+at least one required approval when a second maintainer joins.
 
 ## Integration Milestones
 
@@ -269,7 +283,10 @@ Details are in
 
 Near-term:
 
-- Map the Terraform contract modules to a real AWS sandbox environment.
+- Review and apply the disabled-by-default AWS foundation in a dedicated
+  sandbox account, following [docs/11-aws-cloud-handoff.md](docs/11-aws-cloud-handoff.md).
+- Populate private ECR and Secrets Manager, then enable runtime with zero tasks
+  before scaling services to one.
 - Calibrate the balanced feeder approximation against published IEEE reference
   results or promote it to an unbalanced model.
 - Add a residual/state-estimation detector beyond envelope checks.

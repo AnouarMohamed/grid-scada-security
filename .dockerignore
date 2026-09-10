@@ -1,0 +1,17 @@
+.git
+.github
+.env
+.env.*
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/.terraform
+**/*.tfstate
+**/*.tfstate.*
+docs
+scripts
+power-sim/tests
+infra/services/fake-telemetry/tests
+infra/services/modbus-ingestor/tests
+infra/terraform

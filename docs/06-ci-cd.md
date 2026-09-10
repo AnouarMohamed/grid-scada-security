@@ -24,7 +24,9 @@ and cloud deployment targets.
 3. **DevSecOps track code lands**
    - Terraform CI automatically runs when `*.tf` or `*.tf.json` files exist.
    - The gate runs `terraform fmt`, `terraform init -backend=false`, and
-     `terraform validate`.
+     `terraform validate` for each root.
+   - Roots with a `tests/` directory also run `terraform test` with mocked
+     providers, so CI does not contact or mutate a cloud account.
    - Expected source surface: `infra/`.
 
 4. **Containers and local integration land**
@@ -38,21 +40,26 @@ and cloud deployment targets.
 5. **Cloud deployment**
    - Deployment is manual through `.github/workflows/deploy.yml`.
    - `plan` is the default action.
-   - `apply` is guarded to `main` and should be protected with GitHub
-     environments before real cloud credentials are configured.
+   - The operator selects exactly one allow-listed root: `aws-sandbox` or
+     `local-dev`.
+   - `apply` is guarded to `main`; AWS actions require an OIDC role.
+   - GitHub environments should require approval before real cloud credentials
+     are configured.
 
 ## Branch Protection
 
 Use `CI Gate` as the required status check on `main`. The individual jobs stay
 visible for debugging, but one required gate keeps branch protection simple.
 
-Recommended repository settings:
+Current `main` settings:
 
 - Require a pull request before merging into `main`.
-- Require `CI Gate` to pass before merging.
-- Require branches to be up to date before merging.
-- Block force pushes and direct pushes to `main`.
-- Require at least one review once a second contributor starts pushing code.
+- Require the strict `CI Gate` check before merging.
+- Enforce protection for administrators.
+- Require review conversations to be resolved.
+- Block force pushes and branch deletion.
+- Require zero approvals while there is one maintainer; raise this to at least
+  one when another maintainer joins.
 
 ## Secrets And Cloud Identity
 
@@ -63,10 +70,23 @@ For AWS, configure these values on the target GitHub environment:
 
 - Environment variable: `AWS_REGION`
 - Secret: `AWS_ROLE_TO_ASSUME`
+- Environment variable: `TF_STATE_BUCKET`
+- Optional environment variable: `TF_STATE_KEY`
+- Optional non-secret JSON variable object: `TF_VARS_JSON`
 
 The AWS role should trust this repository through GitHub's OIDC provider and
 should be scoped to the exact Terraform state/backend and runtime resources
 needed by the target environment.
+
+The deploy workflow requires the remote state bucket for every AWS plan and
+apply. It validates `TF_VARS_JSON` as an object and writes it only to the
+ephemeral runner; Terraform secrets must still be populated directly in
+Secrets Manager, never passed through that object.
+
+The AWS Terraform root can create the constrained trust role, but attaches no
+deployment permissions unless an account-managed policy ARN is explicitly
+provided. See the [AWS cloud handoff](11-aws-cloud-handoff.md) before enabling
+the workflow.
 
 ## Local Commands
 

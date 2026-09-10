@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -9,10 +9,11 @@ WORKDIR /app
 RUN groupadd --system gridguard \
     && useradd --system --gid gridguard --home-dir /nonexistent --shell /usr/sbin/nologin gridguard
 
-COPY requirements.txt ./requirements.txt
+COPY power-sim/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir --requirement requirements.txt
 
-COPY src/ ./src/
+COPY power-sim/src/ ./src/
+COPY infra/contracts/register-maps/ieee13-demo.json /etc/gridguard/register-map.json
 
 USER gridguard
 

@@ -10,6 +10,9 @@ configuration.
 infra/
 ├── contracts/
 │   └── register-maps/
+├── images/
+│   ├── grafana/
+│   └── influxdb/
 ├── local/
 │   └── grafana/
 ├── services/
@@ -68,12 +71,13 @@ available through Make targets. See `../docs/10-local-red-blue-lab.md`.
 
 ## Terraform
 
-Terraform currently defines provider-light contracts for:
+Terraform includes provider-light local contracts and a concrete AWS sandbox
+environment for:
 
-- Network zones.
-- Boundary services.
-- Observability endpoints.
-- Security invariants.
+- Two-AZ segmented network zones and explicit boundary rules.
+- Private ECS/Fargate services and ECR repositories.
+- Encrypted persistent storage, secrets containers, and observability logs.
+- Disabled-by-default cost gates and constrained GitHub OIDC trust.
 
 Validate with:
 
@@ -81,7 +85,9 @@ Validate with:
 make terraform
 ```
 
-See `terraform/README.md` for the cloud expansion path.
+See `terraform/README.md` and
+`terraform/environments/aws-sandbox/README.md` for the validated cloud shape
+and operator handoff.
 
 ## Build Order
 
