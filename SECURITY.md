@@ -1,21 +1,32 @@
 # Security Policy
 
+GridGuard is a research and educational SCADA security lab. It must never be
+connected to operational technology or production grid-control systems.
+
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+The project has no numbered stable release yet. Security fixes are applied to
+the latest commit on `main`; older commits and feature branches are not
+supported.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+## Reporting A Vulnerability
 
-## Reporting a Vulnerability
+Report vulnerabilities through GitHub's private vulnerability reporting form:
 
-Use this section to tell people how to report a vulnerability.
+<https://github.com/AnouarMohamed/grid-scada-security/security/advisories/new>
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Do not open a public issue for a suspected vulnerability and do not include
+credentials, exploit payloads, customer data, or sensitive infrastructure
+details in public discussions.
+
+Please include the affected component and commit, reproduction conditions,
+impact, and any suggested mitigation. You should receive an acknowledgement
+within three business days and a status update within seven business days.
+Disclosure timing will be coordinated after impact and remediation are
+understood.
+
+## Research Safety
+
+Only run the attack scenarios against systems you own or are explicitly
+authorized to test. The maintainers do not authorize testing against public,
+third-party, utility, or production infrastructure.

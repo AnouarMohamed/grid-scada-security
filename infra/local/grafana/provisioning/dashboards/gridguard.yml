@@ -9,4 +9,4 @@ providers:
     allowUiUpdates: true
     updateIntervalSeconds: 10
     options:
-      path: /var/lib/grafana/dashboards/gridguard
+      path: /etc/grafana/dashboards/gridguard

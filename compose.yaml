@@ -22,7 +22,8 @@ x-fake-telemetry-base: &fake-telemetry-base
 
 x-modbus-ingestor-base: &modbus-ingestor-base
   build:
-    context: ./infra/services/modbus-ingestor
+    context: .
+    dockerfile: infra/services/modbus-ingestor/Dockerfile
   image: gridguard/modbus-ingestor:local
   restart: unless-stopped
   read_only: true
@@ -36,7 +37,8 @@ x-modbus-ingestor-base: &modbus-ingestor-base
 
 x-power-sim-base: &power-sim-base
   build:
-    context: ./power-sim
+    context: .
+    dockerfile: power-sim/Dockerfile
   image: gridguard/power-sim:local
   restart: unless-stopped
   read_only: true
@@ -230,6 +232,7 @@ services:
       INFLUXDB_ORG: ${INFLUXDB_ORG:-gridguard}
       INFLUXDB_BUCKET: ${INFLUXDB_BUCKET:-gridguard_telemetry}
       INFLUXDB_ADMIN_TOKEN: ${INFLUXDB_ADMIN_TOKEN:-change-this-local-influx-token}
+      INFLUXDB_URL: http://influxdb:8086
     ports:
       - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
     volumes:
@@ -237,7 +240,7 @@ services:
       - ./infra/local/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./infra/local/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./infra/local/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting:ro
-      - ./infra/local/grafana/dashboards:/var/lib/grafana/dashboards/gridguard:ro
+      - ./infra/local/grafana/dashboards:/etc/grafana/dashboards/gridguard:ro
     networks:
       - cloud-core
     healthcheck:

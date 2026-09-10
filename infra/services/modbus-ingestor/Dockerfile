@@ -9,9 +9,9 @@ WORKDIR /app
 RUN groupadd --system gridguard \
     && useradd --system --gid gridguard --home-dir /nonexistent --shell /usr/sbin/nologin gridguard
 
-COPY src/ ./src/
+COPY infra/services/modbus-ingestor/src/ ./src/
+COPY infra/contracts/register-maps/ieee13-demo.json /etc/gridguard/register-map.json
 
 USER gridguard
 
 ENTRYPOINT ["python", "-m", "gridguard_modbus_ingestor"]
-

@@ -42,7 +42,14 @@ if [[ "${CI:-false}" != "true" && "${GRIDGUARD_DOCKER_BUILD:-0}" != "1" ]]; then
 fi
 
 for dockerfile in "${dockerfiles[@]}"; do
-  context_dir="$(dirname "${dockerfile}")"
+  case "${dockerfile}" in
+    power-sim/Dockerfile|infra/services/modbus-ingestor/Dockerfile|infra/images/grafana/Dockerfile)
+      context_dir="."
+      ;;
+    *)
+      context_dir="$(dirname "${dockerfile}")"
+      ;;
+  esac
   tag="gridguard-ci-$(echo "${dockerfile}" | tr '[:upper:]' '[:lower:]' | tr '/.' '--' | tr -cd '[:alnum:]-')"
   docker build --pull --file "${dockerfile}" --tag "${tag}" "${context_dir}"
 done

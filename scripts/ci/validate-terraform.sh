@@ -43,4 +43,8 @@ done
 for dir in "${terraform_dirs[@]}"; do
   terraform -chdir="${dir}" init -backend=false -input=false
   terraform -chdir="${dir}" validate
+
+  if [[ -d "${dir}/tests" ]]; then
+    terraform -chdir="${dir}" test
+  fi
 done
