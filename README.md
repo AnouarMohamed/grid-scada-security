@@ -114,11 +114,13 @@ Source will live in [infra](infra).
 
 ## Current Status
 
-The repository currently contains the project documentation, CI/CD foundation,
-Terraform skeleton, a local fake-data pipeline with InfluxDB and Grafana, and
-a receiver-side Modbus handoff contract with fixture-backed ingestion. The
-local profiles give the DevSecOps track working telemetry storage, dashboards,
-alert guardrails, and register-map validation before the real simulator exists.
+The repository contains a working local red/blue lab. A `pandapower` model of
+the IEEE 13-node feeder runs a deterministic 24-hour demand and PV profile,
+serves live measurements over Modbus TCP, and feeds InfluxDB through the
+receiver-side ingestor. Grafana dashboards and alert rules cover the telemetry,
+while naive and coordinated in-envelope attack replays exercise the detection
+path. Terraform captures the cloud contract but does not create provider
+resources yet.
 
 Current CI is intentionally future-ready:
 
@@ -181,6 +183,27 @@ make stack-modbus-smoke
 
 See [docs/08-modbus-handoff-contract.md](docs/08-modbus-handoff-contract.md)
 for the register-map contract and simulator handoff rules.
+
+Run the complete local simulator pipeline:
+
+```bash
+make stack-live-up
+make stack-live-smoke
+make stack-dashboard-smoke
+```
+
+Replay the two attack scenarios:
+
+```bash
+make stack-naive-up
+make stack-naive-smoke
+
+make stack-stealthy-up
+make stack-stealthy-smoke
+```
+
+See [docs/10-local-red-blue-lab.md](docs/10-local-red-blue-lab.md) for the
+workflow and expected detector behavior.
 
 ## CI/CD
 
@@ -246,18 +269,16 @@ Details are in
 
 Near-term:
 
-- Add Python project structure for `power-sim`.
-- Add a minimal Modbus telemetry server and client test.
 - Map the Terraform contract modules to a real AWS sandbox environment.
-- Add the first real Modbus ingestion service beside the fake-data ingestor.
+- Calibrate the balanced feeder approximation against published IEEE reference
+  results or promote it to an unbalanced model.
+- Add a residual/state-estimation detector beyond envelope checks.
 
 Mid-term:
 
-- Add live time-series simulation and register-map documentation.
-- Add ingestion service tests.
-- Add Grafana provisioning.
 - Add Suricata or Zeek rules for suspicious OT traffic.
-- Add anomaly detection against telemetry values.
+- Add Wazuh or another SIEM target for detection events.
+- Turn the coordinated in-envelope replay into a state-estimator-derived FDIA.
 
 Later:
 

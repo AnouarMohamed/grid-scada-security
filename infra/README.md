@@ -59,6 +59,13 @@ make stack-modbus-smoke
 
 Full handoff notes: `../docs/08-modbus-handoff-contract.md`.
 
+## Live Local Red/Blue Lab
+
+The `live` Compose profile runs the `pandapower` simulator, a Modbus TCP
+server, the TCP-mode ingestor, InfluxDB, and Grafana across the modeled OT/cloud
+boundary. Baseline, naive bad-value, and coordinated in-envelope scenarios are
+available through Make targets. See `../docs/10-local-red-blue-lab.md`.
+
 ## Terraform
 
 Terraform currently defines provider-light contracts for:

@@ -29,6 +29,13 @@ def _optional_int(name: str) -> int | None:
         raise ValueError(f"{name} must be an integer, got {raw_value!r}") from exc
 
 
+def _optional_attack_flag(name: str) -> int | None:
+    value = _optional_int(name)
+    if value is not None and value not in {0, 1}:
+        raise ValueError(f"{name} must be 0 or 1")
+    return value
+
+
 def _port(name: str, default: int) -> int:
     value = _int(name, default)
     if value < 1 or value > 65535:
@@ -58,6 +65,8 @@ class AppConfig:
     modbus_host: str
     modbus_port: int
     modbus_unit_id: int | None
+    scenario_override: str | None
+    attack_flag_override: int | None
     interval_seconds: float
     request_timeout_seconds: float
     status_file: Path
@@ -88,6 +97,8 @@ class AppConfig:
             modbus_host=_env("GRIDGUARD_MODBUS_HOST", "modbus-simulator"),
             modbus_port=_port("GRIDGUARD_MODBUS_PORT", 502),
             modbus_unit_id=unit_id,
+            scenario_override=os.getenv("GRIDGUARD_SCENARIO") or None,
+            attack_flag_override=_optional_attack_flag("GRIDGUARD_ATTACK_FLAG"),
             interval_seconds=_positive_float("GRIDGUARD_MODBUS_INGEST_INTERVAL_SECONDS", 2.0),
             request_timeout_seconds=_positive_float("GRIDGUARD_MODBUS_TIMEOUT_SECONDS", 5.0),
             status_file=Path(

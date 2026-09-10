@@ -66,6 +66,10 @@ The initial DevSecOps detector work should produce events for:
 - `attack-flag-forwarder` - forwards upstream `attack_flag=1` telemetry into
   the detection stream.
 
+The Modbus ingestor currently implements `voltage-envelope` and
+`attack-flag-forwarder`. Stale telemetry remains a Grafana alert because it is
+defined by the absence of input rather than an individual ingested sample.
+
 The Power Systems track owns physically plausible bad values and FDIA design.
 The DevSecOps track owns this detection output schema, alert routing, and
 downstream evidence capture.

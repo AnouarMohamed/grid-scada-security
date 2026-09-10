@@ -21,6 +21,11 @@
    DevSecOps can observe them with `make stack-modbus-smoke` and
    `make stack-dashboard-smoke`.
 
+   *Current implementation:* the balanced IEEE 13-node approximation, 24-hour
+   demand/PV replay, Modbus server, and baseline local handoff are operational.
+   Published-result calibration and a fully unbalanced feeder remain future
+   model-validation work.
+
    **→ Integration checkpoint 1 with DevSecOps track — see
    `docs/04-integration-checkpoints.md`. Do not proceed until this works.**
 
@@ -35,6 +40,10 @@
 7. **Design FDIA attacks** — a naive attack (caught by your own detector) and
    a stealthy, topology-consistent attack (not caught).
    *Done when:* you can demonstrate both against your own baseline.
+
+   *Current implementation:* deterministic naive and coordinated in-envelope
+   replays run through the local pipeline. A state-estimator-derived,
+   topology-consistent FDIA remains research work.
 
 8. **Joint red/blue exercise** — run both attacks against the full pipeline
    once the DevSecOps track's IDS/SIEM is live. Log every run using

@@ -88,3 +88,20 @@ def test_modbus_points_encode_to_influx_line_protocol() -> None:
     assert "value=1.0112" in first_line
     assert "quality=1i" in first_line
     assert first_line.endswith(" 1700000000000000000")
+
+
+def test_scenario_and_attack_flag_can_be_overridden_for_replay() -> None:
+    register_map = load_register_map(REGISTER_MAP)
+    client = FixtureRegisterClient.from_file(FIXTURE)
+    values = read_register_values(register_map=register_map, client=client)
+
+    points = telemetry_points(
+        register_map=register_map,
+        register_values=values,
+        source_id="modbus_tcp",
+        scenario_override="stealthy-fdia",
+        attack_flag_override=1,
+    )
+
+    assert all(point["tags"]["scenario"] == "stealthy-fdia" for point in points)
+    assert all(point["fields"]["attack_flag"] == 1 for point in points)

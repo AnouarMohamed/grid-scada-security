@@ -2,10 +2,12 @@
 testpaths = [
     "infra/services/fake-telemetry/tests",
     "infra/services/modbus-ingestor/tests",
+    "power-sim/tests",
 ]
 pythonpath = [
     "infra/services/fake-telemetry/src",
     "infra/services/modbus-ingestor/src",
+    "power-sim/src",
 ]
 
 [tool.ruff]

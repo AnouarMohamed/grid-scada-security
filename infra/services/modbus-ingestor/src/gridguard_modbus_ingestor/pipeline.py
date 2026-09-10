@@ -36,6 +36,8 @@ def telemetry_points(
     register_values: dict[int, int],
     source_id: str,
     timestamp_ns: int | None = None,
+    scenario_override: str | None = None,
+    attack_flag_override: int | None = None,
 ) -> list[dict[str, object]]:
     sample_time_ns = timestamp_ns if timestamp_ns is not None else current_timestamp_ns()
     points: list[dict[str, object]] = []
@@ -52,14 +54,18 @@ def telemetry_points(
                     "feeder": register_map.feeder,
                     "bus": register.bus,
                     "phase": register.phase,
-                    "scenario": register_map.scenario,
+                    "scenario": scenario_override or register_map.scenario,
                     "signal": register.signal,
                     "source": source_id,
                 },
                 "fields": {
                     "value": register.decode(raw_registers),
                     "quality": register.quality,
-                    "attack_flag": register.attack_flag,
+                    "attack_flag": (
+                        attack_flag_override
+                        if attack_flag_override is not None
+                        else register.attack_flag
+                    ),
                 },
                 "timestamp_ns": sample_time_ns,
             }

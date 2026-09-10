@@ -2,6 +2,11 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
+*.egg
+.eggs/
+build/
+dist/
 .pytest_cache/
 .ruff_cache/
 .coverage

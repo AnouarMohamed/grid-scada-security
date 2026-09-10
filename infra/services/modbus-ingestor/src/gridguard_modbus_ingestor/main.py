@@ -10,6 +10,7 @@ from types import FrameType
 from gridguard_modbus_ingestor.clients import FixtureRegisterClient, ModbusTcpClient
 from gridguard_modbus_ingestor.config import AppConfig
 from gridguard_modbus_ingestor.contract import load_register_map
+from gridguard_modbus_ingestor.detection import detection_points
 from gridguard_modbus_ingestor.influx import line_protocol, write_line_protocol
 from gridguard_modbus_ingestor.pipeline import read_register_values, telemetry_points
 
@@ -42,8 +43,11 @@ def run_once(config: AppConfig) -> int:
         register_map=register_map,
         register_values=register_values,
         source_id=config.source_id,
+        scenario_override=config.scenario_override,
+        attack_flag_override=config.attack_flag_override,
     )
-    payload = line_protocol(points)
+    detections = detection_points(points)
+    payload = line_protocol([*points, *detections])
     if not payload:
         raise RuntimeError("no telemetry points produced from register map")
 
@@ -57,12 +61,13 @@ def run_once(config: AppConfig) -> int:
     )
     config.status_file.write_text(str(time.time()), encoding="utf-8")
     LOGGER.info(
-        "modbus_ingest_ok mode=%s source=%s feeder=%s unit_id=%s points=%s",
+        "modbus_ingest_ok mode=%s source=%s feeder=%s unit_id=%s points=%s detections=%s",
         config.mode,
         config.source_id,
         register_map.feeder,
         effective_unit_id,
         len(points),
+        len(detections),
     )
     return len(points)
 

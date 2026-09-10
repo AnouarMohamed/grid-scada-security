@@ -22,6 +22,9 @@
    `make modbus-contracts`, `make stack-modbus-up`, and
    `make stack-modbus-smoke`.
 
+   The live TCP path is now available through `make stack-live-up` and
+   `make stack-live-smoke`.
+
    **→ Integration checkpoint 1 with Power track — see
    `docs/04-integration-checkpoints.md`.**
 
@@ -40,6 +43,10 @@
    *Done when:* a manually-injected bad value triggers an end-to-end alert.
    *Current prep:* detector outputs should write `grid_detection` using
    `docs/09-detection-output-contract.md`.
+
+   *Current implementation:* voltage-envelope and attack-flag events are
+   written to `grid_detection`; Grafana handles stale-telemetry alerting. IDS
+   network rules and external SIEM forwarding remain future work.
 
 7. **Network hardening** — enforce mTLS between services, move secrets into
    Secrets Manager/Vault.

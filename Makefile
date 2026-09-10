@@ -1,4 +1,4 @@
-.PHONY: ci docs python modbus-contracts terraform docker hygiene stack-up stack-modbus-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke stack-dashboard-smoke
+.PHONY: ci docs python modbus-contracts terraform docker hygiene stack-up stack-modbus-up stack-live-up stack-naive-up stack-stealthy-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke stack-live-smoke stack-attack-smoke stack-naive-smoke stack-stealthy-smoke stack-dashboard-smoke
 
 ci:
 	bash scripts/ci/all.sh
@@ -27,6 +27,15 @@ stack-up:
 stack-modbus-up:
 	bash scripts/dev/local-stack.sh modbus-up
 
+stack-live-up:
+	bash scripts/dev/local-stack.sh live-up
+
+stack-naive-up:
+	bash scripts/dev/local-stack.sh naive-up
+
+stack-stealthy-up:
+	bash scripts/dev/local-stack.sh stealthy-up
+
 stack-down:
 	bash scripts/dev/local-stack.sh down
 
@@ -44,6 +53,18 @@ stack-smoke:
 
 stack-modbus-smoke:
 	bash scripts/dev/local-stack.sh modbus-smoke
+
+stack-live-smoke:
+	bash scripts/dev/local-stack.sh live-smoke
+
+stack-attack-smoke:
+	bash scripts/dev/local-stack.sh attack-smoke
+
+stack-naive-smoke:
+	bash scripts/dev/local-stack.sh naive-smoke
+
+stack-stealthy-smoke:
+	bash scripts/dev/local-stack.sh stealthy-smoke
 
 stack-dashboard-smoke:
 	bash scripts/dev/local-stack.sh dashboard-smoke

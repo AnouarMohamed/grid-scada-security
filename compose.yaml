@@ -34,7 +34,44 @@ x-modbus-ingestor-base: &modbus-ingestor-base
     - no-new-privileges:true
   logging: *log-policy
 
+x-power-sim-base: &power-sim-base
+  build:
+    context: ./power-sim
+  image: gridguard/power-sim:local
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp:size=16m,mode=1777
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  logging: *log-policy
+
 services:
+  power-sim:
+    <<: *power-sim-base
+    profiles: ["live"]
+    command: ["serve"]
+    environment:
+      GRIDGUARD_MODBUS_HOST: 0.0.0.0
+      GRIDGUARD_MODBUS_PORT: 502
+      GRIDGUARD_MODBUS_UNIT_ID: ${GRIDGUARD_MODBUS_UNIT_ID:-1}
+      GRIDGUARD_SIM_INTERVAL_SECONDS: ${GRIDGUARD_SIM_INTERVAL_SECONDS:-2}
+      GRIDGUARD_SIM_START_HOUR: ${GRIDGUARD_SIM_START_HOUR:-0}
+      GRIDGUARD_SCENARIO: ${GRIDGUARD_SCENARIO:-baseline-modbus}
+      GRIDGUARD_REGISTER_MAP: /etc/gridguard/register-map.json
+    volumes:
+      - ./infra/contracts/register-maps/ieee13-demo.json:/etc/gridguard/register-map.json:ro
+    networks:
+      - ot-sim
+    healthcheck:
+      test: ["CMD", "python", "-m", "power_sim", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
   fake-grid-source:
     <<: *fake-telemetry-base
     profiles: ["fake"]
@@ -136,6 +173,43 @@ services:
       timeout: 5s
       retries: 6
       start_period: 20s
+
+  modbus-ingestor-live:
+    <<: *modbus-ingestor-base
+    profiles: ["live"]
+    command: ["ingest"]
+    depends_on:
+      power-sim:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    environment:
+      GRIDGUARD_MODBUS_MODE: tcp
+      GRIDGUARD_MODBUS_SOURCE_ID: modbus_tcp
+      GRIDGUARD_MODBUS_HOST: power-sim
+      GRIDGUARD_MODBUS_PORT: 502
+      GRIDGUARD_MODBUS_UNIT_ID: ${GRIDGUARD_MODBUS_UNIT_ID:-1}
+      GRIDGUARD_REGISTER_MAP: /etc/gridguard/register-map.json
+      GRIDGUARD_MODBUS_INGEST_INTERVAL_SECONDS: ${GRIDGUARD_MODBUS_INGEST_INTERVAL_SECONDS:-2}
+      GRIDGUARD_MODBUS_TIMEOUT_SECONDS: ${GRIDGUARD_MODBUS_TIMEOUT_SECONDS:-5}
+      GRIDGUARD_MODBUS_STATUS_FILE: /tmp/gridguard-modbus-ingestor-ready
+      GRIDGUARD_SCENARIO: ${GRIDGUARD_SCENARIO:-baseline-modbus}
+      GRIDGUARD_ATTACK_FLAG: ${GRIDGUARD_ATTACK_FLAG:-0}
+      GRIDGUARD_INFLUX_URL: http://influxdb:8086
+      GRIDGUARD_INFLUX_ORG: ${INFLUXDB_ORG:-gridguard}
+      GRIDGUARD_INFLUX_BUCKET: ${INFLUXDB_BUCKET:-gridguard_telemetry}
+      GRIDGUARD_INFLUX_TOKEN: ${INFLUXDB_ADMIN_TOKEN:-change-this-local-influx-token}
+    volumes:
+      - ./infra/contracts/register-maps/ieee13-demo.json:/etc/gridguard/register-map.json:ro
+    networks:
+      - ot-sim
+      - cloud-core
+    healthcheck:
+      test: ["CMD", "python", "-m", "gridguard_modbus_ingestor", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   grafana:
     image: ${GRAFANA_IMAGE:-grafana/grafana:11.5.2}

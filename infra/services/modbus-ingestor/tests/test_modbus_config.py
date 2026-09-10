@@ -31,3 +31,20 @@ def test_config_rejects_nonpositive_interval(monkeypatch: pytest.MonkeyPatch) ->
 
     with pytest.raises(ValueError, match="GRIDGUARD_MODBUS_INGEST_INTERVAL_SECONDS"):
         AppConfig.from_env()
+
+
+def test_config_accepts_scenario_replay_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GRIDGUARD_SCENARIO", "naive-bad-value")
+    monkeypatch.setenv("GRIDGUARD_ATTACK_FLAG", "1")
+
+    config = AppConfig.from_env()
+
+    assert config.scenario_override == "naive-bad-value"
+    assert config.attack_flag_override == 1
+
+
+def test_config_rejects_invalid_attack_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GRIDGUARD_ATTACK_FLAG", "2")
+
+    with pytest.raises(ValueError, match="GRIDGUARD_ATTACK_FLAG"):
+        AppConfig.from_env()
