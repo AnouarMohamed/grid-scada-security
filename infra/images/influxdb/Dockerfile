@@ -1,3 +1,3 @@
-FROM influxdb:2.7
+FROM influxdb:2.9
 
 USER influxdb
