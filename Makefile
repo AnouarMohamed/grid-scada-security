@@ -1,4 +1,4 @@
-.PHONY: ci docs python workflows modbus-contracts terraform docker hygiene stack-up stack-modbus-up stack-live-up stack-naive-up stack-stealthy-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke stack-live-smoke stack-attack-smoke stack-naive-smoke stack-stealthy-smoke stack-dashboard-smoke
+.PHONY: ci docs python workflows modbus-contracts terraform docker hygiene aws-preflight stack-up stack-modbus-up stack-live-up stack-naive-up stack-stealthy-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke stack-live-smoke stack-attack-smoke stack-naive-smoke stack-stealthy-smoke stack-dashboard-smoke
 
 ci:
 	bash scripts/ci/all.sh
@@ -23,6 +23,9 @@ terraform:
 
 docker:
 	bash scripts/ci/validate-docker.sh
+
+aws-preflight:
+	bash scripts/aws/preflight-audit.sh
 
 stack-up:
 	bash scripts/dev/local-stack.sh up

@@ -47,6 +47,38 @@ Terraform outputs `estimated_billable_features` so every plan records which
 cost-bearing groups are enabled. AWS budgets and account-level cost alerts are
 still recommended before the first apply.
 
+### Us-east-1 Cost Envelope
+
+The following estimate was checked against AWS public pricing on 2026-09-11
+and assumes 730 hours per month. It excludes traffic, log ingestion, image and
+filesystem storage, backups, taxes, and promotional credits. Recalculate it
+before every runtime deployment because prices and Free Tier eligibility can
+change.
+
+| Configuration | Approximate fixed monthly cost | Main components |
+| --- | ---: | --- |
+| Foundation defaults | ~$0 | VPC, subnets, route tables, security groups, IAM roles, ECS cluster, and empty ECR repositories have no fixed hourly charge; flow logs, ECR, and state storage remain usage-based. |
+| Runtime created, task counts zero | ~$76.13 | Eight interface-endpoint ENIs: $58.40; one ALB: $16.43; two secrets: $0.80; one private DNS namespace: $0.50. |
+| Four tasks continuously running | ~$157.62 | Runtime-zero resources plus approximately $81.09 of Linux/x86 Fargate compute for 2.25 vCPU and 4.5 GB total memory, and $0.40 for four Cloud Map registrations. |
+| Optional NAT gateway | +~$36.50 | One NAT gateway: $32.85; one public IPv4 address: $3.65; data processing and transfer are additional. |
+
+The endpoint estimate uses four interface services in two AZs at $0.01 per
+endpoint ENI-hour. Fargate uses $0.000011244 per vCPU-second and $0.000001235
+per GB-second. The ALB base charge is $0.0225 per hour before LCUs. See the
+official [PrivateLink pricing](https://aws.amazon.com/privatelink/pricing/),
+[Fargate pricing](https://aws.amazon.com/ecs/pricing/),
+[load-balancer pricing](https://aws.amazon.com/elasticloadbalancing/pricing/),
+[Secrets Manager pricing](https://aws.amazon.com/secrets-manager/pricing/), and
+[Cloud Map pricing](https://aws.amazon.com/cloud-map/pricing/).
+
+Do not leave runtime resources enabled under a $20 monthly budget. Use the
+foundation configuration for persistent study, and create the runtime only for
+a supervised exercise with the same-day destroy procedure already reviewed.
+Create and inspect the destroy plan immediately after the exercise. An
+eight-hour runtime window is approximately $1.72 in fixed compute, endpoint,
+ALB, and secret charges, plus usage-based charges; a DNS hosted-zone charge can
+also apply unless AWS's short-lived-zone exception applies.
+
 ## Prerequisites
 
 - Terraform `1.10` or newer (required for native S3 state lockfiles).
@@ -56,6 +88,29 @@ still recommended before the first apply.
   AWS Backup, Secrets Manager, and the explicitly named IAM and service-linked
   roles.
 - Two available AZs in the chosen region.
+
+## Account Preflight
+
+Before creating the state bucket or granting write permissions, run the
+repository's read-only account audit with a non-root profile:
+
+```bash
+AWS_PROFILE="REPLACE_NON_ROOT_PROFILE" \
+AWS_REGION="us-east-1" \
+AWS_AUDIT_ALL_REGIONS="true" \
+make aws-preflight
+```
+
+The audit rejects root sessions, missing MFA, long-lived access keys, a weak or
+missing IAM password policy, inactive Free plans, budgets that include credits,
+and regions with fewer than two available zones. It reports existing resources
+without modifying them. `AWS_BUDGET_NAME` defaults to
+`gridguard-gross-usage` and can be overridden for another sandbox.
+
+Resolve every `FAIL` before creating infrastructure. Review every `WARN` and
+confirm that the reported resources are intentional. Read-only permissions are
+sufficient for this phase; do not attach administrator access merely to run the
+audit.
 
 ## Phase 1: Foundation
 
