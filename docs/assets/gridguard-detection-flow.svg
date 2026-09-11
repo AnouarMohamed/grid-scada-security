@@ -1,4 +1,4 @@
-<svg width="1440" height="840" viewBox="0 0 1440 840" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ggf-title ggf-desc">
+<svg width="100%" height="auto" viewBox="0 0 1440 840" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ggf-title ggf-desc">
   <title id="ggf-title">GridGuard attack, detection, and alert data flow</title>
   <desc id="ggf-desc">Three deterministic scenarios feed the IEEE 13-node power simulator. Nine Modbus holding registers are decoded into grid telemetry. The ingestor applies a voltage envelope detector and forwards the explicit attack flag, then writes telemetry and detections to InfluxDB. Grafana presents sixteen panels and three alert rules. Baseline produces no sample-level detection, the naive attack triggers both detectors, and the coordinated in-envelope replay triggers only the ground-truth flag, exposing the threshold detector gap.</desc>
   <defs>
