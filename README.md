@@ -33,15 +33,18 @@ Planned deliverables:
 
 ![GridGuard architecture diagram](docs/assets/gridguard-architecture.svg)
 
-The diagram shows the target end-state architecture. Blue is the telemetry
-path, gray is control/configuration, green is detection and alerting, red is the
-attack exercise path, and dashed gray lines mark CI/CD guardrails.
+The overview separates the locally verified telemetry path from the
+Terraform-defined AWS target. Blue carries telemetry, green carries detection
+or review, red marks attack or blocked paths, and dashed gray marks delivery
+guardrails. The Modbus ingestor is the sole service permitted to cross the
+simulated OT/cloud boundary.
 
-The protocol emulator to cloud ingestion link is the main simulated OT/IT
-boundary. That boundary must stay explicit through network segmentation,
-controlled connectivity, and eventually mTLS.
-
-Full architecture notes live in [docs/02-architecture.md](docs/02-architecture.md).
+The [full architecture guide](docs/02-architecture.md) includes a detailed
+[AWS deployment view](docs/assets/gridguard-aws-deployment.svg), an
+[attack-to-alert data-flow view](docs/assets/gridguard-detection-flow.svg), and
+the exact status, trust invariants, omissions, and recorded outcomes behind
+each figure. [Diagram provenance](docs/assets/README.md) records the official
+icon sources and render-validation process.
 
 ## Repository Layout
 
@@ -81,6 +84,7 @@ Important entry points:
 | Project overview | [README.md](README.md) |
 | Scope and guardrails | [docs/01-project-scope.md](docs/01-project-scope.md) |
 | Architecture and stack | [docs/02-architecture.md](docs/02-architecture.md) |
+| Diagram provenance and validation | [docs/assets/README.md](docs/assets/README.md) |
 | Timeline | [docs/03-timeline.md](docs/03-timeline.md) |
 | Integration checkpoints | [docs/04-integration-checkpoints.md](docs/04-integration-checkpoints.md) |
 | Attack-run template | [docs/05-attack-log-template.md](docs/05-attack-log-template.md) |

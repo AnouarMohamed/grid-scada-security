@@ -15,9 +15,12 @@ if [[ "${#existing_markdown_files[@]}" -eq 0 ]]; then
 fi
 
 python3 - "$@" <<'PY'
+import base64
+import binascii
 import re
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -77,10 +80,100 @@ for path in markdown_files:
         if not resolved.exists():
             errors.append(f"{path}: broken relative link: {raw_link}")
 
+diagram_dir = root / "docs" / "assets"
+diagram_files = sorted(diagram_dir.glob("*.svg"))
+required_diagrams = {
+    "gridguard-architecture.svg",
+    "gridguard-aws-deployment.svg",
+    "gridguard-detection-flow.svg",
+}
+missing_diagrams = required_diagrams - {path.name for path in diagram_files}
+for name in sorted(missing_diagrams):
+    errors.append(f"docs/assets/{name}: required architecture diagram is missing")
+
+svg_namespace = "http://www.w3.org/2000/svg"
+for path in diagram_files:
+    display_path = path.relative_to(root)
+    try:
+        svg = ET.parse(path).getroot()
+    except ET.ParseError as exc:
+        errors.append(f"{display_path}: invalid XML: {exc}")
+        continue
+
+    if svg.tag != f"{{{svg_namespace}}}svg":
+        errors.append(f"{display_path}: root element is not an SVG")
+        continue
+
+    if svg.get("role") != "img":
+        errors.append(f'{display_path}: root must declare role="img"')
+
+    children = list(svg)
+    if len(children) < 2:
+        errors.append(f"{display_path}: missing title and description")
+    else:
+        title, description = children[0], children[1]
+        if title.tag != f"{{{svg_namespace}}}title" or not (title.text or "").strip():
+            errors.append(f"{display_path}: first child must be a non-empty title")
+        if (
+            description.tag != f"{{{svg_namespace}}}desc"
+            or not (description.text or "").strip()
+        ):
+            errors.append(f"{display_path}: second child must be a non-empty desc")
+
+    ids = [element_id for element in svg.iter() if (element_id := element.get("id"))]
+    if len(ids) != len(set(ids)):
+        errors.append(f"{display_path}: duplicate element IDs")
+
+    labelled_by = (svg.get("aria-labelledby") or "").split()
+    if len(labelled_by) != 2 or any(element_id not in ids for element_id in labelled_by):
+        errors.append(
+            f"{display_path}: aria-labelledby must resolve to the title and desc IDs"
+        )
+
+    view_box = (svg.get("viewBox") or "").split()
+    try:
+        _, _, view_width, view_height = [float(value) for value in view_box]
+    except (TypeError, ValueError):
+        errors.append(f"{display_path}: viewBox must contain four numeric values")
+    else:
+        if view_width <= 0 or view_height <= 0:
+            errors.append(f"{display_path}: viewBox dimensions must be positive")
+        for attribute, expected in (("width", view_width), ("height", view_height)):
+            raw_value = (svg.get(attribute) or "").removesuffix("px")
+            try:
+                actual = float(raw_value)
+            except ValueError:
+                errors.append(f"{display_path}: {attribute} must be numeric")
+            else:
+                if actual != expected:
+                    errors.append(
+                        f"{display_path}: {attribute} must match its viewBox dimension"
+                    )
+
+    if svg.find(f".//{{{svg_namespace}}}foreignObject") is not None:
+        errors.append(f"{display_path}: foreignObject is not portable")
+
+    for image in svg.findall(f".//{{{svg_namespace}}}image"):
+        href = image.get("href") or image.get(
+            "{http://www.w3.org/1999/xlink}href", ""
+        )
+        prefix = "data:image/svg+xml;base64,"
+        if not href.startswith(prefix):
+            errors.append(f"{display_path}: image asset is not embedded")
+            continue
+        try:
+            embedded = base64.b64decode(href.removeprefix(prefix), validate=True)
+            ET.fromstring(embedded)
+        except (binascii.Error, ET.ParseError) as exc:
+            errors.append(f"{display_path}: invalid embedded SVG image: {exc}")
+
 if errors:
     for error in errors:
         print(f"::error::{error}")
     sys.exit(1)
 
-print(f"Validated {len(markdown_files)} Markdown files.")
+print(
+    f"Validated {len(markdown_files)} Markdown files and "
+    f"{len(diagram_files)} architecture diagrams."
+)
 PY
