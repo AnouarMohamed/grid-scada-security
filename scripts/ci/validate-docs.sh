@@ -26,6 +26,9 @@ from urllib.parse import unquote
 
 link_pattern = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 reference_pattern = re.compile(r"^\[[^\]]+\]:\s+(\S+)", re.MULTILINE)
+html_image_pattern = re.compile(r"<img\b[^>]*>", re.IGNORECASE)
+html_src_pattern = re.compile(r"\bsrc=[\"']([^\"']+)[\"']", re.IGNORECASE)
+responsive_width_pattern = re.compile(r"\bwidth=[\"']100%[\"']", re.IGNORECASE)
 skip_schemes = (
     "http://",
     "https://",
@@ -60,6 +63,20 @@ for path in markdown_files:
 
     links = [match.group(1) for match in link_pattern.finditer(text)]
     links.extend(match.group(1) for match in reference_pattern.finditer(text))
+
+    for match in html_image_pattern.finditer(text):
+        tag = match.group(0)
+        src_match = html_src_pattern.search(tag)
+        if src_match is None:
+            errors.append(f"{path}: HTML image is missing src")
+            continue
+        src = src_match.group(1)
+        links.append(src)
+        if "gridguard-" in src and src.endswith(".svg"):
+            if responsive_width_pattern.search(tag) is None:
+                errors.append(
+                    f'{path}: architecture image must declare width="100%"'
+                )
 
     for raw_link in links:
         link = raw_link.strip().strip("<>")
@@ -138,17 +155,12 @@ for path in diagram_files:
     else:
         if view_width <= 0 or view_height <= 0:
             errors.append(f"{display_path}: viewBox dimensions must be positive")
-        for attribute, expected in (("width", view_width), ("height", view_height)):
-            raw_value = (svg.get(attribute) or "").removesuffix("px")
-            try:
-                actual = float(raw_value)
-            except ValueError:
-                errors.append(f"{display_path}: {attribute} must be numeric")
-            else:
-                if actual != expected:
-                    errors.append(
-                        f"{display_path}: {attribute} must match its viewBox dimension"
-                    )
+        if svg.get("width") != "100%" or svg.get("height") != "auto":
+            errors.append(
+                f'{display_path}: root must declare width="100%" and height="auto"'
+            )
+        if svg.get("preserveAspectRatio") != "xMidYMid meet":
+            errors.append(f"{display_path}: root must preserve its centered aspect ratio")
 
     if svg.find(f".//{{{svg_namespace}}}foreignObject") is not None:
         errors.append(f"{display_path}: foreignObject is not portable")

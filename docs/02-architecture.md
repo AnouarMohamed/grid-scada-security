@@ -24,7 +24,9 @@ recorded in the [diagram asset guide](assets/README.md).
 
 ## System Architecture
 
-![GridGuard system architecture](assets/gridguard-architecture.svg)
+<p align="center">
+  <img src="assets/gridguard-architecture.svg" alt="GridGuard system architecture" width="100%">
+</p>
 
 Read the numbered data path from left to right:
 
@@ -55,7 +57,9 @@ rotation, and write only to explicit temporary or persistent mounts.
 
 ## AWS Deployment
 
-![GridGuard AWS deployment topology](assets/gridguard-aws-deployment.svg)
+<p align="center">
+  <img src="assets/gridguard-aws-deployment.svg" alt="GridGuard AWS deployment topology" width="100%">
+</p>
 
 The AWS root creates a VPC spanning two availability zones. Each zone contains
 one public-ingress subnet, one cloud-core subnet, and one OT-sim subnet.
@@ -100,7 +104,9 @@ decision and is not created by this repository.
 
 ## Attack and Detection Flow
 
-![GridGuard attack and detection data flow](assets/gridguard-detection-flow.svg)
+<p align="center">
+  <img src="assets/gridguard-detection-flow.svg" alt="GridGuard attack and detection data flow" width="100%">
+</p>
 
 The simulator exposes nine holding registers representing five signal families:
 `voltage_pu`, `current_a`, `frequency_hz`, `real_power_kw`, and

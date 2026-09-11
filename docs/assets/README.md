@@ -89,19 +89,22 @@ Run the normal documentation gate:
 make docs
 ```
 
-For a visual release check, render the native diagrams and a README-width
-preview:
+For a visual release check, render the native diagrams plus README-width and
+narrow-preview variants:
 
 ```bash
 for name in gridguard-architecture gridguard-aws-deployment gridguard-detection-flow; do
   magick -background none "docs/assets/${name}.svg" "/tmp/${name}.png"
   magick "/tmp/${name}.png" -resize 720x "/tmp/${name}-720.png"
+  magick "/tmp/${name}.png" -resize 458x "/tmp/${name}-458.png"
 done
 ```
 
-Inspect both sizes. Acceptance requires centered content, loaded logos, readable
-labels, no clipping, no connector-label collisions, and no connector passing
-through a non-endpoint node.
+Inspect all three sizes. Acceptance requires centered content, loaded logos,
+readable labels, no horizontal overflow or clipping, no connector-label
+collisions, and no connector passing through a non-endpoint node. Diagram roots
+and Markdown embeds must remain fluid-width so narrow documentation panes scale
+the complete canvas instead of cropping it.
 
 ## Update Rule
 

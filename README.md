@@ -31,7 +31,9 @@ Planned deliverables:
 
 ## Architecture
 
-![GridGuard architecture diagram](docs/assets/gridguard-architecture.svg)
+<p align="center">
+  <img src="docs/assets/gridguard-architecture.svg" alt="GridGuard architecture diagram" width="100%">
+</p>
 
 The overview separates the locally verified telemetry path from the
 Terraform-defined AWS target. Blue carries telemetry, green carries detection
