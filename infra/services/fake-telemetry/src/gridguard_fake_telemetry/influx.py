@@ -6,6 +6,9 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
+MAX_SNAPSHOT_BYTES = 1024 * 1024
+MAX_ERROR_BODY_BYTES = 4096
+
 
 def _line_safe(value: str) -> str:
     return value.replace("\r", " ").replace("\n", " ").replace("\t", " ")
@@ -65,7 +68,10 @@ def snapshot_to_line_protocol(snapshot: dict[str, Any]) -> str:
 def fetch_snapshot(source_url: str, timeout_seconds: float) -> dict[str, Any]:
     request = urllib.request.Request(source_url, headers={"Accept": "application/json"})
     with urllib.request.urlopen(request, timeout=timeout_seconds) as response:  # nosec B310
-        payload = response.read().decode("utf-8")
+        raw_payload = response.read(MAX_SNAPSHOT_BYTES + 1)
+    if len(raw_payload) > MAX_SNAPSHOT_BYTES:
+        raise RuntimeError("telemetry snapshot exceeds 1 MiB limit")
+    payload = raw_payload.decode("utf-8")
     return json.loads(payload)
 
 
@@ -101,5 +107,7 @@ def write_line_protocol(
             if response.status >= 300:
                 raise RuntimeError(f"InfluxDB write failed with status {response.status}")
     except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
+        raw_body = exc.read(MAX_ERROR_BODY_BYTES + 1)
+        suffix = " [truncated]" if len(raw_body) > MAX_ERROR_BODY_BYTES else ""
+        body = raw_body[:MAX_ERROR_BODY_BYTES].decode("utf-8", errors="replace") + suffix
         raise RuntimeError(f"InfluxDB write failed with status {exc.code}: {body}") from exc

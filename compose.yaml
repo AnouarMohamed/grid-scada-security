@@ -10,6 +10,10 @@ x-fake-telemetry-base: &fake-telemetry-base
   build:
     context: ./infra/services/fake-telemetry
   image: gridguard/fake-telemetry:local
+  init: true
+  cpus: "0.50"
+  mem_limit: 256m
+  pids_limit: 128
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -25,6 +29,10 @@ x-modbus-ingestor-base: &modbus-ingestor-base
     context: .
     dockerfile: infra/services/modbus-ingestor/Dockerfile
   image: gridguard/modbus-ingestor:local
+  init: true
+  cpus: "0.50"
+  mem_limit: 256m
+  pids_limit: 128
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -40,6 +48,10 @@ x-power-sim-base: &power-sim-base
     context: .
     dockerfile: power-sim/Dockerfile
   image: gridguard/power-sim:local
+  init: true
+  cpus: "1.00"
+  mem_limit: 1g
+  pids_limit: 256
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -93,8 +105,17 @@ services:
       start_period: 10s
 
   influxdb:
-    image: ${INFLUXDB_IMAGE:-influxdb:2.7}
+    image: ${INFLUXDB_IMAGE:-influxdb:2.9.0-alpine@sha256:20c190638610b37cf296e4c2751d276862adaeb76909529ebe5f49b44008ac4b}
+    user: "1000:1000"
+    init: true
+    cpus: "1.00"
+    mem_limit: 1g
+    pids_limit: 256
     restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_ADMIN_USER:-gridguard}
@@ -214,8 +235,16 @@ services:
       start_period: 30s
 
   grafana:
-    image: ${GRAFANA_IMAGE:-grafana/grafana:11.5.2}
+    image: ${GRAFANA_IMAGE:-grafana/grafana:12.4.10@sha256:c132a683b2430fff9115a29b2a79c8ab97540cdcc90846e3c81878c778ca3596}
+    init: true
+    cpus: "0.75"
+    mem_limit: 512m
+    pids_limit: 256
     restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       influxdb:
         condition: service_healthy
@@ -244,7 +273,7 @@ services:
     networks:
       - cloud-core
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/health >/dev/null 2>&1"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
       interval: 10s
       timeout: 5s
       retries: 12

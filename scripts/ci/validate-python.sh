@@ -20,10 +20,6 @@ if [[ "${#python_files[@]}" -eq 0 ]]; then
   exit 0
 fi
 
-if [[ "${CI:-false}" == "true" ]]; then
-  python -m pip install --upgrade pip
-fi
-
 mapfile -t requirement_files < <(
   git ls-files \
     --cached \
@@ -37,7 +33,7 @@ mapfile -t requirement_files < <(
 for requirements_file in "${requirement_files[@]}"; do
   [[ -f "${requirements_file}" ]] || continue
   if [[ "${CI:-false}" == "true" || "${GRIDGUARD_INSTALL_PYTHON_DEPS:-0}" == "1" ]]; then
-    python -m pip install -r "${requirements_file}"
+    python -m pip install --disable-pip-version-check --requirement "${requirements_file}"
   else
     echo "Skipping ${requirements_file}; set GRIDGUARD_INSTALL_PYTHON_DEPS=1 to install locally."
   fi
@@ -52,8 +48,8 @@ ensure_python_module() {
   fi
 
   if [[ "${CI:-false}" == "true" ]]; then
-    python -m pip install "${package_name}"
-    return 0
+    echo "::error::${package_name} is required but was not installed from requirements-dev.txt."
+    exit 1
   fi
 
   echo "${package_name} is not installed locally; skipping ${package_name}-based checks."
@@ -68,6 +64,13 @@ fi
 
 if ensure_python_module bandit bandit; then
   python -m bandit -r . -x '*/tests/*,*/test_*,.git,.venv,venv'
+fi
+
+if ensure_python_module pip_audit pip-audit; then
+  for requirements_file in "${requirement_files[@]}"; do
+    [[ -f "${requirements_file}" ]] || continue
+    python -m pip_audit --strict --requirement "${requirements_file}"
+  done
 fi
 
 mapfile -t test_files < <(
@@ -90,7 +93,16 @@ if [[ "${#test_files[@]}" -eq 0 ]]; then
 fi
 
 if ensure_python_module pytest pytest; then
-  python -m pytest
+  if ensure_python_module pytest_cov pytest-cov; then
+    python -m pytest \
+      --cov=gridguard_fake_telemetry \
+      --cov=gridguard_modbus_ingestor \
+      --cov=power_sim \
+      --cov-report=term-missing:skip-covered \
+      --cov-fail-under=80
+  else
+    python -m pytest
+  fi
 else
   python -m unittest discover
 fi

@@ -9,7 +9,7 @@ and cloud deployment targets.
 
 1. **Now: foundation gates**
    - Repository hygiene: line endings, final newlines, trailing whitespace,
-     root-level secret ignore rules.
+     secret ignore rules, ignored tracked files, and a 5 MiB tracked-file cap.
    - Documentation validation: Markdown files must have balanced fenced code
      blocks and valid relative links.
    - Security scanning: committed-secret scanning with Gitleaks and filesystem
@@ -17,8 +17,13 @@ and cloud deployment targets.
 
 2. **Power track code lands**
    - Python CI automatically runs when `*.py` files exist.
-   - The gate installs requirements files, runs Ruff, runs Bandit SAST, and
-     runs pytest once tests exist.
+   - The gate installs pinned development tools, runs Ruff and Bandit SAST,
+     audits every requirements file with pip-audit, and runs pytest on both
+     container runtime versions (Python 3.12 and 3.14) with an 80% aggregate
+     coverage floor.
+   - Workflow policy runs actionlint and yamllint, requires full commit SHAs
+     for third-party actions, requires explicit top-level permissions, and
+     prohibits `pull_request_target`.
    - Expected source surface: `power-sim/`.
 
 3. **DevSecOps track code lands**
@@ -30,8 +35,10 @@ and cloud deployment targets.
    - Expected source surface: `infra/`.
 
 4. **Containers and local integration land**
-   - Docker CI automatically validates Compose files and builds Dockerfiles in
-     GitHub Actions.
+   - Docker CI validates Compose, builds every Dockerfile, reports fixed high
+     and critical findings, and blocks fixed critical image vulnerabilities.
+   - Every Dockerfile base and default stateful Compose image uses a complete
+     multi-platform digest. Dependabot proposes reviewed digest updates.
    - Local `make docker` validates Compose by default; set
      `GRIDGUARD_DOCKER_BUILD=1` to build images locally.
    - The fake-data pipeline can be smoke-tested with `make stack-smoke` after
@@ -40,11 +47,13 @@ and cloud deployment targets.
 5. **Cloud deployment**
    - Deployment is manual through `.github/workflows/deploy.yml`.
    - `plan` is the default action.
-   - The operator selects exactly one allow-listed root: `aws-sandbox` or
-     `local-dev`.
-   - `apply` is guarded to `main`; AWS actions require an OIDC role.
-   - GitHub environments should require approval before real cloud credentials
-     are configured.
+   - The workflow is fixed to `infra/terraform/environments/aws-sandbox` and
+     the `sandbox` GitHub environment. Local metadata is validated in CI and is
+     never a cloud deployment target.
+   - `apply` is guarded to `main`; every run requires an OIDC role and durable,
+     encrypted remote state.
+   - The `sandbox` environment should require approval before real cloud
+     credentials are configured.
 
 ## Branch Protection
 
@@ -101,6 +110,7 @@ Run a focused gate:
 ```bash
 make docs
 make python
+make workflows
 make modbus-contracts
 make terraform
 make docker
@@ -126,9 +136,8 @@ make stack-down
 
 Add these once the corresponding project surfaces exist:
 
-- Python coverage thresholds for simulation, Modbus, ingestion, and detection
-  logic.
 - Terraform plan artifacts on pull requests once cloud resources exist.
 - Docker image SBOM generation and signed image publishing.
 - A staging environment that deploys from `main` before production.
-- End-to-end attack-run smoke tests using the attack log template.
+- Raise the Python coverage floor as orchestration code gains deterministic
+  unit seams; decreases require an explicit review.

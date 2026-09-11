@@ -7,11 +7,12 @@ import os
 import sys
 
 from power_sim.attacks import Scenario, apply_scenario
-from power_sim.feeder import FeederModel, simulate_day, simulate_timestep
-from power_sim.server import ServerConfig, healthcheck, serve
+from power_sim.health import healthcheck
 
 
 def _snapshot(args: argparse.Namespace) -> int:
+    from power_sim.feeder import FeederModel, simulate_timestep
+
     snapshot = simulate_timestep(
         FeederModel(base_load_kw=args.base_load, solar_kw=args.solar),
         hour=args.hour,
@@ -26,8 +27,17 @@ def _snapshot(args: argparse.Namespace) -> int:
 
 
 def _series(args: argparse.Namespace) -> int:
+    from power_sim.feeder import FeederModel, simulate_day
+
     snapshots = simulate_day(FeederModel(base_load_kw=args.base_load, solar_kw=args.solar))
     print(json.dumps([snapshot.__dict__ for snapshot in snapshots], indent=2, sort_keys=True))
+    return 0
+
+
+def _serve(_args: argparse.Namespace) -> int:
+    from power_sim.server import ServerConfig, serve
+
+    serve(ServerConfig.from_env())
     return 0
 
 
@@ -52,7 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
     series.set_defaults(handler=_series)
 
     server = subparsers.add_parser("serve", help="serve live telemetry over Modbus TCP")
-    server.set_defaults(handler=lambda _args: serve(ServerConfig.from_env()) or 0)
+    server.set_defaults(handler=_serve)
 
     health = subparsers.add_parser("healthcheck", help="check the local Modbus listener")
     health.set_defaults(

@@ -165,8 +165,8 @@ that class of attack.
 | OT protocol | pymodbus, Modbus TCP |
 | Contract | Versioned JSON register map |
 | Ingestion and detection | Python services |
-| Time-series storage | InfluxDB 2.7 |
-| Dashboards and alerts | Grafana 11.5.2 |
+| Time-series storage | InfluxDB 2.9.0 |
+| Dashboards and alerts | Grafana 12.4.10 |
 | Local runtime | Docker Compose |
 | Cloud runtime definition | AWS ECS/Fargate |
 | Infrastructure as code | Terraform |

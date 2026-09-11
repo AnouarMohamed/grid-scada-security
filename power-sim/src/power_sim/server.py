@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import socket
 import threading
 import time
 from dataclasses import dataclass
@@ -131,11 +130,3 @@ def serve(config: ServerConfig) -> None:
         config.scenario,
     )
     StartTcpServer(context=[build_device(state)], address=(config.host, config.port))
-
-
-def healthcheck(host: str, port: int, timeout: float = 2.0) -> bool:
-    try:
-        with socket.create_connection((host, port), timeout=timeout):
-            return True
-    except OSError:
-        return False

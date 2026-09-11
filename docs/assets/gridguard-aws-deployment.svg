@@ -64,5 +64,5 @@
 
   <rect x="40" y="852" width="1360" height="44" rx="6" fill="#FFFFFF" stroke="#CDD5CF"/>
   <text x="64" y="878" class="legend"><tspan font-weight="600" fill="#0B7A53">ENABLE ORDER</tspan><tspan x="160">foundation -> images -> secrets -> endpoints/runtime with ×0 -> stateful services -> simulator + ingestor</tspan></text>
-  <text x="1376" y="878" class="legend" text-anchor="end">Source: infra/terraform/environments/aws-sandbox · a54770d</text>
+  <text x="1376" y="878" class="legend" text-anchor="end">Source: infra/terraform/environments/aws-sandbox · validated in CI</text>
 </svg>

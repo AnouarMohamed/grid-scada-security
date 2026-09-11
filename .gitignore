@@ -23,6 +23,7 @@ venv/
 *.tfvars
 *.tfvars.json
 *.tfplan
+tfplan
 crash.log
 crash.*.log
 

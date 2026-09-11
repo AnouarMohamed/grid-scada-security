@@ -18,6 +18,8 @@ without a manual workflow dispatch.
 - Billable runtime resources, endpoints, NAT, public Grafana, and GitHub OIDC
   are disabled by default. ECS desired counts also default to zero.
 - Terraform formatting, validation, and mocked plan tests run in CI.
+- Runtime bases and third-party CI actions are immutable, Python dependencies
+  are audited, and built images are scanned before the required CI gate passes.
 - `main` requires a current, passing `CI Gate` through a pull request and blocks
   force pushes and deletion.
 - GitHub private vulnerability reporting is enabled and `SECURITY.md` points to
@@ -44,8 +46,9 @@ the expected scope.
    `estimated_billable_features` before applying.
 6. Apply only the reviewed foundation plan. Record the ECR URLs and confirm the
    OT route tables have no default internet or NAT route.
-7. Build, scan, tag, and push all four images with unique non-`latest` versions.
-   ECR tags cannot be overwritten.
+7. Build and scan all four images from the repository Dockerfiles. Tag and push
+   them with the exact non-`latest` versions in `image_tags`; ECR tags cannot be
+   overwritten. Record each ECR image digest in the change record.
 8. Bootstrap or reference the account-wide GitHub OIDC provider. Create a
    least-privilege account-managed deployment policy, review it separately,
    and attach it through `github_deploy_policy_arn` only when ready.

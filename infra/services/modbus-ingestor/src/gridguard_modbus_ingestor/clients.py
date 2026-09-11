@@ -26,7 +26,11 @@ class FixtureRegisterClient:
         values: dict[int, int] = {}
         for raw_address, raw_value in raw_registers.items():
             address = int(raw_address)
-            value = int(raw_value)
+            if address in values:
+                raise ValueError(f"fixture contains duplicate register address {address}")
+            if not isinstance(raw_value, int) or isinstance(raw_value, bool):
+                raise ValueError(f"fixture value at {address} must be an integer")
+            value = raw_value
             if address < 0 or address > 65535:
                 raise ValueError(f"fixture address out of range: {address}")
             if value < 0 or value > 0xFFFF:
@@ -80,6 +84,7 @@ class ModbusTcpClient:
             if response_unit != unit_id:
                 raise ModbusProtocolError("unexpected Modbus unit id")
 
+            _validate_mbap_response_length(length=length, count=count)
             response_pdu = _read_exact(sock, length - 1)
 
         return _parse_read_holding_registers_response(response_pdu, count)
@@ -100,6 +105,17 @@ def _validate_read_request(*, start: int, count: int, unit_id: int) -> None:
         raise ValueError(f"Modbus read count must be between 1 and 125, got {count}")
     if start + count - 1 > 65535:
         raise ValueError("Modbus read range exceeds address 65535")
+
+
+def _validate_mbap_response_length(*, length: int, count: int) -> None:
+    # MBAP length includes the unit byte. A valid response is either a two-byte
+    # exception PDU or the exact function/byte-count/data PDU requested.
+    expected_data_length = (count * 2) + 3
+    if length not in (3, expected_data_length):
+        raise ModbusProtocolError(
+            f"unexpected Modbus response length {length}; "
+            f"expected 3 or {expected_data_length}"
+        )
 
 
 def _read_exact(sock: socket.socket, size: int) -> bytes:
