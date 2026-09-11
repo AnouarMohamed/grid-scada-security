@@ -70,6 +70,7 @@ icon sources and render-validation process.
 │   ├── validate-docker.sh
 │   ├── validate-python.sh
 │   ├── validate-repo-hygiene.sh
+│   ├── validate-workflows.sh
 │   └── validate-terraform.sh
 ├── docs/
 │   ├── devsecops-track/
@@ -96,6 +97,7 @@ Important entry points:
 | Detection output contract | [docs/09-detection-output-contract.md](docs/09-detection-output-contract.md) |
 | Local red/blue lab | [docs/10-local-red-blue-lab.md](docs/10-local-red-blue-lab.md) |
 | AWS cloud handoff | [docs/11-aws-cloud-handoff.md](docs/11-aws-cloud-handoff.md) |
+| Security assurance controls | [docs/12-security-assurance.md](docs/12-security-assurance.md) |
 | AWS Terraform runbook | [infra/terraform/environments/aws-sandbox/README.md](infra/terraform/environments/aws-sandbox/README.md) |
 | Power track plan | [docs/power-track/execution-plan.md](docs/power-track/execution-plan.md) |
 | DevSecOps track plan | [docs/devsecops-track/execution-plan.md](docs/devsecops-track/execution-plan.md) |
@@ -228,24 +230,27 @@ It runs on pull requests, pushes to `main`, and manual dispatch.
 
 CI jobs:
 
-- **Repository Hygiene**: line endings, final newline, trailing whitespace, and
-  secret-ignore sanity checks.
+- **Repository Hygiene**: line endings, final newline, trailing whitespace,
+  ignored tracked files, oversized files, and secret-ignore sanity checks.
 - **Documentation**: Markdown fence balance and relative-link validation.
-- **Python Lint, Test, and SAST**: Ruff, Bandit, dependency installation, and
-  pytest when tests exist.
+- **Python Lint, Test, SAST, and Audit**: reproducibly pinned tooling, Ruff,
+  Bandit, pip-audit, pytest on Python 3.12 and 3.14, and an 80% aggregate
+  coverage floor.
+- **Workflow Policy**: actionlint and yamllint plus immutable action revision,
+  explicit permissions, and event-trigger checks.
 - **Terraform Format, Validate, and Test**: `terraform fmt`, init without a
   backend, validate, and native tests when a root contains `tests/`.
-- **Docker and Compose Validation**: Compose config validation and Docker image
-  builds.
+- **Docker and Compose Validation**: Compose config validation, Docker image
+  builds, vulnerability reporting, and a blocking critical-vulnerability gate.
 - **Secrets and Dependency Scans**: Gitleaks plus Trivy filesystem, secret, and
   misconfiguration scanning.
 - **CI Gate**: single required status check for branch protection.
 
 Manual deployment is defined in
 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It supports
-Terraform `plan` and `apply` for one allow-listed environment root at a time,
-expects GitHub environments, and uses cloud authentication through OIDC instead
-of static access keys. AWS applies require an OIDC role and remain manual.
+Terraform `plan` and `apply` only for the repository's AWS sandbox root, uses
+the protected `sandbox` GitHub environment, and authenticates through OIDC
+instead of static access keys. Applies require `main` and remain manual.
 
 The `main` branch is protected with:
 

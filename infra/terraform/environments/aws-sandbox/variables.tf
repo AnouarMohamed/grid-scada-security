@@ -171,8 +171,8 @@ variable "image_tags" {
   default = {
     power_sim       = "0.1.0"
     modbus_ingestor = "0.1.0"
-    influxdb        = "2.7"
-    grafana         = "11.5.2"
+    influxdb        = "2.9.0"
+    grafana         = "12.4.10"
   }
 
   validation {

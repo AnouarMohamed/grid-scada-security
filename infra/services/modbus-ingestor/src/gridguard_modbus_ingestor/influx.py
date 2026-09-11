@@ -4,6 +4,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+MAX_ERROR_BODY_BYTES = 4096
+
 
 def line_protocol(points: list[dict[str, object]]) -> str:
     lines: list[str] = []
@@ -54,7 +56,9 @@ def write_line_protocol(
             if response.status >= 300:
                 raise RuntimeError(f"InfluxDB write failed with status {response.status}")
     except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
+        raw_body = exc.read(MAX_ERROR_BODY_BYTES + 1)
+        suffix = " [truncated]" if len(raw_body) > MAX_ERROR_BODY_BYTES else ""
+        body = raw_body[:MAX_ERROR_BODY_BYTES].decode("utf-8", errors="replace") + suffix
         raise RuntimeError(f"InfluxDB write failed with status {exc.code}: {body}") from exc
 
 
@@ -81,4 +85,3 @@ def _format_field(value: object) -> str:
         return repr(value)
     escaped = _line_safe(str(value)).replace("\\", "\\\\").replace('"', '\\"')
     return f'"{escaped}"'
-

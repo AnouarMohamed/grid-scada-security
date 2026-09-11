@@ -8,8 +8,8 @@ version = "0.1.0"
 description = "Power track simulation primitives for GridGuard"
 requires-python = ">=3.11"
 dependencies = [
-    "pandapower>=3.5,<3.6",
-    "pymodbus>=3.14,<3.16",
+    "pandapower==3.5.4",
+    "pymodbus==3.15.0",
 ]
 
 [tool.setuptools]

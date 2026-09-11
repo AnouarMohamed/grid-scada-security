@@ -144,8 +144,8 @@ run "mutable_latest_image_tags_are_rejected" {
     image_tags = {
       power_sim       = "latest"
       modbus_ingestor = "0.1.0"
-      influxdb        = "2.7"
-      grafana         = "11.5.2"
+      influxdb        = "2.9.0"
+      grafana         = "12.4.10"
     }
   }
 

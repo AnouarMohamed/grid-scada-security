@@ -1,3 +1,3 @@
-FROM influxdb:2.7
+FROM influxdb:2.9.0-alpine@sha256:20c190638610b37cf296e4c2751d276862adaeb76909529ebe5f49b44008ac4b
 
 USER influxdb

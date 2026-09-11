@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 from power_sim.attacks import Scenario, apply_scenario
@@ -10,6 +11,7 @@ from power_sim.feeder import (
     simulate_day,
     simulate_timestep,
 )
+from power_sim.health import healthcheck
 from power_sim.registers import encode_registers, load_register_contract
 from power_sim.server import ServerConfig, TelemetryState
 
@@ -94,3 +96,21 @@ def test_detector_flags_obvious_bad_value() -> None:
 
     assert detector.evaluate("bus_voltage", 1.0, 0.85) is True
     assert detector.evaluate("bus_voltage", 1.0, 0.995) is False
+
+
+def test_healthcheck_closes_successful_connection(monkeypatch: pytest.MonkeyPatch) -> None:
+    connection = MagicMock()
+    create_connection = MagicMock(return_value=connection)
+    monkeypatch.setattr("power_sim.health.socket.create_connection", create_connection)
+
+    assert healthcheck("127.0.0.1", 1502, timeout=0.5) is True
+    create_connection.assert_called_once_with(("127.0.0.1", 1502), timeout=0.5)
+    connection.__enter__.assert_called_once_with()
+    connection.__exit__.assert_called_once()
+
+
+def test_healthcheck_handles_connection_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    create_connection = MagicMock(side_effect=OSError("connection refused"))
+    monkeypatch.setattr("power_sim.health.socket.create_connection", create_connection)
+
+    assert healthcheck("127.0.0.1", 1502) is False
