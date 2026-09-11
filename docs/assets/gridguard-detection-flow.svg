@@ -43,7 +43,7 @@
 
   <rect x="584" y="220" width="224" height="240" rx="6" class="node-focal"/>
   <rect x="600" y="236" width="108" height="20" rx="2" fill="#CDEBDE"/><text x="654" y="250" class="tag" text-anchor="middle" fill="#0B7A53">MODBUS INGESTOR</text>
-  <text x="600" y="288" class="node-title">Decode once, emit two schemas</text>
+  <text x="600" y="288" class="node-title">Decode and normalize</text>
   <text x="600" y="316" class="node-sub">big-endian · zero-based PDU</text><text x="600" y="336" class="node-sub">scale + offset · shared timestamp</text>
   <rect x="600" y="364" width="192" height="32" rx="4" fill="#E9F1F8" stroke="#2563EB"/><text x="616" y="384" class="mono" fill="#2563EB">grid_telemetry</text>
   <rect x="600" y="412" width="192" height="32" rx="4" fill="#EAF7F1" stroke="#0B7A53"/><text x="616" y="432" class="mono" fill="#0B7A53">grid_detection</text>
