@@ -19,6 +19,14 @@ Parameters:
     AllowedPattern: '^[A-Za-z0-9_+=,.@-]{1,64}$'
 
 Resources:
+  EcsServiceLinkedRole:
+    Type: AWS::IAM::ServiceLinkedRole
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      AWSServiceName: ecs.amazonaws.com
+      Description: Allows Amazon ECS to manage GridGuard service resources.
+
   WorkloadRoleBoundary:
     Type: AWS::IAM::ManagedPolicy
     DeletionPolicy: Retain

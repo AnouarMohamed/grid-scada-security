@@ -4,8 +4,10 @@ This bootstrap creates a temporary human deployment path for the reviewed
 Phase 1 Terraform foundation. It does not create network, compute, storage, or
 runtime resources and has no direct AWS service charge.
 
-The four resources are:
+The five resources are:
 
+- The account-wide Amazon ECS service-linked role, retained while ECS resources
+  depend on it.
 - An MFA-only role trusted exclusively by the named IAM operator.
 - A Phase 1 deployment policy attached to that role.
 - A workload-role permissions boundary retained for Terraform-managed roles.
@@ -49,11 +51,19 @@ aws cloudformation deploy \
   --no-execute-changeset
 ```
 
-The change set must contain exactly `WorkloadRoleBoundary`,
-`FoundationDeploymentPolicy`, `FoundationDeploymentRole`, and
-`OperatorAssumeRolePolicy` as additions, with no replacements or deletions.
-Execute only after inspecting those four additions, then enable stack
+The initial change set must contain exactly `EcsServiceLinkedRole`,
+`WorkloadRoleBoundary`, `FoundationDeploymentPolicy`,
+`FoundationDeploymentRole`, and `OperatorAssumeRolePolicy` as additions, with
+no replacements or deletions. Execute only after inspecting those five
+additions, then enable stack
 termination protection and return to `anouar-admin`.
+
+If the four IAM resources already exist from an earlier bootstrap revision,
+update the stack with the current template. The update must add only
+`EcsServiceLinkedRole`; it must not modify, replace, or delete another resource.
+Wait for `UPDATE_COMPLETE`, then generate a fresh Terraform plan. A foundation
+apply interrupted at ECS capacity-provider configuration should show exactly
+one addition and no changes or deletions.
 
 ## Local Role Profile
 
