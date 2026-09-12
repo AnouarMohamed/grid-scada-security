@@ -9,7 +9,7 @@
     </style>
   </defs>
   <rect width="1440" height="920" fill="#F7F8F5"/>
-  <text x="40" y="52" class="eyebrow">AWS DEPLOYMENT / TERRAFORM-DEFINED, NOT APPLIED</text>
+  <text x="40" y="52" class="eyebrow">AWS DEPLOYMENT / FOUNDATION DEPLOYED, RUNTIME OFF</text>
   <text x="40" y="88" class="title">Private runtime placement with an isolated OT simulation zone</text>
   <text x="40" y="116" class="subtitle">Default posture: foundation only, no running tasks, no endpoints, no NAT gateway, no public Grafana, no OIDC role.</text>
   <!-- Regional services outside the VPC. -->

@@ -50,7 +50,7 @@ visible because upstream observability images can bundle tools that GridGuard
 does not execute; each update still requires review of reachability and a scan
 comparison. No vulnerability is silently ignored in a repository allow-list.
 
-The current local stack uses InfluxDB 2.9.0 Alpine and Grafana 12.4.10. Their
+The current local stack uses InfluxDB 2.9.1 Alpine and Grafana 12.4.10. Their
 manifest digests are recorded directly in Dockerfiles, Compose defaults, and
 `.env.example`. Application images use digest-pinned Python slim bases.
 
@@ -71,11 +71,13 @@ default, so repository validation never creates cloud resources.
 
 ## Residual Work
 
-The AWS owner must still configure the state bucket, budget alarms, OIDC trust,
-least-privilege deployment policy, environment approval, secrets, operator
-CIDRs, and reviewed image publication. Registry-side SBOM attestation, image
-signing, and provenance verification become enforceable only after the target
-registry and signing identity exist.
+The state backend, cost budget, anomaly monitor, MFA-gated foundation role,
+permissions boundary, and default-off AWS foundation are deployed. The AWS
+owner must still configure OIDC trust, a least-privilege runtime deployment
+policy, environment approval, secrets, the private operator access path, and
+reviewed image publication. Registry-side SBOM attestation, image signing, and
+provenance verification become enforceable only after the target registry and
+signing identity exist.
 
 The next repository step after cloud bootstrap is to record the first reviewed
 Terraform plan and ECR image digests, then add signed SBOM attestations to the

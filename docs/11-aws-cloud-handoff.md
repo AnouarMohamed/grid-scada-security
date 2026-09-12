@@ -4,6 +4,16 @@ This checklist separates repository work that is complete from account work
 that requires the AWS owner. No repository automation applies cloud resources
 without a manual workflow dispatch.
 
+## Deployment Status
+
+The default-off AWS foundation was applied in `us-east-1` and verified on
+2026-09-12. Remote state, termination-protected bootstrap stacks, the cost
+budget, anomaly monitoring, isolated routes, VPC flow logs, bounded workload
+roles, four empty ECR repositories, and the ECS capacity providers are healthy.
+No Fargate task, ECS service, task definition, load balancer, EFS file system,
+VPC endpoint, NAT gateway, Elastic IP, or runtime secret exists yet. See the
+[sanitized foundation deployment record](deployment-records/2026-09-12-aws-foundation.md).
+
 ## Complete In The Repository
 
 - The local power simulator, Modbus ingestor, InfluxDB, and Grafana path runs
@@ -103,7 +113,7 @@ procedure are documented in the
 
 ## Next
 
-The next action is an account-side review of the foundation plan with every
-billable runtime flag disabled. Do not enable runtime until the state backend,
-budget alerts, ECR images, private access path, and secret-handling procedure
-are all ready.
+The next action is to build, scan, and publish the four immutable ECR images.
+Do not enable runtime until the image digests, OIDC deployment role,
+environment approval, private access path, and secret-handling procedure are
+all ready.
