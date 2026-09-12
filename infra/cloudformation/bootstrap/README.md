@@ -5,14 +5,23 @@ without keeping the backend itself in local Terraform state. It creates only:
 
 - One S3 bucket retained on stack deletion or replacement.
 - One bucket policy that denies non-TLS and pre-TLS-1.2 requests.
+- One rotating customer-managed KMS key and its stable alias.
 - One customer-managed IAM policy attached to the named non-root operator.
 
-The bucket uses SSE-S3 encryption, versioning, bucket-owner-enforced object
-ownership, and all four S3 Block Public Access settings. The IAM policy can
-list only the configured state keys, can read and write the state and lock
-objects, and can delete only the `.tflock` object. It cannot delete Terraform
-state. No KMS key, DynamoDB table, or fixed-hourly-price resource is created;
-S3 storage and requests remain usage-billed.
+The bucket uses the dedicated KMS key, S3 Bucket Keys, versioning,
+bucket-owner-enforced object ownership, and all four S3 Block Public Access
+settings. The IAM policy can list only the configured state keys, can read and
+write the state and lock objects, and can delete only the `.tflock` object. It
+cannot delete Terraform state. No DynamoDB table, compute, or network resource
+is created.
+
+The customer-managed KMS key costs approximately `$1/month`, prorated hourly,
+before request charges. S3 storage and requests remain usage-billed. KMS has a
+20,000-request monthly free tier, but eligibility and pricing can change; check
+the official [AWS KMS pricing](https://aws.amazon.com/kms/pricing/) before
+deployment. Automatic key rotation is enabled. The first two completed key
+rotations can each add another `$1/month`, so reassess retention before the
+first annual rotation.
 
 ## Preconditions
 
@@ -49,8 +58,8 @@ make aws-state-bootstrap-validate
 ```
 
 Review the template and its `CAPABILITY_NAMED_IAM` declaration before any
-deployment. Expected resource count: three additions, no replacements, and no
-deletions.
+deployment. Expected resource count: five additions, no replacements, and no
+deletions: the bucket, bucket policy, KMS key, KMS alias, and IAM policy.
 
 ## Owner-Executed Change Set
 
@@ -70,8 +79,9 @@ aws cloudformation deploy \
 ```
 
 Inspect the change set in CloudFormation. It must contain exactly
-`StateBucket`, `StateBucketPolicy`, and `StateAccessPolicy` as additions. Run
-the same command without `--no-execute-changeset` only after that review.
+`StateBucket`, `StateBucketPolicy`, `StateEncryptionKey`,
+`StateEncryptionKeyAlias`, and `StateAccessPolicy` as additions. Run the same
+command without `--no-execute-changeset` only after that review.
 Immediately enable stack termination protection after successful creation:
 
 ```bash
@@ -94,12 +104,18 @@ aws s3api get-bucket-versioning --bucket "REPLACE_UNIQUE_BUCKET_NAME"
 aws s3api get-public-access-block --bucket "REPLACE_UNIQUE_BUCKET_NAME"
 aws s3api get-bucket-ownership-controls --bucket "REPLACE_UNIQUE_BUCKET_NAME"
 aws s3api get-bucket-policy-status --bucket "REPLACE_UNIQUE_BUCKET_NAME"
+aws kms describe-key --key-id alias/gridguard/aws-sandbox/terraform-state
+aws kms get-key-rotation-status \
+  --key-id alias/gridguard/aws-sandbox/terraform-state
 ```
 
-Expected results are `AES256`, versioning `Enabled`, all four public-access
-flags `true`, ownership `BucketOwnerEnforced`, and `IsPublic: false`.
+Expected results are `aws:kms` with the stack's KMS key ARN, versioning
+`Enabled`, all four public-access flags `true`, ownership
+`BucketOwnerEnforced`, `IsPublic: false`, an enabled KMS key, and key rotation
+enabled.
 
-Copy the ignored backend example and replace only the bucket name:
+Copy the ignored backend example and replace the bucket name and KMS key ARN
+with the CloudFormation outputs:
 
 ```bash
 cd infra/terraform/environments/aws-sandbox
@@ -119,11 +135,12 @@ operator policy to the whole bucket.
 Bucket versioning is the recovery mechanism for an overwritten or deleted
 state object. Do not add automatic noncurrent-version expiration without a
 separate recovery review. CloudFormation retains the bucket, bucket policy,
-and state-access policy if the stack is deleted or a resource is replaced.
-That protects state from an accidental stack deletion, but it also means final
-removal is a deliberate manual procedure.
+KMS key, KMS alias, and state-access policy if the stack is deleted or a
+resource is replaced. That protects state from an accidental stack deletion,
+but it also means final removal is a deliberate manual procedure.
 
 Before any intentional cleanup, export and verify the latest state, inspect
 all object versions, remove external policy attachments, disable stack
-termination protection, and obtain explicit approval. Never use a recursive
-bucket deletion command as part of routine sandbox teardown.
+termination protection, and obtain explicit approval. Only schedule KMS key
+deletion after all retained state has been safely removed. Never use a
+recursive bucket deletion command as part of routine sandbox teardown.

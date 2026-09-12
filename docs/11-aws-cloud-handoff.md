@@ -53,7 +53,7 @@ the expected scope.
 4. Select one AWS region and two available zones. Confirm service quotas for
    VPC, elastic IPs, ECS/Fargate, ECR, EFS, ALB, Cloud Map, and interface
    endpoints.
-5. Validate and review the retained, versioned, encrypted,
+5. Validate and review the retained, versioned, KMS-encrypted,
    public-access-blocked [state-backend bootstrap](../infra/cloudformation/bootstrap/README.md).
    An account owner creates its CloudFormation change set and grants the
    bootstrap identity exact-object access to the state and `.tflock` objects.
@@ -72,10 +72,11 @@ the expected scope.
 10. Bootstrap or reference the account-wide GitHub OIDC provider. Create a
    least-privilege account-managed deployment policy, review it separately,
    and attach it through `github_deploy_policy_arn` only when ready.
-11. Put `AWS_ROLE_TO_ASSUME`, `AWS_REGION`, and `TF_STATE_BUCKET` in the
-   `sandbox` GitHub environment. Add an environment approval rule before
-   enabling apply. Use `TF_STATE_KEY` only to override the documented default,
-   and `TF_VARS_JSON` only for reviewed, non-secret variable overrides.
+11. Put `AWS_ROLE_TO_ASSUME`, `AWS_REGION`, `TF_STATE_BUCKET`, and
+   `TF_STATE_KMS_KEY_ARN` in the `sandbox` GitHub environment. Add an
+   environment approval rule before enabling apply. Use `TF_STATE_KEY` only to
+   override the documented default, and `TF_VARS_JSON` only for reviewed,
+   non-secret variable overrides.
 12. Enable runtime and VPC endpoints with every desired count still zero. Apply
     the reviewed plan to create storage, secret containers, task definitions,
     and dormant services.

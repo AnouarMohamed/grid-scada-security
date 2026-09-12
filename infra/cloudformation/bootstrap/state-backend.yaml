@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
-  GridGuard Terraform state backend: a retained, encrypted, versioned S3 bucket
-  and exact-object IAM access for one non-root operator.
+  GridGuard Terraform state backend: a retained, KMS-encrypted, versioned S3
+  bucket and exact-object IAM access for one non-root operator.
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -51,6 +51,44 @@ Parameters:
     ConstraintDescription: Enter the name of an existing non-root IAM user.
 
 Resources:
+  StateEncryptionKey:
+    Type: AWS::KMS::Key
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: GridGuard Terraform state encryption key.
+      EnableKeyRotation: true
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: 30
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: EnableAccountIAMPolicies
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:root'
+            Action: kms:*
+            Resource: '*'
+      Tags:
+        - Key: Project
+          Value: gridguard
+        - Key: Environment
+          Value: aws-sandbox
+        - Key: ManagedBy
+          Value: cloudformation
+        - Key: Purpose
+          Value: terraform-state
+
+  StateEncryptionKeyAlias:
+    Type: AWS::KMS::Alias
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      AliasName: alias/gridguard/aws-sandbox/terraform-state
+      TargetKeyId: !Ref StateEncryptionKey
+
   StateBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
@@ -60,7 +98,9 @@ Resources:
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
+              KMSMasterKeyID: !GetAtt StateEncryptionKey.Arn
+              SSEAlgorithm: aws:kms
+            BucketKeyEnabled: true
       LifecycleConfiguration:
         Rules:
           - Id: AbortIncompleteMultipartUploads
@@ -160,6 +200,14 @@ Resources:
             Effect: Allow
             Action: s3:DeleteObject
             Resource: !Sub '${StateBucket.Arn}/${StateKey}.tflock'
+          - Sid: UseStateEncryptionKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey
+            Resource: !GetAtt StateEncryptionKey.Arn
 
 Outputs:
   StateBucketName:
@@ -168,6 +216,9 @@ Outputs:
   StateAccessPolicyArn:
     Description: IAM policy granting exact-path state and lock access.
     Value: !Ref StateAccessPolicy
+  StateEncryptionKeyArn:
+    Description: Customer-managed KMS key used to encrypt Terraform state.
+    Value: !GetAtt StateEncryptionKey.Arn
   StateKey:
     Description: Object key used by the GridGuard AWS sandbox state.
     Value: !Ref StateKey
@@ -178,4 +229,5 @@ Outputs:
       key          = "${StateKey}"
       region       = "${AWS::Region}"
       encrypt      = true
+      kms_key_id   = "${StateEncryptionKey.Arn}"
       use_lockfile = true
