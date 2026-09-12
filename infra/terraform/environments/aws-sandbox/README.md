@@ -102,8 +102,10 @@ make aws-preflight
 ```
 
 The audit rejects root sessions, missing MFA, long-lived access keys, a weak or
-missing IAM password policy, inactive Free plans, budgets that include credits,
-and regions with fewer than two available zones. It reports existing resources
+missing IAM password policy, inactive Free plans, budgets that net promotional
+credits, and regions with fewer than two available zones. Current budgets must
+use the **Unblended cost** metric; legacy API budgets must set
+`CostTypes.IncludeCredit` to `false`. The audit reports existing resources
 without modifying them. `AWS_BUDGET_NAME` defaults to
 `gridguard-gross-usage` and can be overridden for another sandbox.
 

@@ -34,8 +34,9 @@ the expected scope.
    identity with MFA, remove root and IAM access keys, and configure a strong
    account password policy. Use browser-issued temporary CLI credentials.
 2. Configure a monthly AWS cost budget and billing alerts before creating
-   infrastructure. Set `CostTypes.IncludeCredit` to `false` so the budget
-   measures gross usage instead of hiding usage behind promotional credits.
+   infrastructure. Select **Unblended cost** in the current console so the
+   budget does not net promotional credits. For a legacy API budget, set
+   `CostTypes.IncludeCredit` to `false`.
 3. Attach read-only service and billing permissions to the bootstrap identity,
    authenticate a non-root CLI profile, and run the read-only preflight. Resolve
    every failure before granting deployment permissions:

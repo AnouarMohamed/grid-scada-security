@@ -145,13 +145,19 @@ if budget_json="$(aws_read budgets describe-budget \
   --account-id "${account_id}" --budget-name "${AWS_BUDGET_NAME}" \
   --output json 2>/dev/null)"; then
   budget_limit="$(jq -r '.Budget.BudgetLimit | "\(.Amount) \(.Unit)"' <<<"${budget_json}")"
-  include_credit="$(jq -r '.Budget.CostTypes.IncludeCredit // true' <<<"${budget_json}")"
+  legacy_excludes_credit="$(jq -r '.Budget.CostTypes.IncludeCredit? == false' <<<"${budget_json}")"
+  uses_unblended_cost="$(jq -r '
+    [.Budget.Metrics[]? | ascii_downcase]
+    | any(. == "unblendedcost" or . == "unblended_cost")
+  ' <<<"${budget_json}")"
   pass "budget ${AWS_BUDGET_NAME} exists with limit ${budget_limit}"
 
-  if [[ "${include_credit}" == "false" ]]; then
-    pass "budget excludes credits and measures gross usage"
+  if [[ "${legacy_excludes_credit}" == "true" ]]; then
+    pass "budget excludes credits through the legacy cost-type setting"
+  elif [[ "${uses_unblended_cost}" == "true" ]]; then
+    pass "budget uses unblended cost and does not net promotional credits"
   else
-    fail "budget includes credits; set CostTypes.IncludeCredit to false"
+    fail "budget can net credits; select Unblended cost or set CostTypes.IncludeCredit to false"
   fi
 
   notifications_json="$(aws_read budgets describe-notifications-for-budget \
@@ -204,7 +210,10 @@ read_count "load balancers in ${AWS_REGION}" 'length(LoadBalancers)' elbv2 descr
 read_count "EFS filesystems in ${AWS_REGION}" 'length(FileSystems)' efs describe-file-systems
 read_count "RDS instances in ${AWS_REGION}" 'length(DBInstances)' rds describe-db-instances
 read_count "Lambda functions in ${AWS_REGION}" 'length(Functions)' lambda list-functions
+read_count "CloudWatch log groups in ${AWS_REGION}" 'length(logGroups)' logs describe-log-groups
 read_count "S3 buckets account-wide" 'length(Buckets)' s3api list-buckets
+read_count "customer-created IAM roles account-wide" \
+  'length(Roles[?!starts_with(Path, `/aws-service-role/`)])' iam list-roles
 
 if [[ "${AWS_AUDIT_ALL_REGIONS}" == "true" ]]; then
   printf '\nAll-region core resource scan\n'
