@@ -210,7 +210,10 @@ read_count "load balancers in ${AWS_REGION}" 'length(LoadBalancers)' elbv2 descr
 read_count "EFS filesystems in ${AWS_REGION}" 'length(FileSystems)' efs describe-file-systems
 read_count "RDS instances in ${AWS_REGION}" 'length(DBInstances)' rds describe-db-instances
 read_count "Lambda functions in ${AWS_REGION}" 'length(Functions)' lambda list-functions
+read_count "CloudWatch log groups in ${AWS_REGION}" 'length(logGroups)' logs describe-log-groups
 read_count "S3 buckets account-wide" 'length(Buckets)' s3api list-buckets
+read_count "customer-created IAM roles account-wide" \
+  'length(Roles[?Path!=`/aws-service-role/`])' iam list-roles
 
 if [[ "${AWS_AUDIT_ALL_REGIONS}" == "true" ]]; then
   printf '\nAll-region core resource scan\n'
