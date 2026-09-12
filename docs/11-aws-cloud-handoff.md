@@ -53,8 +53,10 @@ the expected scope.
 4. Select one AWS region and two available zones. Confirm service quotas for
    VPC, elastic IPs, ECS/Fargate, ECR, EFS, ALB, Cloud Map, and interface
    endpoints.
-5. Create a versioned, encrypted, public-access-blocked S3 state bucket. Grant
-   the bootstrap identity access to the state object and its `.tflock` object.
+5. Validate and review the retained, versioned, encrypted,
+   public-access-blocked [state-backend bootstrap](../infra/cloudformation/bootstrap/README.md).
+   An account owner creates its CloudFormation change set and grants the
+   bootstrap identity exact-object access to the state and `.tflock` objects.
 6. Copy `backend.tfbackend.example` to the ignored `backend.tfbackend`, and
    `terraform.tfvars.example` to the ignored `terraform.tfvars`. Replace every
    placeholder and keep all runtime flags disabled.

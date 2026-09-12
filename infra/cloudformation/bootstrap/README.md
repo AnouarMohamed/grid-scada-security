@@ -1,0 +1,129 @@
+# AWS State Backend Bootstrap
+
+This CloudFormation template breaks Terraform's backend bootstrap dependency
+without keeping the backend itself in local Terraform state. It creates only:
+
+- One S3 bucket retained on stack deletion or replacement.
+- One bucket policy that denies non-TLS and pre-TLS-1.2 requests.
+- One customer-managed IAM policy attached to the named non-root operator.
+
+The bucket uses SSE-S3 encryption, versioning, bucket-owner-enforced object
+ownership, and all four S3 Block Public Access settings. The IAM policy can
+list only the configured state keys, can read and write the state and lock
+objects, and can delete only the `.tflock` object. It cannot delete Terraform
+state. No KMS key, DynamoDB table, or fixed-hourly-price resource is created;
+S3 storage and requests remain usage-billed.
+
+## Preconditions
+
+Run the full account audit and continue only with zero failures and zero
+unreviewed warnings:
+
+```bash
+AWS_PROFILE="REPLACE_NON_ROOT_PROFILE" \
+AWS_REGION="us-east-1" \
+AWS_AUDIT_ALL_REGIONS="true" \
+make aws-preflight
+```
+
+Choose a globally unique bucket name. A suitable form is
+`gridguard-tfstate-REPLACE_ACCOUNT_ID-us-east-1`. The account ID is not a
+secret. The template deliberately rejects periods for HTTPS compatibility and
+rejects prefixes and suffixes reserved by S3. Do not bake credentials or
+session tokens into any parameter or backend file.
+
+The current read-only operator cannot deploy this stack. An account owner must
+review and create it using a separately authorized administrative session.
+Do not attach `AdministratorAccess` or create an access key for the operator.
+
+## Read-Only Validation
+
+The validation command rejects a root CLI session. It calls only
+`sts:GetCallerIdentity` and `cloudformation:ValidateTemplate`; it does not
+create a stack, change set, bucket, or IAM policy.
+
+```bash
+AWS_PROFILE="REPLACE_NON_ROOT_PROFILE" \
+AWS_REGION="us-east-1" \
+make aws-state-bootstrap-validate
+```
+
+Review the template and its `CAPABILITY_NAMED_IAM` declaration before any
+deployment. Expected resource count: three additions, no replacements, and no
+deletions.
+
+## Owner-Executed Change Set
+
+From the repository root, create but do not execute a change set:
+
+```bash
+aws cloudformation deploy \
+  --region us-east-1 \
+  --stack-name gridguard-state-backend \
+  --template-file infra/cloudformation/bootstrap/state-backend.yaml \
+  --parameter-overrides \
+    StateBucketName="REPLACE_UNIQUE_BUCKET_NAME" \
+    StateKey="gridguard/aws-sandbox/terraform.tfstate" \
+    OperatorUserName="REPLACE_NON_ROOT_USER" \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --no-execute-changeset
+```
+
+Inspect the change set in CloudFormation. It must contain exactly
+`StateBucket`, `StateBucketPolicy`, and `StateAccessPolicy` as additions. Run
+the same command without `--no-execute-changeset` only after that review.
+Immediately enable stack termination protection after successful creation:
+
+```bash
+aws cloudformation update-termination-protection \
+  --region us-east-1 \
+  --stack-name gridguard-state-backend \
+  --enable-termination-protection
+```
+
+Return to the non-root operator session after the owner-only bootstrap. Do not
+continue if CloudFormation reports a replacement or deletion.
+
+## Post-Create Verification
+
+Confirm every bucket control before initializing Terraform:
+
+```bash
+aws s3api get-bucket-encryption --bucket "REPLACE_UNIQUE_BUCKET_NAME"
+aws s3api get-bucket-versioning --bucket "REPLACE_UNIQUE_BUCKET_NAME"
+aws s3api get-public-access-block --bucket "REPLACE_UNIQUE_BUCKET_NAME"
+aws s3api get-bucket-ownership-controls --bucket "REPLACE_UNIQUE_BUCKET_NAME"
+aws s3api get-bucket-policy-status --bucket "REPLACE_UNIQUE_BUCKET_NAME"
+```
+
+Expected results are `AES256`, versioning `Enabled`, all four public-access
+flags `true`, ownership `BucketOwnerEnforced`, and `IsPublic: false`.
+
+Copy the ignored backend example and replace only the bucket name:
+
+```bash
+cd infra/terraform/environments/aws-sandbox
+cp backend.tfbackend.example backend.tfbackend
+terraform init -backend-config=backend.tfbackend
+terraform validate
+terraform test
+```
+
+The future GitHub OIDC deployment role needs equivalent permissions to the
+same state and lock objects. Grant those permissions through its separately
+reviewed deployment policy; do not make the bucket public or broaden this
+operator policy to the whole bucket.
+
+## Recovery And Removal
+
+Bucket versioning is the recovery mechanism for an overwritten or deleted
+state object. Do not add automatic noncurrent-version expiration without a
+separate recovery review. CloudFormation retains the bucket, bucket policy,
+and state-access policy if the stack is deleted or a resource is replaced.
+That protects state from an accidental stack deletion, but it also means final
+removal is a deliberate manual procedure.
+
+Before any intentional cleanup, export and verify the latest state, inspect
+all object versions, remove external policy attachments, disable stack
+termination protection, and obtain explicit approval. Never use a recursive
+bucket deletion command as part of routine sandbox teardown.

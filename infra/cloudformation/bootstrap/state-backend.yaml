@@ -1,0 +1,181 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  GridGuard Terraform state backend: a retained, encrypted, versioned S3 bucket
+  and exact-object IAM access for one non-root operator.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: State storage
+        Parameters:
+          - StateBucketName
+          - StateKey
+      - Label:
+          default: Operator access
+        Parameters:
+          - OperatorUserName
+    ParameterLabels:
+      StateBucketName:
+        default: Globally unique S3 bucket name
+      StateKey:
+        default: Terraform state object key
+      OperatorUserName:
+        default: Existing non-root IAM operator user
+
+Parameters:
+  StateBucketName:
+    Type: String
+    MinLength: 3
+    MaxLength: 63
+    AllowedPattern: >-
+      ^(?!xn--)(?!sthree-)(?!amzn-s3-demo-)(?!.*(?:-s3alias|--ol-s3|--x-s3|--table-s3)$)[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$
+    ConstraintDescription: >-
+      Use a globally unique, valid S3 bucket name with 3-63 lowercase
+      letters, numbers, or hyphens and no reserved prefix or suffix.
+  StateKey:
+    Type: String
+    Default: gridguard/aws-sandbox/terraform.tfstate
+    MinLength: 1
+    MaxLength: 512
+    AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9._/-]{0,511}$'
+    ConstraintDescription: >-
+      Start with a letter or number and use only letters, numbers, periods,
+      underscores, slashes, or hyphens.
+  OperatorUserName:
+    Type: String
+    Default: anouar-admin
+    MinLength: 1
+    MaxLength: 64
+    AllowedPattern: '^[A-Za-z0-9_+=,.@-]+$'
+    ConstraintDescription: Enter the name of an existing non-root IAM user.
+
+Resources:
+  StateBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Ref StateBucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Project
+          Value: gridguard
+        - Key: Environment
+          Value: aws-sandbox
+        - Key: ManagedBy
+          Value: cloudformation
+        - Key: Purpose
+          Value: terraform-state
+
+  StateBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Bucket: !Ref StateBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt StateBucket.Arn
+              - !Sub '${StateBucket.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+                aws:PrincipalIsAWSService: 'false'
+          - Sid: DenyOutdatedTLS
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt StateBucket.Arn
+              - !Sub '${StateBucket.Arn}/*'
+            Condition:
+              Bool:
+                aws:PrincipalIsAWSService: 'false'
+              NumericLessThan:
+                s3:TlsVersion: 1.2
+
+  StateAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      ManagedPolicyName: gridguard-aws-sandbox-terraform-state
+      Description: Exact-object access to the GridGuard Terraform state and lock file.
+      Path: /gridguard/
+      Users:
+        - !Ref OperatorUserName
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ReadStateBucketMetadata
+            Effect: Allow
+            Action:
+              - s3:GetBucketLocation
+              - s3:GetBucketVersioning
+            Resource: !GetAtt StateBucket.Arn
+          - Sid: ListStateObjects
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource: !GetAtt StateBucket.Arn
+            Condition:
+              StringEquals:
+                s3:prefix:
+                  - !Ref StateKey
+                  - !Sub '${StateKey}.tflock'
+          - Sid: ReadWriteState
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub '${StateBucket.Arn}/${StateKey}'
+              - !Sub '${StateBucket.Arn}/${StateKey}.tflock'
+          - Sid: DeleteLockOnly
+            Effect: Allow
+            Action: s3:DeleteObject
+            Resource: !Sub '${StateBucket.Arn}/${StateKey}.tflock'
+
+Outputs:
+  StateBucketName:
+    Description: S3 bucket used by the GridGuard Terraform backend.
+    Value: !Ref StateBucket
+  StateAccessPolicyArn:
+    Description: IAM policy granting exact-path state and lock access.
+    Value: !Ref StateAccessPolicy
+  StateKey:
+    Description: Object key used by the GridGuard AWS sandbox state.
+    Value: !Ref StateKey
+  BackendConfiguration:
+    Description: Non-secret partial backend configuration for Terraform.
+    Value: !Sub |-
+      bucket       = "${StateBucket}"
+      key          = "${StateKey}"
+      region       = "${AWS::Region}"
+      encrypt      = true
+      use_lockfile = true
