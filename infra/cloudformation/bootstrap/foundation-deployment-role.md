@@ -65,8 +65,23 @@ paste an MFA value into chat, Git, Terraform, or a shell-history command.
 [profile gridguard-foundation]
 role_arn = arn:aws:iam::227755136916:role/gridguard-aws-sandbox-foundation-deploy
 source_profile = default
-mfa_serial = arn:aws:iam::227755136916:mfa/anouar-admin
 role_session_name = gridguard-foundation
+region = us-east-1
+```
+
+The `default` source profile must be an active `aws login` session for
+`anouar-admin`; that short-lived session already carries MFA context. The role
+trust policy independently rejects a source session without MFA. Do not create
+access keys or add an empty `mfa_serial` setting to this profile.
+
+Terraform's embedded AWS SDK does not consume the AWS CLI `login_session`
+setting directly. Bridge the assumed role through AWS CLI's standard
+`credential_process` output; it returns short-lived credentials to the calling
+process without persisting them:
+
+```ini
+[profile gridguard-terraform]
+credential_process = aws configure export-credentials --profile gridguard-foundation --format process
 region = us-east-1
 ```
 
@@ -77,8 +92,16 @@ aws --profile gridguard-foundation sts get-caller-identity
 ```
 
 The ARN must contain `assumed-role/gridguard-aws-sandbox-foundation-deploy/`.
-Generate a fresh saved plan with this profile and compare it with the reviewed
-70-addition baseline. Never apply the earlier operator-generated plan.
+Generate a fresh saved plan through the credential-process profile and compare
+it with the reviewed 70-addition baseline:
+
+```bash
+AWS_PROFILE=gridguard-terraform \
+terraform -chdir=infra/terraform/environments/aws-sandbox \
+  plan -input=false -out=tfplan
+```
+
+Never apply an earlier operator-generated plan.
 
 ## After Phase 1
 
