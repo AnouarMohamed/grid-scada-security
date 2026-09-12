@@ -60,31 +60,35 @@ the expected scope.
 6. Copy `backend.tfbackend.example` to the ignored `backend.tfbackend`, and
    `terraform.tfvars.example` to the ignored `terraform.tfvars`. Replace every
    placeholder and keep all runtime flags disabled.
-7. Run `terraform init -backend-config=backend.tfbackend`,
+7. Create and review the MFA-gated
+   [foundation deployment role](../infra/cloudformation/bootstrap/foundation-deployment-role.md).
+   Use its workload-boundary output in `terraform.tfvars`; never apply as root
+   or attach `AdministratorAccess` to the operator.
+8. Run `terraform init -backend-config=backend.tfbackend`,
    `terraform validate`, `terraform test`, and a saved foundation plan. Inspect
    account, region, CIDRs, resource count, tags, and
    `estimated_billable_features` before applying.
-8. Apply only the reviewed foundation plan. Record the ECR URLs and confirm the
+9. Apply only the reviewed foundation plan. Record the ECR URLs and confirm the
    OT route tables have no default internet or NAT route.
-9. Build and scan all four images from the repository Dockerfiles. Tag and push
+10. Build and scan all four images from the repository Dockerfiles. Tag and push
    them with the exact non-`latest` versions in `image_tags`; ECR tags cannot be
    overwritten. Record each ECR image digest in the change record.
-10. Bootstrap or reference the account-wide GitHub OIDC provider. Create a
+11. Bootstrap or reference the account-wide GitHub OIDC provider. Create a
    least-privilege account-managed deployment policy, review it separately,
    and attach it through `github_deploy_policy_arn` only when ready.
-11. Put `AWS_ROLE_TO_ASSUME`, `AWS_REGION`, `TF_STATE_BUCKET`, and
+12. Put `AWS_ROLE_TO_ASSUME`, `AWS_REGION`, `TF_STATE_BUCKET`, and
    `TF_STATE_KMS_KEY_ARN` in the `sandbox` GitHub environment. Add an
    environment approval rule before enabling apply. Use `TF_STATE_KEY` only to
    override the documented default, and `TF_VARS_JSON` only for reviewed,
    non-secret variable overrides.
-12. Enable runtime and VPC endpoints with every desired count still zero. Apply
-    the reviewed plan to create storage, secret containers, task definitions,
-    and dormant services.
-13. Populate the two secret values directly through Secrets Manager. Never put
-    secret values in Terraform variables, plans, logs, or state.
-14. Raise InfluxDB and Grafana to one task first, validate storage and health,
-    then raise the simulator and ingestor. Confirm flow logs and dashboards
-    before running attack scenarios.
+13. Enable runtime and VPC endpoints with every desired count still zero. Apply
+   the reviewed plan to create storage, secret containers, task definitions,
+   and dormant services.
+14. Populate the two secret values directly through Secrets Manager. Never put
+   secret values in Terraform variables, plans, logs, or state.
+15. Raise InfluxDB and Grafana to one task first, validate storage and health,
+   then raise the simulator and ingestor. Confirm flow logs and dashboards
+   before running attack scenarios.
 
 ## Required Decisions
 

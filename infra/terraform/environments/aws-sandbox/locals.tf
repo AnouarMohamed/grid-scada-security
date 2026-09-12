@@ -63,6 +63,7 @@ resource "terraform_data" "invariants" {
     github_oidc_provider_arn = var.github_oidc_provider_arn
     grafana_certificate_arn  = var.grafana_certificate_arn
     github_deploy_policy_arn = var.github_deploy_policy_arn
+    workload_boundary_arn    = var.workload_role_permissions_boundary_arn
   }
 
   lifecycle {
@@ -122,6 +123,14 @@ resource "terraform_data" "invariants" {
         startswith(var.github_role_permissions_boundary_arn, local.account_policy_prefix)
       )
       error_message = "github_role_permissions_boundary_arn must identify a policy in the selected AWS account."
+    }
+
+    precondition {
+      condition = startswith(
+        var.workload_role_permissions_boundary_arn,
+        local.account_policy_prefix,
+      )
+      error_message = "workload_role_permissions_boundary_arn must identify a policy in the selected AWS account."
     }
 
     precondition {

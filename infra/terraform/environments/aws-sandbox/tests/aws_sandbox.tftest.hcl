@@ -34,6 +34,10 @@ mock_provider "aws" {
 
 mock_provider "tls" {}
 
+variables {
+  workload_role_permissions_boundary_arn = "arn:aws:iam::123456789012:policy/gridguard/gridguard-aws-sandbox-workload-boundary"
+}
+
 run "foundation_defaults_are_safe" {
   command = plan
 
@@ -50,6 +54,14 @@ run "foundation_defaults_are_safe" {
   assert {
     condition     = length(output.ecr_repository_urls) == 4
     error_message = "The foundation must create all four ECR repositories."
+  }
+
+  assert {
+    condition = alltrue([
+      aws_iam_role.flow.permissions_boundary == var.workload_role_permissions_boundary_arn,
+      aws_iam_role.ecs_execution.permissions_boundary == var.workload_role_permissions_boundary_arn,
+    ])
+    error_message = "Every foundation workload role must use the required permissions boundary."
   }
 }
 
@@ -75,6 +87,15 @@ run "runtime_graph_expands_with_zero_tasks" {
   assert {
     condition     = length(output.runtime_secret_arns) == 2
     error_message = "Runtime mode must create the InfluxDB and Grafana secret containers."
+  }
+
+
+  assert {
+    condition = alltrue([
+      for role in values(aws_iam_role.ecs_storage) :
+      role.permissions_boundary == var.workload_role_permissions_boundary_arn
+    ])
+    error_message = "Every stateful ECS task role must use the required permissions boundary."
   }
 }
 
@@ -160,6 +181,16 @@ run "public_vpc_space_is_rejected" {
   }
 
   expect_failures = [var.vpc_cidr]
+}
+
+run "cross_account_workload_boundary_is_rejected" {
+  command = plan
+
+  variables {
+    workload_role_permissions_boundary_arn = "arn:aws:iam::999999999999:policy/gridguard/workload-boundary"
+  }
+
+  expect_failures = [terraform_data.invariants]
 }
 
 run "stateful_multi_writer_counts_are_rejected" {
