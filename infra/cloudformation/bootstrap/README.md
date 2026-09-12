@@ -149,6 +149,10 @@ same state and lock objects. Grant those permissions through its separately
 reviewed deployment policy; do not make the bucket public or broaden this
 operator policy to the whole bucket.
 
+Before applying the Phase 1 foundation, create the MFA-gated
+[foundation deployment role](foundation-deployment-role.md). Do not apply with
+the root user or grant the operator `AdministratorAccess`.
+
 ## Recovery And Removal
 
 Bucket versioning is the recovery mechanism for an overwritten or deleted

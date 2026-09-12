@@ -235,3 +235,16 @@ variable "github_role_permissions_boundary_arn" {
   type        = string
   default     = null
 }
+
+variable "workload_role_permissions_boundary_arn" {
+  description = "Required permissions boundary ARN for ECS and VPC Flow Logs workload roles."
+  type        = string
+
+  validation {
+    condition = can(regex(
+      "^arn:(aws|aws-us-gov|aws-cn):iam::[0-9]{12}:policy/[A-Za-z0-9_+=,.@/-]+$",
+      var.workload_role_permissions_boundary_arn,
+    ))
+    error_message = "workload_role_permissions_boundary_arn must be an IAM managed-policy ARN."
+  }
+}

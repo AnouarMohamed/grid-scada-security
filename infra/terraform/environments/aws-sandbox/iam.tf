@@ -1,5 +1,6 @@
 resource "aws_iam_role" "ecs_execution" {
-  name = "${local.name}-ecs-execution"
+  name                 = "${local.name}-ecs-execution"
+  permissions_boundary = var.workload_role_permissions_boundary_arn
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -34,7 +35,8 @@ resource "aws_iam_role_policy" "ecs_secrets" {
 resource "aws_iam_role" "ecs_storage" {
   for_each = var.enable_runtime ? local.stateful_services : toset([])
 
-  name = "${local.name}-${each.key}-task"
+  name                 = "${local.name}-${each.key}-task"
+  permissions_boundary = var.workload_role_permissions_boundary_arn
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{

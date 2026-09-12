@@ -1,0 +1,265 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  GridGuard Phase 1 foundation deployment role: MFA-only operator trust,
+  cost-gated write permissions, and a mandatory workload-role boundary.
+
+Parameters:
+  OperatorUserName:
+    Type: String
+    Default: anouar-admin
+    MinLength: 1
+    MaxLength: 64
+    AllowedPattern: '^[A-Za-z0-9_+=,.@-]+$'
+  StateAccessPolicyArn:
+    Type: String
+    AllowedPattern: '^arn:(aws|aws-us-gov|aws-cn):iam::[0-9]{12}:policy/[A-Za-z0-9_+=,.@/-]+$'
+  DeploymentRoleName:
+    Type: String
+    Default: gridguard-aws-sandbox-foundation-deploy
+    AllowedPattern: '^[A-Za-z0-9_+=,.@-]{1,64}$'
+
+Resources:
+  WorkloadRoleBoundary:
+    Type: AWS::IAM::ManagedPolicy
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      ManagedPolicyName: gridguard-aws-sandbox-workload-boundary
+      Path: /gridguard/
+      Description: Maximum permissions available to GridGuard workload roles.
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PullGridGuardImages
+            Effect: Allow
+            Action:
+              - ecr:BatchCheckLayerAvailability
+              - ecr:BatchGetImage
+              - ecr:GetDownloadUrlForLayer
+            Resource: !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/gridguard-aws-sandbox/*'
+          - Sid: GetRegistryToken
+            Effect: Allow
+            Action: ecr:GetAuthorizationToken
+            Resource: '*'
+          - Sid: WriteGridGuardLogs
+            Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/gridguard/aws-sandbox/*:*'
+          - Sid: DescribeLogDestinations
+            Effect: Allow
+            Action:
+              - logs:DescribeLogGroups
+              - logs:DescribeLogStreams
+            Resource: '*'
+          - Sid: ReadGridGuardRuntimeSecrets
+            Effect: Allow
+            Action: secretsmanager:GetSecretValue
+            Resource: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:gridguard-aws-sandbox/*'
+          - Sid: MountGridGuardFilesystems
+            Effect: Allow
+            Action:
+              - elasticfilesystem:ClientMount
+              - elasticfilesystem:ClientWrite
+            Resource: !Sub 'arn:${AWS::Partition}:elasticfilesystem:${AWS::Region}:${AWS::AccountId}:file-system/*'
+            Condition:
+              StringEquals:
+                aws:ResourceTag/Project: gridguard
+
+  FoundationDeploymentPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      ManagedPolicyName: gridguard-aws-sandbox-foundation-deploy
+      Path: /gridguard/
+      Description: GridGuard Phase 1 writes; runtime cost-driver APIs are omitted.
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ReadFoundationState
+            Effect: Allow
+            Action:
+              - ec2:Describe*
+              - ecr:Describe*
+              - ecr:GetLifecyclePolicy
+              - ecr:ListTagsForResource
+              - ecs:DescribeClusters
+              - ecs:ListClusters
+              - ecs:ListTagsForResource
+              - iam:GetPolicy
+              - iam:GetPolicyVersion
+              - iam:GetRole
+              - iam:GetRolePolicy
+              - iam:ListAttachedRolePolicies
+              - iam:ListInstanceProfilesForRole
+              - iam:ListPolicyVersions
+              - iam:ListRolePolicies
+              - logs:DescribeLogGroups
+              - logs:ListTagsForResource
+              - sts:GetCallerIdentity
+            Resource: '*'
+          - Sid: ManageFoundationNetwork
+            Effect: Allow
+            Action:
+              - ec2:AssociateRouteTable
+              - ec2:AttachInternetGateway
+              - ec2:AuthorizeSecurityGroupEgress
+              - ec2:AuthorizeSecurityGroupIngress
+              - ec2:CreateFlowLogs
+              - ec2:CreateInternetGateway
+              - ec2:CreateRoute
+              - ec2:CreateRouteTable
+              - ec2:CreateSecurityGroup
+              - ec2:CreateSubnet
+              - ec2:CreateTags
+              - ec2:CreateVpc
+              - ec2:DeleteFlowLogs
+              - ec2:DeleteInternetGateway
+              - ec2:DeleteRoute
+              - ec2:DeleteRouteTable
+              - ec2:DeleteSecurityGroup
+              - ec2:DeleteSubnet
+              - ec2:DeleteTags
+              - ec2:DeleteVpc
+              - ec2:DetachInternetGateway
+              - ec2:DisassociateRouteTable
+              - ec2:ModifySecurityGroupRules
+              - ec2:ModifySubnetAttribute
+              - ec2:ModifyVpcAttribute
+              - ec2:ReplaceRoute
+              - ec2:ReplaceRouteTableAssociation
+              - ec2:RevokeSecurityGroupEgress
+              - ec2:RevokeSecurityGroupIngress
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !Ref AWS::Region
+          - Sid: ManageGridGuardRepositories
+            Effect: Allow
+            Action:
+              - ecr:CreateRepository
+              - ecr:DeleteLifecyclePolicy
+              - ecr:DeleteRepository
+              - ecr:PutImageScanningConfiguration
+              - ecr:PutImageTagMutability
+              - ecr:PutLifecyclePolicy
+              - ecr:TagResource
+              - ecr:UntagResource
+            Resource: !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/gridguard-aws-sandbox/*'
+          - Sid: ManageGridGuardCluster
+            Effect: Allow
+            Action:
+              - ecs:CreateCluster
+              - ecs:DeleteCluster
+              - ecs:PutClusterCapacityProviders
+              - ecs:TagResource
+              - ecs:UntagResource
+            Resource: !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:cluster/gridguard-aws-sandbox'
+          - Sid: ManageGridGuardLogGroups
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:DeleteLogGroup
+              - logs:DeleteRetentionPolicy
+              - logs:PutRetentionPolicy
+              - logs:TagResource
+              - logs:UntagResource
+            Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/gridguard/aws-sandbox/*'
+          - Sid: CreateBoundedWorkloadRoles
+            Effect: Allow
+            Action: iam:CreateRole
+            Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-sandbox-*'
+            Condition:
+              ArnEquals:
+                iam:PermissionsBoundary: !Ref WorkloadRoleBoundary
+              StringEquals:
+                aws:RequestTag/Project: gridguard
+          - Sid: ManageBoundedWorkloadRoles
+            Effect: Allow
+            Action:
+              - iam:DeleteRole
+              - iam:DeleteRolePolicy
+              - iam:PutRolePolicy
+              - iam:TagRole
+              - iam:UntagRole
+              - iam:UpdateAssumeRolePolicy
+            Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-sandbox-*'
+          - Sid: AttachEcsExecutionPolicy
+            Effect: Allow
+            Action:
+              - iam:AttachRolePolicy
+              - iam:DetachRolePolicy
+            Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-sandbox-ecs-execution'
+            Condition:
+              ArnEquals:
+                iam:PolicyARN: !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+          - Sid: PassBoundedRolesToServices
+            Effect: Allow
+            Action: iam:PassRole
+            Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-sandbox-*'
+            Condition:
+              StringEquals:
+                iam:PassedToService:
+                  - ecs-tasks.amazonaws.com
+                  - vpc-flow-logs.amazonaws.com
+
+  FoundationDeploymentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref DeploymentRoleName
+      Description: MFA-only role for the reviewed GridGuard Phase 1 foundation plan.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: MfaOnlyOperatorTrust
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:user/${OperatorUserName}'
+            Action: sts:AssumeRole
+            Condition:
+              Bool:
+                aws:MultiFactorAuthPresent: 'true'
+      ManagedPolicyArns:
+        - !Ref FoundationDeploymentPolicy
+        - !Ref StateAccessPolicyArn
+      Tags:
+        - Key: Project
+          Value: gridguard
+        - Key: Environment
+          Value: aws-sandbox
+        - Key: ManagedBy
+          Value: cloudformation
+        - Key: Purpose
+          Value: terraform-foundation-deployment
+
+  OperatorAssumeRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: gridguard-aws-sandbox-assume-foundation-deploy
+      Path: /gridguard/
+      Description: Allows the named operator to assume only the MFA-protected foundation role.
+      Users:
+        - !Ref OperatorUserName
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AssumeFoundationRoleWithMfa
+            Effect: Allow
+            Action: sts:AssumeRole
+            Resource: !GetAtt FoundationDeploymentRole.Arn
+            Condition:
+              Bool:
+                aws:MultiFactorAuthPresent: 'true'
+
+Outputs:
+  FoundationDeploymentRoleArn:
+    Value: !GetAtt FoundationDeploymentRole.Arn
+  FoundationDeploymentPolicyArn:
+    Value: !Ref FoundationDeploymentPolicy
+  WorkloadRoleBoundaryArn:
+    Value: !Ref WorkloadRoleBoundary
+  OperatorAssumeRolePolicyArn:
+    Value: !Ref OperatorAssumeRolePolicy

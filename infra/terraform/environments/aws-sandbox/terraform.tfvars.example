@@ -25,6 +25,9 @@ enable_nat_gateway   = false
 grafana_public = false
 operator_cidrs = ["10.40.0.0/16"]
 
+# Output of the owner-created foundation deployment bootstrap.
+workload_role_permissions_boundary_arn = "arn:aws:iam::123456789012:policy/gridguard/gridguard-aws-sandbox-workload-boundary"
+
 # OIDC is bootstrapped with an existing administrative identity. Prefer an
 # existing account-wide provider and an account-managed least-privilege policy.
 enable_github_oidc_role     = false
