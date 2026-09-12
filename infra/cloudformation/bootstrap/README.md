@@ -94,6 +94,24 @@ aws cloudformation update-termination-protection \
 Return to the non-root operator session after the owner-only bootstrap. Do not
 continue if CloudFormation reports a replacement or deletion.
 
+When a template is uploaded through the CloudFormation console, AWS creates or
+reuses a regional `cf-templates-*` S3 bucket in the account. That helper bucket
+is not a resource in this stack. After the stack reaches `CREATE_COMPLETE`,
+confirm that CloudFormation can return both stored template stages before
+removing the uploaded object and helper bucket if they are no longer needed:
+
+```bash
+aws cloudformation get-template \
+  --region us-east-1 \
+  --stack-name gridguard-state-backend \
+  --template-stage Original \
+  --query StagesAvailable
+```
+
+The expected result contains `Original` and `Processed`. Never confuse the
+helper bucket with the retained `StateBucketName` output; the state bucket must
+remain in place.
+
 ## Post-Create Verification
 
 Confirm every bucket control before initializing Terraform:
@@ -106,13 +124,14 @@ aws s3api get-bucket-ownership-controls --bucket "REPLACE_UNIQUE_BUCKET_NAME"
 aws s3api get-bucket-policy-status --bucket "REPLACE_UNIQUE_BUCKET_NAME"
 aws kms describe-key --key-id alias/gridguard/aws-sandbox/terraform-state
 aws kms get-key-rotation-status \
-  --key-id alias/gridguard/aws-sandbox/terraform-state
+  --key-id "REPLACE_STATE_ENCRYPTION_KEY_ARN"
 ```
 
 Expected results are `aws:kms` with the stack's KMS key ARN, versioning
 `Enabled`, all four public-access flags `true`, ownership
 `BucketOwnerEnforced`, `IsPublic: false`, an enabled KMS key, and key rotation
-enabled.
+enabled. Use the `StateEncryptionKeyArn` stack output for the rotation check;
+that KMS operation does not accept an alias.
 
 Copy the ignored backend example and replace the bucket name and KMS key ARN
 with the CloudFormation outputs:
