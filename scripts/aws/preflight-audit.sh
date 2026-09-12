@@ -213,7 +213,7 @@ read_count "Lambda functions in ${AWS_REGION}" 'length(Functions)' lambda list-f
 read_count "CloudWatch log groups in ${AWS_REGION}" 'length(logGroups)' logs describe-log-groups
 read_count "S3 buckets account-wide" 'length(Buckets)' s3api list-buckets
 read_count "customer-created IAM roles account-wide" \
-  'length(Roles[?Path!=`/aws-service-role/`])' iam list-roles
+  'length(Roles[?!starts_with(Path, `/aws-service-role/`)])' iam list-roles
 
 if [[ "${AWS_AUDIT_ALL_REGIONS}" == "true" ]]; then
   printf '\nAll-region core resource scan\n'
