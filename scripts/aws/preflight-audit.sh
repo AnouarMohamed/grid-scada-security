@@ -214,6 +214,10 @@ read_count "CloudWatch log groups in ${AWS_REGION}" 'length(logGroups)' logs des
 read_count "S3 buckets account-wide" 'length(Buckets)' s3api list-buckets
 read_count "customer-created IAM roles account-wide" \
   'length(Roles[?!starts_with(Path, `/aws-service-role/`)])' iam list-roles
+read_count "customer-managed IAM policies account-wide" \
+  'length(Policies)' iam list-policies --scope Local
+read_count "active CloudFormation stacks in ${AWS_REGION}" \
+  'length(StackSummaries[?StackStatus!=`DELETE_COMPLETE`])' cloudformation list-stacks
 
 if [[ "${AWS_AUDIT_ALL_REGIONS}" == "true" ]]; then
   printf '\nAll-region core resource scan\n'
