@@ -47,5 +47,7 @@ The [AWS sandbox runbook](environments/aws-sandbox/README.md) accounts for:
 - Cost-bearing runtime features disabled by default.
 
 The repository supplies and validates this configuration but does not apply it.
-Account bootstrap, backend creation, secrets, policy authorization, cost
-controls, and final AWS applies remain deliberate operator actions.
+The separate [CloudFormation state bootstrap](../cloudformation/bootstrap/README.md)
+creates the backend without a Terraform state dependency. Account bootstrap,
+secrets, policy authorization, cost controls, and final AWS applies remain
+deliberate operator actions.

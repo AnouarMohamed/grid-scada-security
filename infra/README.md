@@ -8,6 +8,8 @@ configuration.
 
 ```text
 infra/
+├── cloudformation/
+│   └── bootstrap/
 ├── contracts/
 │   └── register-maps/
 ├── images/
@@ -88,6 +90,10 @@ make terraform
 See `terraform/README.md` and
 `terraform/environments/aws-sandbox/README.md` for the validated cloud shape
 and operator handoff.
+
+The [state-backend bootstrap](cloudformation/bootstrap/README.md) uses a
+separate retained CloudFormation stack so the Terraform root never depends on
+local state to create its own remote backend.
 
 ## Build Order
 

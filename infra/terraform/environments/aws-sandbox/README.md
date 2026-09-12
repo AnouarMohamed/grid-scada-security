@@ -57,9 +57,9 @@ change.
 
 | Configuration | Approximate fixed monthly cost | Main components |
 | --- | ---: | --- |
-| Foundation defaults | ~$0 | VPC, subnets, route tables, security groups, IAM roles, ECS cluster, and empty ECR repositories have no fixed hourly charge; flow logs, ECR, and state storage remain usage-based. |
-| Runtime created, task counts zero | ~$76.13 | Eight interface-endpoint ENIs: $58.40; one ALB: $16.43; two secrets: $0.80; one private DNS namespace: $0.50. |
-| Four tasks continuously running | ~$157.62 | Runtime-zero resources plus approximately $81.09 of Linux/x86 Fargate compute for 2.25 vCPU and 4.5 GB total memory, and $0.40 for four Cloud Map registrations. |
+| Foundation defaults | ~$1 | One customer-managed state-encryption KMS key: $1; VPC, subnets, route tables, security groups, IAM roles, ECS cluster, and empty ECR repositories have no fixed hourly charge; flow logs, ECR, S3 state, and KMS requests remain usage-based. |
+| Runtime created, task counts zero | ~$77.13 | Foundation plus eight interface-endpoint ENIs: $58.40; one ALB: $16.43; two secrets: $0.80; one private DNS namespace: $0.50. |
+| Four tasks continuously running | ~$158.62 | Runtime-zero resources plus approximately $81.09 of Linux/x86 Fargate compute for 2.25 vCPU and 4.5 GB total memory, and $0.40 for four Cloud Map registrations. |
 | Optional NAT gateway | +~$36.50 | One NAT gateway: $32.85; one public IPv4 address: $3.65; data processing and transfer are additional. |
 
 The endpoint estimate uses four interface services in two AZs at $0.01 per
@@ -69,15 +69,18 @@ official [PrivateLink pricing](https://aws.amazon.com/privatelink/pricing/),
 [Fargate pricing](https://aws.amazon.com/ecs/pricing/),
 [load-balancer pricing](https://aws.amazon.com/elasticloadbalancing/pricing/),
 [Secrets Manager pricing](https://aws.amazon.com/secrets-manager/pricing/), and
-[Cloud Map pricing](https://aws.amazon.com/cloud-map/pricing/).
+[Cloud Map pricing](https://aws.amazon.com/cloud-map/pricing/). The state-key
+estimate uses the official [KMS pricing](https://aws.amazon.com/kms/pricing/);
+completed automatic rotations can increase its monthly storage charge.
 
 Do not leave runtime resources enabled under a $20 monthly budget. Use the
 foundation configuration for persistent study, and create the runtime only for
 a supervised exercise with the same-day destroy procedure already reviewed.
 Create and inspect the destroy plan immediately after the exercise. An
-eight-hour runtime window is approximately $1.72 in fixed compute, endpoint,
-ALB, and secret charges, plus usage-based charges; a DNS hosted-zone charge can
-also apply unless AWS's short-lived-zone exception applies.
+eight-hour runtime window is approximately $1.72 in exercise-specific fixed
+compute, endpoint, ALB, and secret charges, plus the persistent state key and
+usage-based charges; a DNS hosted-zone charge can also apply unless AWS's
+short-lived-zone exception applies.
 
 ## Prerequisites
 
@@ -116,11 +119,13 @@ audit.
 
 ## Phase 1: Foundation
 
-Create a versioned, encrypted S3 bucket with public access blocked before the
-first plan. Copy `backend.tfbackend.example` to the ignored
-`backend.tfbackend`, replace its bucket and region, and initialize the committed
-partial S3 backend. Terraform's S3 lockfile is enabled; the IAM principal needs
-S3 access to both the state object and its `.tflock` object.
+Create the versioned, customer-managed-KMS-encrypted S3 bucket with public
+access blocked before the first plan. Use the reviewed
+[state-backend bootstrap](../../../cloudformation/bootstrap/README.md). Copy
+`backend.tfbackend.example` to the ignored `backend.tfbackend`, replace its
+bucket, KMS key ARN, and region, and initialize the committed partial S3
+backend. Terraform's S3 lockfile is enabled; the IAM principal needs S3 access
+to both the state object and its `.tflock` object plus use of the KMS key.
 
 ```bash
 cd infra/terraform/environments/aws-sandbox
@@ -240,8 +245,9 @@ attach `AdministratorAccess` to the deployment role.
 
 After bootstrap, place the `github_deploy_role_arn` output in the selected
 GitHub environment as `AWS_ROLE_TO_ASSUME`, and set `AWS_REGION` as an
-environment variable. Set `TF_STATE_BUCKET`; optionally override
-`TF_STATE_KEY`, whose default is `gridguard/aws-sandbox/terraform.tfstate`.
+environment variable. Set `TF_STATE_BUCKET` and `TF_STATE_KMS_KEY_ARN` from
+the state-bootstrap outputs; optionally override `TF_STATE_KEY`, whose default
+is `gridguard/aws-sandbox/terraform.tfstate`.
 
 The deployment workflow uses Terraform defaults unless the environment variable
 `TF_VARS_JSON` contains a valid non-secret JSON object of variable overrides.
