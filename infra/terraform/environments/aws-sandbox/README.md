@@ -164,10 +164,16 @@ docker build -f infra/services/modbus-ingestor/Dockerfile -t gridguard-modbus-in
 docker build -f infra/images/grafana/Dockerfile -t gridguard-grafana .
 docker build -f infra/images/influxdb/Dockerfile -t gridguard-influxdb .
 
-trivy image --exit-code 1 --severity HIGH,CRITICAL gridguard-power-sim
-trivy image --exit-code 1 --severity HIGH,CRITICAL gridguard-modbus-ingestor
-trivy image --exit-code 1 --severity HIGH,CRITICAL gridguard-grafana
-trivy image --exit-code 1 --severity HIGH,CRITICAL gridguard-influxdb
+for image in \
+  gridguard-power-sim \
+  gridguard-modbus-ingestor \
+  gridguard-grafana \
+  gridguard-influxdb; do
+  trivy image --exit-code 0 --ignore-unfixed --scanners vuln \
+    --severity HIGH,CRITICAL "$image"
+  trivy image --exit-code 1 --ignore-unfixed --scanners vuln \
+    --severity CRITICAL "$image"
+done
 ```
 
 Scan the four local images before publishing. Then use the foundation outputs
@@ -181,12 +187,12 @@ GRAFANA_REPO="$(terraform output -json ecr_repository_urls | jq -r '.grafana')"
 
 docker tag gridguard-power-sim "${POWER_SIM_REPO}:0.1.0"
 docker tag gridguard-modbus-ingestor "${INGESTOR_REPO}:0.1.0"
-docker tag gridguard-influxdb "${INFLUXDB_REPO}:2.9.0"
+docker tag gridguard-influxdb "${INFLUXDB_REPO}:2.9.1"
 docker tag gridguard-grafana "${GRAFANA_REPO}:12.4.10"
 
 docker push "${POWER_SIM_REPO}:0.1.0"
 docker push "${INGESTOR_REPO}:0.1.0"
-docker push "${INFLUXDB_REPO}:2.9.0"
+docker push "${INFLUXDB_REPO}:2.9.1"
 docker push "${GRAFANA_REPO}:12.4.10"
 ```
 

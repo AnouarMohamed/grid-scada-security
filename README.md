@@ -136,9 +136,11 @@ the IEEE 13-node feeder runs a deterministic 24-hour demand and PV profile,
 serves live measurements over Modbus TCP, and feeds InfluxDB through the
 receiver-side ingestor. Grafana dashboards and alert rules cover the telemetry,
 while naive and coordinated in-envelope attack replays exercise the detection
-path. A tested AWS Terraform environment now maps the same trust boundary to
-concrete VPC, ECS/Fargate, ECR, EFS, ALB, endpoint, logging, secrets-container,
-and OIDC resources. It has not been applied to an AWS account.
+path. The default-off AWS foundation is deployed in a dedicated `us-east-1`
+sandbox with its VPC, flow logs, security groups, private ECR repositories, ECS
+cluster, and bounded IAM roles verified. Billable runtime resources remain
+disabled; EFS, ALB, endpoints, secret containers, task definitions, services,
+and OIDC integration are still gated Terraform definitions.
 
 Current CI is intentionally future-ready:
 
@@ -294,10 +296,11 @@ Details are in
 
 Near-term:
 
-- Review and apply the disabled-by-default AWS foundation in a dedicated
-  sandbox account, following [docs/11-aws-cloud-handoff.md](docs/11-aws-cloud-handoff.md).
-- Populate private ECR and Secrets Manager, then enable runtime with zero tasks
-  before scaling services to one.
+- Publish the reviewed release images to private ECR and record their immutable
+  registry digests.
+- Configure the OIDC deployment role, environment approval, private operator
+  access, and secret procedure; then enable runtime with zero tasks before
+  scaling services to one.
 - Calibrate the balanced feeder approximation against published IEEE reference
   results or promote it to an unbalanced model.
 - Add a residual/state-estimation detector beyond envelope checks.

@@ -1,12 +1,14 @@
 # Architecture and Tech Stack
 
-GridGuard has two architecture states:
+GridGuard has three architecture states:
 
 - **Locally verified:** the complete simulator-to-dashboard path, including two
   attack replays and their detector outcomes.
-- **Terraform-defined, not applied:** an AWS sandbox that maps the same trust
-  boundary to concrete resources but defaults all runtime task counts and
-  optional cost features off.
+- **AWS foundation deployed:** the `us-east-1` sandbox network, flow logs,
+  security groups, ECR repositories, ECS cluster, and bounded IAM roles were
+  applied and verified on 2026-09-12.
+- **Runtime defined, not applied:** ALB, EFS, endpoints, secrets, task
+  definitions, and ECS services remain gated off with all desired counts zero.
 
 The diagrams keep those states explicit. They do not present future work as
 already deployed.
@@ -165,7 +167,7 @@ that class of attack.
 | OT protocol | pymodbus, Modbus TCP |
 | Contract | Versioned JSON register map |
 | Ingestion and detection | Python services |
-| Time-series storage | InfluxDB 2.9.0 |
+| Time-series storage | InfluxDB 2.9.1 |
 | Dashboards and alerts | Grafana 12.4.10 |
 | Local runtime | Docker Compose |
 | Cloud runtime definition | AWS ECS/Fargate |
@@ -182,7 +184,7 @@ verification evidence.
 
 ## Next
 
-The next step is the AWS owner's account-side review of a foundation-only
-Terraform plan. After the first reviewed apply, capture the actual account,
-region, availability zones, resource outputs, and private Grafana access path,
-then update the AWS figure from `CODE ONLY` to an as-deployed record.
+The next step is to publish the four reviewed images to the private ECR
+repositories and record their immutable registry digests. Runtime resources
+remain disabled until the OIDC deployment role, environment approval, private
+Grafana access path, and secret-handling procedure are ready.
