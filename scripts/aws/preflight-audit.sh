@@ -145,13 +145,19 @@ if budget_json="$(aws_read budgets describe-budget \
   --account-id "${account_id}" --budget-name "${AWS_BUDGET_NAME}" \
   --output json 2>/dev/null)"; then
   budget_limit="$(jq -r '.Budget.BudgetLimit | "\(.Amount) \(.Unit)"' <<<"${budget_json}")"
-  include_credit="$(jq -r '.Budget.CostTypes.IncludeCredit // true' <<<"${budget_json}")"
+  legacy_excludes_credit="$(jq -r '.Budget.CostTypes.IncludeCredit? == false' <<<"${budget_json}")"
+  uses_unblended_cost="$(jq -r '
+    [.Budget.Metrics[]? | ascii_downcase]
+    | any(. == "unblendedcost" or . == "unblended_cost")
+  ' <<<"${budget_json}")"
   pass "budget ${AWS_BUDGET_NAME} exists with limit ${budget_limit}"
 
-  if [[ "${include_credit}" == "false" ]]; then
-    pass "budget excludes credits and measures gross usage"
+  if [[ "${legacy_excludes_credit}" == "true" ]]; then
+    pass "budget excludes credits through the legacy cost-type setting"
+  elif [[ "${uses_unblended_cost}" == "true" ]]; then
+    pass "budget uses unblended cost and does not net promotional credits"
   else
-    fail "budget includes credits; set CostTypes.IncludeCredit to false"
+    fail "budget can net credits; select Unblended cost or set CostTypes.IncludeCredit to false"
   fi
 
   notifications_json="$(aws_read budgets describe-notifications-for-budget \
