@@ -115,8 +115,8 @@ procedure are documented in the
 
 ## Next
 
-The next account action is to remove the temporary image-publisher policy,
-apply the reviewed registry-level basic scan-on-push rule, and manually scan
-the four images that predate that rule. Do not enable runtime until those scan
-results, the OIDC deployment role, environment approval, private access path,
-and secret-handling procedure are all ready.
+The next repository action is to reconcile the AWS and Trivy critical findings
+against vendor fix availability and workload reachability, then pin ECS task
+definitions to the verified runnable image digests. Do not enable runtime until
+that review, the OIDC deployment role, environment approval, private access
+path, and secret-handling procedure are all ready.
