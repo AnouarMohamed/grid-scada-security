@@ -9,9 +9,10 @@ without a manual workflow dispatch.
 The default-off AWS foundation was applied in `us-east-1` and verified on
 2026-09-12. Remote state, termination-protected bootstrap stacks, the cost
 budget, anomaly monitoring, isolated routes, VPC flow logs, bounded workload
-roles, four ECR repositories, and the ECS capacity providers are healthy. Four
-immutable release images were published and verified on 2026-09-13; see the
-[sanitized image publication record](deployment-records/2026-09-13-aws-image-publication.md).
+roles, four ECR repositories, and the ECS capacity providers are healthy. The
+initial and remediated immutable image sets were published and verified on
+2026-09-13; see the [initial publication record](deployment-records/2026-09-13-aws-image-publication.md)
+and [remediated publication record](deployment-records/2026-09-13-aws-remediated-image-publication.md).
 No Fargate task, ECS service, task definition, load balancer, EFS file system,
 VPC endpoint, NAT gateway, Elastic IP, or runtime secret exists yet. See the
 [sanitized foundation deployment record](deployment-records/2026-09-12-aws-foundation.md).
@@ -115,8 +116,9 @@ procedure are documented in the
 
 ## Next
 
-The next repository action is to reconcile the AWS and Trivy critical findings
-against vendor fix availability and workload reachability, then pin ECS task
-definitions to the verified runnable image digests. Do not enable runtime until
-that review, the OIDC deployment role, environment approval, private access
-path, and secret-handling procedure are all ready.
+ECS task definitions are pinned to the verified runnable image digests. The
+next repository action is to close the documented vendor-binary high findings
+through a fixed release or explicit time-bounded risk acceptance and review the
+remaining Debian zlib high finding. Do not enable runtime until that work, the
+OIDC deployment role, environment approval, private access path, and
+secret-handling procedure are all ready.

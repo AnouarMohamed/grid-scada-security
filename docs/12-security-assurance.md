@@ -85,6 +85,7 @@ reviewed image publication. Registry-side SBOM attestation, image signing, and
 provenance verification become enforceable only after the target registry and
 signing identity exist.
 
-The next repository step after cloud bootstrap is to record the first reviewed
-Terraform plan and ECR image digests, then add signed SBOM attestations to the
+The remediated ECR image digests and scans are recorded, and ECS task definitions
+are pinned to the verified runnable manifests. The next repository steps are to
+close the documented high findings and add signed SBOM attestations to the
 publication workflow.

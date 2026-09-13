@@ -161,7 +161,7 @@ variable "desired_counts" {
 }
 
 variable "image_tags" {
-  description = "ECR image tags selected by ECS task definitions. Use immutable release tags."
+  description = "Immutable ECR tags used to publish and audit each release. ECS uses image_digests."
   type = object({
     power_sim       = string
     modbus_ingestor = string
@@ -181,6 +181,30 @@ variable "image_tags" {
       can(regex("^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$", tag)) && lower(tag) != "latest"
     ])
     error_message = "image_tags values must be valid, non-latest ECR tags of at most 128 characters."
+  }
+}
+
+variable "image_digests" {
+  description = "Verified Linux/AMD64 ECR manifest digests selected by ECS task definitions."
+  type = object({
+    power_sim       = string
+    modbus_ingestor = string
+    influxdb        = string
+    grafana         = string
+  })
+  default = {
+    power_sim       = "sha256:f51d3dd888b3a2a2855bbba40725357a92d91c2a9bd6660fdd8a5a39505a9451"
+    modbus_ingestor = "sha256:18e13b46ed9fe4d89290ae8219b6cd897e3a8e3c6675f3069541779b49e2caa7"
+    influxdb        = "sha256:66e4f468821b9a47f9eb0808d2e87c70d6ddd92c741450e9d78eff70ae856d67"
+    grafana         = "sha256:1fbc7b35e2e71e9ccf8178dc7b05369bc85a9000320ee40031743a868f566c5c"
+  }
+
+  validation {
+    condition = alltrue([
+      for digest in values(var.image_digests) :
+      can(regex("^sha256:[0-9a-f]{64}$", digest))
+    ])
+    error_message = "image_digests values must be lowercase sha256 manifest digests."
   }
 }
 

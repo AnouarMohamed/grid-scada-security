@@ -53,10 +53,10 @@ resource "aws_service_discovery_service" "service" {
 
 locals {
   image_uris = {
-    power_sim       = "${aws_ecr_repository.service["power-sim"].repository_url}:${var.image_tags.power_sim}"
-    modbus_ingestor = "${aws_ecr_repository.service["modbus-ingestor"].repository_url}:${var.image_tags.modbus_ingestor}"
-    influxdb        = "${aws_ecr_repository.service["influxdb"].repository_url}:${var.image_tags.influxdb}"
-    grafana         = "${aws_ecr_repository.service["grafana"].repository_url}:${var.image_tags.grafana}"
+    power_sim       = "${aws_ecr_repository.service["power-sim"].repository_url}@${var.image_digests.power_sim}"
+    modbus_ingestor = "${aws_ecr_repository.service["modbus-ingestor"].repository_url}@${var.image_digests.modbus_ingestor}"
+    influxdb        = "${aws_ecr_repository.service["influxdb"].repository_url}@${var.image_digests.influxdb}"
+    grafana         = "${aws_ecr_repository.service["grafana"].repository_url}@${var.image_digests.grafana}"
   }
 
   log_configuration = {

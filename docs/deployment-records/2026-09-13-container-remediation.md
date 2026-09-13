@@ -81,3 +81,7 @@ publication, record the ECR parent and runnable manifest digests, confirm scan
 completion on the runnable manifests, and pin Terraform task definitions to
 those digests. Runtime remains blocked until the vendor-binary decision above
 is closed.
+
+Publication and cleanup completed on 2026-09-13. The exact artifacts, ECR scan
+results, remaining zlib finding, and privilege cleanup are recorded in the
+[AWS remediated image publication record](2026-09-13-aws-remediated-image-publication.md).

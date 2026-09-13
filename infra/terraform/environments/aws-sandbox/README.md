@@ -199,7 +199,10 @@ docker push "${GRAFANA_REPO}:12.4.10-gridguard.1"
 ```
 
 ECR tag mutability is disabled, so publish a new version instead of replacing a
-tag. Update `terraform.tfvars` and review a new plan whenever a version changes.
+tag. Resolve each OCI index to its scanned Linux/AMD64 manifest, then update
+`image_tags` and `image_digests` together. ECS task definitions use
+`repository@sha256:...`, so changing a tag cannot change deployed bytes. Review
+a new plan whenever either release map changes.
 
 ## Runtime Secrets
 
