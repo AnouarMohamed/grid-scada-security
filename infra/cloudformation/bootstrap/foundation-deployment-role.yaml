@@ -1,7 +1,8 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
   GridGuard Phase 1 foundation deployment role: MFA-only operator trust,
-  cost-gated write permissions, and a mandatory workload-role boundary.
+  cost-gated write permissions, a mandatory workload-role boundary, and an
+  optional temporary image-publication permission.
 
 Parameters:
   OperatorUserName:
@@ -17,6 +18,15 @@ Parameters:
     Type: String
     Default: gridguard-aws-sandbox-foundation-deploy
     AllowedPattern: '^[A-Za-z0-9_+=,.@-]{1,64}$'
+  EnableOperatorImagePublish:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'false'
+      - 'true'
+
+Conditions:
+  OperatorImagePublishEnabled: !Equals [!Ref EnableOperatorImagePublish, 'true']
 
 Resources:
   EcsServiceLinkedRole:
@@ -262,6 +272,36 @@ Resources:
               Bool:
                 aws:MultiFactorAuthPresent: 'true'
 
+  OperatorEcrPublishPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: OperatorImagePublishEnabled
+    Properties:
+      ManagedPolicyName: gridguard-aws-sandbox-ecr-publish
+      Path: /gridguard/
+      Description: Temporary image-push access to the four GridGuard sandbox repositories.
+      Users:
+        - !Ref OperatorUserName
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: GetRegistryToken
+            Effect: Allow
+            Action: ecr:GetAuthorizationToken
+            Resource: '*'
+          - Sid: PublishExactGridGuardImages
+            Effect: Allow
+            Action:
+              - ecr:BatchCheckLayerAvailability
+              - ecr:CompleteLayerUpload
+              - ecr:InitiateLayerUpload
+              - ecr:PutImage
+              - ecr:UploadLayerPart
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/gridguard-aws-sandbox/power-sim'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/gridguard-aws-sandbox/modbus-ingestor'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/gridguard-aws-sandbox/influxdb'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/gridguard-aws-sandbox/grafana'
+
 Outputs:
   FoundationDeploymentRoleArn:
     Value: !GetAtt FoundationDeploymentRole.Arn
@@ -271,3 +311,6 @@ Outputs:
     Value: !Ref WorkloadRoleBoundary
   OperatorAssumeRolePolicyArn:
     Value: !Ref OperatorAssumeRolePolicy
+  OperatorEcrPublishPolicyArn:
+    Condition: OperatorImagePublishEnabled
+    Value: !Ref OperatorEcrPublishPolicy

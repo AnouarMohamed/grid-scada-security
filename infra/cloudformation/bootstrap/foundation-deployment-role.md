@@ -4,7 +4,7 @@ This bootstrap creates a temporary human deployment path for the reviewed
 Phase 1 Terraform foundation. It does not create network, compute, storage, or
 runtime resources and has no direct AWS service charge.
 
-The five resources are:
+The five baseline resources are:
 
 - The account-wide Amazon ECS service-linked role, retained while ECS resources
   depend on it.
@@ -12,6 +12,11 @@ The five resources are:
 - A Phase 1 deployment policy attached to that role.
 - A workload-role permissions boundary retained for Terraform-managed roles.
 - An exact `sts:AssumeRole` policy attached to the named operator.
+
+An optional sixth managed policy grants the named operator temporary image-push
+access to the four exact GridGuard ECR repositories. It is disabled by default
+and must be removed immediately after the registry digests and scans are
+verified.
 
 The deployment policy deliberately omits NAT gateway, Elastic IP, VPC
 endpoint, load balancer, EFS, Secrets Manager, ECS task definition, ECS
@@ -47,6 +52,7 @@ aws cloudformation deploy \
   --parameter-overrides \
     OperatorUserName="anouar-admin" \
     StateAccessPolicyArn="arn:aws:iam::227755136916:policy/gridguard/gridguard-aws-sandbox-terraform-state" \
+    EnableOperatorImagePublish="false" \
   --capabilities CAPABILITY_NAMED_IAM \
   --no-execute-changeset
 ```
@@ -64,6 +70,26 @@ update the stack with the current template. The update must add only
 Wait for `UPDATE_COMPLETE`, then generate a fresh Terraform plan. A foundation
 apply interrupted at ECS capacity-provider configuration should show exactly
 one addition and no changes or deletions.
+
+## Temporary Image Publication
+
+Do not grant `AdministratorAccess` or an AWS-managed ECR power-user policy to
+publish images. Update this stack with the current template and set
+`EnableOperatorImagePublish` to `true`. The reviewed change set must add only
+`OperatorEcrPublishPolicy`; it must not replace or delete another resource.
+
+The policy allows registry authentication plus the five layer and manifest
+upload actions Docker requires. Its resources are the exact `power-sim`,
+`modbus-ingestor`, `influxdb`, and `grafana` repositories in this account and
+region. Repository immutability remains the independent control against tag
+replacement.
+
+After all four images are present, record their AWS-returned manifest digests
+and confirm each enhanced scan completes. Then update the same stack with
+`EnableOperatorImagePublish` set back to `false`. The cleanup change set must
+remove only `OperatorEcrPublishPolicy`. Execute it, wait for
+`UPDATE_COMPLETE`, run `docker logout` for the account registry, and verify the
+policy is no longer attached to the operator.
 
 ## Local Role Profile
 
