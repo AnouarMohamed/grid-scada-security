@@ -1,5 +1,10 @@
 # AWS State Backend Bootstrap
 
+This directory also contains separately reviewed bootstraps for the
+[foundation deployment role](foundation-deployment-role.md) and the
+[GitHub plan-only OIDC role](github-oidc-plan-role.md). Each has an independent
+change set, ownership boundary, and removal procedure.
+
 This CloudFormation template breaks Terraform's backend bootstrap dependency
 without keeping the backend itself in local Terraform state. It creates only:
 

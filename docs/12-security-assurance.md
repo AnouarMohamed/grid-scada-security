@@ -18,7 +18,8 @@ for dependency, workflow, protocol, container, and infrastructure changes.
 | Networks | Loopback-only host ports and an internal OT simulation network | Compose validation and smoke tests |
 | Images | Fixed high/critical findings reported; every known critical finding blocks CI | Trivy image scans |
 | Terraform | Format, offline initialization, validation, and mocked native tests | `make terraform` |
-| Deployment | Manual sandbox-only dispatch, protected environment, OIDC, remote encrypted state, apply from `main` only | Deploy workflow |
+| CloudFormation | Parsed templates plus exact OIDC trust, state-write, and action-boundary assertions | `make cloudformation` |
+| Deployment | Manual sandbox-only Terraform plan, exact-environment OIDC trust, plan-only permissions boundary, remote encrypted state, no apply path | Deploy workflow |
 
 The required `CI Gate` aggregates every CI job and fails on either a failed or
 cancelled dependency. Branch protection requires that single current check.
@@ -79,13 +80,15 @@ default, so repository validation never creates cloud resources.
 
 The state backend, cost budget, anomaly monitor, MFA-gated foundation role,
 permissions boundary, and default-off AWS foundation are deployed. The AWS
-owner must still configure OIDC trust, a least-privilege runtime deployment
-policy, environment approval, secrets, the private operator access path, and
-reviewed image publication. Registry-side SBOM attestation, image signing, and
-provenance verification become enforceable only after the target registry and
-signing identity exist.
+owner must still execute the reviewed plan-only OIDC bootstrap and configure
+the GitHub environment. A separate least-privilege runtime deployment policy,
+environment approval, secrets, and the private operator access path remain
+blocked from runtime enablement. Registry-side SBOM attestation, image signing,
+and provenance verification become enforceable only after the signing identity
+exists.
 
-The remediated ECR image digests and scans are recorded, and ECS task definitions
-are pinned to the verified runnable manifests. The next repository steps are to
+The remediated ECR image digests and scans are recorded, and ECS task
+definitions are pinned to the verified runnable manifests. The next account
+step is to prove the plan-only GitHub identity; the next repository work is to
 close the documented high findings and add signed SBOM attestations to the
 publication workflow.

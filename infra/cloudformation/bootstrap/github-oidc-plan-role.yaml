@@ -1,0 +1,255 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  GridGuard GitHub Actions OIDC provider and plan-only Terraform role with
+  exact state-path access and no infrastructure mutation permissions.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: GitHub trust boundary
+        Parameters:
+          - GitHubRepository
+          - GitHubEnvironment
+          - RoleName
+          - PolicyName
+      - Label:
+          default: Terraform state boundary
+        Parameters:
+          - StateBucketName
+          - StateKey
+          - StateKmsKeyArn
+    ParameterLabels:
+      GitHubRepository:
+        default: Trusted GitHub owner/repository
+      GitHubEnvironment:
+        default: Trusted GitHub environment
+      RoleName:
+        default: Plan-only IAM role name
+      PolicyName:
+        default: Plan-only managed policy name
+      StateBucketName:
+        default: Existing Terraform state bucket
+      StateKey:
+        default: Exact Terraform state object key
+      StateKmsKeyArn:
+        default: Existing Terraform state KMS key ARN
+
+Parameters:
+  GitHubRepository:
+    Type: String
+    Default: AnouarMohamed/grid-scada-security
+    MinLength: 3
+    MaxLength: 200
+    AllowedPattern: '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'
+    ConstraintDescription: Use the exact GitHub owner/repository form.
+  GitHubEnvironment:
+    Type: String
+    Default: sandbox
+    MinLength: 1
+    MaxLength: 100
+    AllowedPattern: '^[A-Za-z0-9_.-]+$'
+    ConstraintDescription: Use a single exact GitHub environment name.
+  RoleName:
+    Type: String
+    Default: gridguard-aws-sandbox-github-plan
+    MinLength: 1
+    MaxLength: 64
+    AllowedPattern: '^gridguard-aws-sandbox-[A-Za-z0-9_+=,.@-]+$'
+    ConstraintDescription: Keep the role inside the GridGuard sandbox namespace.
+  PolicyName:
+    Type: String
+    Default: gridguard-aws-sandbox-github-plan
+    MinLength: 1
+    MaxLength: 128
+    AllowedPattern: '^gridguard-aws-sandbox-[A-Za-z0-9_+=,.@-]+$'
+    ConstraintDescription: Keep the policy inside the GridGuard sandbox namespace.
+  StateBucketName:
+    Type: String
+    MinLength: 3
+    MaxLength: 63
+    AllowedPattern: >-
+      ^(?!xn--)(?!sthree-)(?!amzn-s3-demo-)(?!.*(?:-s3alias|--ol-s3|--x-s3|--table-s3)$)[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$
+    ConstraintDescription: Enter the existing GridGuard Terraform state bucket name.
+  StateKey:
+    Type: String
+    Default: gridguard/aws-sandbox/terraform.tfstate
+    MinLength: 1
+    MaxLength: 512
+    AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9._/-]{0,511}$'
+    ConstraintDescription: Enter the exact existing Terraform state object key.
+  StateKmsKeyArn:
+    Type: String
+    MinLength: 20
+    MaxLength: 2048
+    AllowedPattern: '^arn:(aws|aws-us-gov|aws-cn):kms:[a-z0-9-]+:[0-9]{12}:key/[A-Za-z0-9-]+$'
+    ConstraintDescription: Enter the ARN of the existing Terraform state KMS key.
+
+Resources:
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      Tags:
+        - Key: Project
+          Value: gridguard
+        - Key: Environment
+          Value: aws-sandbox
+        - Key: ManagedBy
+          Value: cloudformation
+        - Key: Purpose
+          Value: github-oidc
+
+  GitHubPlanPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      ManagedPolicyName: !Ref PolicyName
+      Path: /gridguard/
+      Description: >-
+        Plan-only GridGuard Terraform access: exact state read and lock access,
+        KMS use for that backend, and AWS metadata reads without secret values.
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ReadStateBucketMetadata
+            Effect: Allow
+            Action:
+              - s3:GetBucketLocation
+              - s3:GetBucketVersioning
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${StateBucketName}'
+          - Sid: ListExactStateObjects
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${StateBucketName}'
+            Condition:
+              StringEquals:
+                s3:prefix:
+                  - !Ref StateKey
+                  - !Sub '${StateKey}.tflock'
+          - Sid: ReadExactState
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${StateBucketName}/${StateKey}'
+          - Sid: ManageExactStateLock
+            Effect: Allow
+            Action:
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${StateBucketName}/${StateKey}.tflock'
+          - Sid: UseStateEncryptionKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey
+            Resource: !Ref StateKmsKeyArn
+          - Sid: DenyStateMutation
+            Effect: Deny
+            Action:
+              - s3:DeleteObject
+              - s3:DeleteObjectVersion
+              - s3:PutObject
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${StateBucketName}/${StateKey}'
+          - Sid: DenyPrivilegeAndSecretAccess
+            Effect: Deny
+            Action:
+              - iam:PassRole
+              - secretsmanager:GetSecretValue
+              - sts:AssumeRole
+            Resource: '*'
+          - Sid: ReadTerraformMetadata
+            Effect: Allow
+            Action:
+              - ec2:Describe*
+              - ec2:GetManagedPrefixListEntries
+              - ecr:Describe*
+              - ecr:GetLifecyclePolicy
+              - ecr:GetRegistryPolicy
+              - ecr:GetRegistryScanningConfiguration
+              - ecr:ListImages
+              - ecr:ListTagsForResource
+              - ecs:Describe*
+              - ecs:List*
+              - elasticfilesystem:Describe*
+              - elasticloadbalancing:Describe*
+              - iam:GetOpenIDConnectProvider
+              - iam:GetPolicy
+              - iam:GetPolicyVersion
+              - iam:GetRole
+              - iam:GetRolePolicy
+              - iam:ListAttachedRolePolicies
+              - iam:ListInstanceProfilesForRole
+              - iam:ListOpenIDConnectProviders
+              - iam:ListPolicyTags
+              - iam:ListPolicyVersions
+              - iam:ListRolePolicies
+              - iam:ListRoleTags
+              - logs:Describe*
+              - logs:GetDataProtectionPolicy
+              - logs:ListTagsForResource
+              - secretsmanager:DescribeSecret
+              - secretsmanager:GetResourcePolicy
+              - secretsmanager:ListSecrets
+              - secretsmanager:ListSecretVersionIds
+              - servicediscovery:Get*
+              - servicediscovery:List*
+              - sts:GetCallerIdentity
+            Resource: '*'
+
+  GitHubPlanRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RoleName: !Ref RoleName
+      Path: /gridguard/
+      Description: GitHub Actions OIDC role for GridGuard Terraform plans only.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: TrustExactGitHubEnvironment
+            Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GitHubOidcProvider
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubRepository}:environment:${GitHubEnvironment}'
+      ManagedPolicyArns:
+        - !Ref GitHubPlanPolicy
+      PermissionsBoundary: !Ref GitHubPlanPolicy
+      Tags:
+        - Key: Project
+          Value: gridguard
+        - Key: Environment
+          Value: aws-sandbox
+        - Key: ManagedBy
+          Value: cloudformation
+        - Key: Purpose
+          Value: github-plan
+
+Outputs:
+  GitHubOidcProviderArn:
+    Description: Account-wide GitHub Actions OIDC provider ARN.
+    Value: !Ref GitHubOidcProvider
+  GitHubPlanPolicyArn:
+    Description: Plan-only permissions policy and permissions boundary ARN.
+    Value: !Ref GitHubPlanPolicy
+  GitHubPlanRoleArn:
+    Description: Role ARN for the GitHub sandbox environment AWS_ROLE_TO_ASSUME secret.
+    Value: !GetAtt GitHubPlanRole.Arn
+  TrustedSubject:
+    Description: Exact GitHub OIDC subject accepted by the role.
+    Value: !Sub 'repo:${GitHubRepository}:environment:${GitHubEnvironment}'

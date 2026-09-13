@@ -1,22 +1,13 @@
-name: Deploy
+name: AWS Sandbox Plan
 
 on:
   workflow_dispatch:
-    inputs:
-      action:
-        description: Terraform action to run.
-        required: true
-        default: plan
-        type: choice
-        options:
-          - plan
-          - apply
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: deploy-sandbox
+  group: plan-sandbox
   cancel-in-progress: false
 
 defaults:
@@ -25,7 +16,7 @@ defaults:
 
 jobs:
   terraform:
-    name: Terraform ${{ inputs.action }}
+    name: Terraform Plan
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: sandbox
@@ -42,14 +33,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
-
-      - name: Guard applies
-        if: ${{ inputs.action == 'apply' }}
-        run: |
-          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
-            echo "::error::Terraform apply is only allowed from main."
-            exit 1
-          fi
 
       - name: Require sandbox deployment inputs
         run: |
@@ -110,11 +93,3 @@ jobs:
               -lock-timeout=5m \
               -out=tfplan
           fi
-
-      - name: Terraform apply
-        if: ${{ inputs.action == 'apply' }}
-        run: |
-          terraform -chdir="${TERRAFORM_ROOT}" apply \
-            -lock-timeout=5m \
-            -auto-approve \
-            tfplan

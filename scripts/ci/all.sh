@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 checks=(
   validate-repo-hygiene.sh
   validate-docs.sh
+  validate-cloudformation.sh
   validate-python.sh
   validate-workflows.sh
   validate-modbus-contracts.sh

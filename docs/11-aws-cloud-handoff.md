@@ -13,7 +13,7 @@ roles, four ECR repositories, and the ECS capacity providers are healthy. The
 initial and remediated immutable image sets were published and verified on
 2026-09-13; see the [initial publication record](deployment-records/2026-09-13-aws-image-publication.md)
 and [remediated publication record](deployment-records/2026-09-13-aws-remediated-image-publication.md).
-No Fargate task, ECS service, task definition, load balancer, EFS file system,
+No Fargate task, ECS service, load balancer, EFS file system,
 VPC endpoint, NAT gateway, Elastic IP, or runtime secret exists yet. See the
 [sanitized foundation deployment record](deployment-records/2026-09-12-aws-foundation.md).
 
@@ -28,8 +28,8 @@ VPC endpoint, NAT gateway, Elastic IP, or runtime secret exists yet. See the
 - Registry-level basic ECR scan-on-push for the GridGuard repository prefix and
   immutable tags, encrypted EFS, VPC flow logs, private AWS endpoints, Secrets
   Manager containers, and ECS deployment rollback are configured.
-- Billable runtime resources, endpoints, NAT, public Grafana, and GitHub OIDC
-  are disabled by default. ECS desired counts also default to zero.
+- Billable runtime resources, endpoints, NAT, and public Grafana are disabled
+  by default. ECS desired counts also default to zero.
 - Terraform formatting, validation, and mocked plan tests run in CI.
 - Runtime bases and third-party CI actions are immutable, Python dependencies
   are audited, and built images are scanned before the required CI gate passes.
@@ -86,14 +86,16 @@ the expected scope.
 10. Build and scan all four images from the repository Dockerfiles. Tag and push
    them with the exact non-`latest` versions in `image_tags`; ECR tags cannot be
    overwritten. Record each ECR image digest in the change record.
-11. Bootstrap or reference the account-wide GitHub OIDC provider. Create a
-   least-privilege account-managed deployment policy, review it separately,
-   and attach it through `github_deploy_policy_arn` only when ready.
+11. Validate and review the retained
+   [GitHub OIDC plan-role bootstrap](../infra/cloudformation/bootstrap/github-oidc-plan-role.md).
+   An account owner creates its change set. It must contain exactly one OIDC
+   provider, one plan-only managed policy, and one plan-only role, all as
+   additions. This role cannot apply Terraform.
 12. Put `AWS_ROLE_TO_ASSUME`, `AWS_REGION`, `TF_STATE_BUCKET`, and
-   `TF_STATE_KMS_KEY_ARN` in the `sandbox` GitHub environment. Add an
-   environment approval rule before enabling apply. Use `TF_STATE_KEY` only to
-   override the documented default, and `TF_VARS_JSON` only for reviewed,
-   non-secret variable overrides.
+   `TF_STATE_KMS_KEY_ARN` in the `sandbox` GitHub environment. Restrict the
+   environment to protected branches and run the manual plan workflow. Use
+   `TF_STATE_KEY` only to override the documented default, and `TF_VARS_JSON`
+   only for reviewed, non-secret variable overrides.
 13. Enable runtime and VPC endpoints with every desired count still zero. Apply
    the reviewed plan to create storage, secret containers, task definitions,
    and dormant services.
@@ -117,8 +119,8 @@ procedure are documented in the
 ## Next
 
 ECS task definitions are pinned to the verified runnable image digests. The
-next repository action is to close the documented vendor-binary high findings
-through a fixed release or explicit time-bounded risk acceptance and review the
-remaining Debian zlib high finding. Do not enable runtime until that work, the
-OIDC deployment role, environment approval, private access path, and
-secret-handling procedure are all ready.
+next account action is to deploy the reviewed plan-only OIDC bootstrap and
+prove the GitHub plan workflow. After that, close or explicitly accept the
+documented remaining high findings and separately design an apply role. Do not
+enable runtime until those controls, the private access path, and the
+secret-handling procedure are ready.
