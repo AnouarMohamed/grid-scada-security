@@ -1,8 +1,9 @@
 # Signed Image Evidence Readiness Record
 
 This record captures the local verification and repository controls prepared
-for signed SBOM evidence on 2026-09-13. It is a readiness record, not evidence
-that the AWS role or GitHub workflow has been deployed or executed.
+for signed SBOM evidence on 2026-09-13. It remains the pre-deployment readiness
+record; deployment, execution, and independent verification are recorded in
+the [signed image evidence completion record](2026-09-13-signed-image-evidence.md).
 The scanned images were built from commit
 `00caa5fc8d810471a418972bdbdbe57875b307a6`.
 
@@ -90,13 +91,13 @@ role chaining.
 
 ## Decision And Next Gate
 
-Runtime remains blocked. Zero critical findings satisfies the automated image
-gate, but it is not a blanket approval of the high findings. The remaining
-cloud work is to deploy the reviewed two-resource evidence-role stack, add its
-ARN as `AWS_IMAGE_EVIDENCE_ROLE_TO_ASSUME` in the protected `sandbox`
-environment, run the workflow from merged `main`, and preserve the successful
-run URL and four attestation IDs in a completion record.
+Runtime remains blocked. The reviewed two-resource evidence-role stack was
+deployed, the protected `sandbox` environment was configured, and the workflow
+completed successfully from merged `main`. The run, artifact IDs, checksums,
+attestation IDs, and independent verification are preserved in the
+[completion record](2026-09-13-signed-image-evidence.md).
 
-After signed evidence exists, the next engineering decision is still the
-CVE-by-CVE reachability review or fixed upstream releases described in the
+Zero critical findings satisfies the automated image gate, but it is not a
+blanket approval of the high findings. The next engineering decision remains
+the CVE-by-CVE reachability review or fixed upstream releases described in the
 [container remediation record](2026-09-13-container-remediation.md).
