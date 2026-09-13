@@ -169,10 +169,10 @@ variable "image_tags" {
     grafana         = string
   })
   default = {
-    power_sim       = "0.1.0"
-    modbus_ingestor = "0.1.0"
-    influxdb        = "2.9.1"
-    grafana         = "12.4.10"
+    power_sim       = "0.1.1"
+    modbus_ingestor = "0.1.1"
+    influxdb        = "2.9.1-gridguard.1"
+    grafana         = "12.4.10-gridguard.1"
   }
 
   validation {

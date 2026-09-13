@@ -127,7 +127,6 @@ jobs:
           for image in "${gate_images[@]}"; do
             trivy image \
               --exit-code 1 \
-              --ignore-unfixed \
               --scanners vuln \
               --severity CRITICAL \
               --skip-version-check \

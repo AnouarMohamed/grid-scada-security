@@ -36,7 +36,7 @@ and cloud deployment targets.
 
 4. **Containers and local integration land**
    - Docker CI validates Compose, builds every Dockerfile, reports fixed high
-     and critical findings, and blocks fixed critical image vulnerabilities.
+     and critical findings, and blocks every known critical image vulnerability.
    - Every Dockerfile base and default stateful Compose image uses a complete
      multi-platform digest. Dependabot proposes reviewed digest updates.
    - Local `make docker` validates Compose by default; set

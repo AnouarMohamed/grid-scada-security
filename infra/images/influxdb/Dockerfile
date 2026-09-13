@@ -1,3 +1,7 @@
 FROM influxdb:2.9.1-alpine@sha256:243d7adc3edc2a3f98518e5395a9be725504acb43deb125bdcc78579b5c4bbd8
 
+USER root
+
+RUN apk upgrade --no-cache
+
 USER influxdb
