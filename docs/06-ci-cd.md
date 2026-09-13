@@ -139,8 +139,11 @@ make stack-down
 
 Add these once the corresponding project surfaces exist:
 
-- Terraform plan artifacts on pull requests once cloud resources exist.
-- Docker image SBOM generation and signed image publishing.
+- A separately approved Terraform apply workflow; the current cloud workflow
+  deliberately stops after a remote-state plan.
+- Registry-stored image signatures after a dedicated publication identity is
+  designed; the prepared read-only evidence workflow stores signed SPDX SBOM
+  attestations with GitHub and cannot mutate ECR.
 - A staging environment that deploys from `main` before production.
 - Raise the Python coverage floor as orchestration code gains deterministic
   unit seams; decreases require an explicit review.

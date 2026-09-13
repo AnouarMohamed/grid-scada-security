@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+python scripts/ci/validate-image-evidence.py
+
 readonly ACTIONLINT_VERSION="1.7.7"
 readonly ACTIONLINT_LINUX_AMD64_SHA256="023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757"
 readonly ACTIONLINT_LINUX_ARM64_SHA256="401942f9c24ed71e4fe71b76c7d638f66d8633575c4016efd2977ce7c28317d0"

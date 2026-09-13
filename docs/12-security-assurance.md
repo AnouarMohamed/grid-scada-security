@@ -20,6 +20,7 @@ for dependency, workflow, protocol, container, and infrastructure changes.
 | Terraform | Format, offline initialization, validation, and mocked native tests | `make terraform` |
 | CloudFormation | Parsed templates plus exact OIDC trust, state-write, and action-boundary assertions | `make cloudformation` |
 | Deployment | Manual sandbox-only Terraform plan, exact-environment OIDC trust, plan-only permissions boundary, remote encrypted state, no apply path | Deploy workflow |
+| Image evidence | Exact runnable ECR digests, pull-only OIDC role, SPDX SBOM, complete high/critical scan, GitHub-signed attestation | Manual evidence workflow |
 
 The required `CI Gate` aggregates every CI job and fails on either a failed or
 cancelled dependency. Branch protection requires that single current check.
@@ -88,6 +89,10 @@ attestation, image signing, and provenance verification become enforceable only
 after the signing identity exists.
 
 The remediated ECR image digests and scans are recorded, and ECS task
-definitions are pinned to the verified runnable manifests. The next repository
-work is to close the documented high findings and add signed SBOM attestations
-to the publication workflow.
+definitions are pinned to the verified runnable manifests. A separately
+bounded, manual signed-SBOM workflow and its read-only ECR role are prepared;
+their local verification and the current finding delta are captured in the
+[image-evidence readiness record](deployment-records/2026-09-13-image-evidence-readiness.md).
+The role still needs an owner-reviewed CloudFormation deployment and a
+successful evidence run. Runtime remains blocked pending the documented high
+finding decision.

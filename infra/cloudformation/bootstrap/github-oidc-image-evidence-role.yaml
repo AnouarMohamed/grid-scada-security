@@ -1,0 +1,179 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  GridGuard GitHub Actions role for read-only ECR evidence collection from the
+  four exact sandbox repositories. The role cannot publish or delete images.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: GitHub trust boundary
+        Parameters:
+          - GitHubOidcProviderArn
+          - GitHubRepository
+          - GitHubEnvironment
+          - RoleName
+          - PolicyName
+      - Label:
+          default: ECR boundary
+        Parameters:
+          - RepositoryPrefix
+
+Parameters:
+  GitHubOidcProviderArn:
+    Type: String
+    MinLength: 60
+    MaxLength: 2048
+    AllowedPattern: >-
+      ^arn:(aws|aws-us-gov|aws-cn):iam::[0-9]{12}:oidc-provider/token[.]actions[.]githubusercontent[.]com$
+    ConstraintDescription: Enter the existing GitHub Actions OIDC provider ARN.
+  GitHubRepository:
+    Type: String
+    Default: AnouarMohamed@235483559/grid-scada-security@1307773501
+    MinLength: 7
+    MaxLength: 200
+    AllowedPattern: '^[A-Za-z0-9_.-]+@[0-9]+/[A-Za-z0-9_.-]+@[0-9]+$'
+    ConstraintDescription: >-
+      Use the exact immutable GitHub owner@owner-id/repository@repository-id
+      prefix returned by the repository OIDC settings API.
+  GitHubEnvironment:
+    Type: String
+    Default: sandbox
+    MinLength: 1
+    MaxLength: 100
+    AllowedPattern: '^[A-Za-z0-9_.-]+$'
+    ConstraintDescription: Use a single exact GitHub environment name.
+  RoleName:
+    Type: String
+    Default: gridguard-aws-sandbox-github-image-evidence
+    MinLength: 1
+    MaxLength: 64
+    AllowedPattern: '^gridguard-aws-sandbox-[A-Za-z0-9_+=,.@-]+$'
+    ConstraintDescription: Keep the role inside the GridGuard sandbox namespace.
+  PolicyName:
+    Type: String
+    Default: gridguard-aws-sandbox-github-image-evidence
+    MinLength: 1
+    MaxLength: 128
+    AllowedPattern: '^gridguard-aws-sandbox-[A-Za-z0-9_+=,.@-]+$'
+    ConstraintDescription: Keep the policy inside the GridGuard sandbox namespace.
+  RepositoryPrefix:
+    Type: String
+    Default: gridguard-aws-sandbox
+    MinLength: 1
+    MaxLength: 200
+    AllowedPattern: '^[a-z0-9]+(?:[._/-][a-z0-9]+)*$'
+    ConstraintDescription: Enter the exact GridGuard ECR repository prefix.
+
+Resources:
+  GitHubImageEvidencePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      ManagedPolicyName: !Ref PolicyName
+      Path: /gridguard/
+      Description: >-
+        Read-only access to authenticate to ECR and pull the four GridGuard
+        sandbox images for SBOM and vulnerability evidence generation.
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AuthenticateToEcr
+            Effect: Allow
+            Action: ecr:GetAuthorizationToken
+            Resource: '*'
+          - Sid: PullExactImageRepositories
+            Effect: Allow
+            Action:
+              - ecr:BatchCheckLayerAvailability
+              - ecr:BatchGetImage
+              - ecr:DescribeImages
+              - ecr:GetDownloadUrlForLayer
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${RepositoryPrefix}/power-sim'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${RepositoryPrefix}/modbus-ingestor'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${RepositoryPrefix}/influxdb'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${RepositoryPrefix}/grafana'
+          - Sid: ReadCallerIdentity
+            Effect: Allow
+            Action: sts:GetCallerIdentity
+            Resource: '*'
+          - Sid: DenyEcrMutation
+            Effect: Deny
+            Action:
+              - ecr:BatchDeleteImage
+              - ecr:CompleteLayerUpload
+              - ecr:CreateRepository
+              - ecr:DeleteLifecyclePolicy
+              - ecr:DeleteRegistryPolicy
+              - ecr:DeleteRepository
+              - ecr:DeleteRepositoryPolicy
+              - ecr:InitiateLayerUpload
+              - ecr:PutImage
+              - ecr:PutImageScanningConfiguration
+              - ecr:PutImageTagMutability
+              - ecr:PutLifecyclePolicy
+              - ecr:PutRegistryPolicy
+              - ecr:PutRegistryScanningConfiguration
+              - ecr:PutReplicationConfiguration
+              - ecr:ReplicateImage
+              - ecr:SetRepositoryPolicy
+              - ecr:StartImageScan
+              - ecr:TagResource
+              - ecr:UntagResource
+              - ecr:UploadLayerPart
+            Resource: '*'
+          - Sid: DenyPrivilegeAndSecretAccess
+            Effect: Deny
+            Action:
+              - iam:PassRole
+              - secretsmanager:GetSecretValue
+              - sts:AssumeRole
+            Resource: '*'
+
+  GitHubImageEvidenceRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RoleName: !Ref RoleName
+      Path: /gridguard/
+      Description: >-
+        GitHub Actions OIDC role for read-only GridGuard image evidence.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: TrustExactGitHubEnvironment
+            Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GitHubOidcProviderArn
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubRepository}:environment:${GitHubEnvironment}'
+      ManagedPolicyArns:
+        - !Ref GitHubImageEvidencePolicy
+      PermissionsBoundary: !Ref GitHubImageEvidencePolicy
+      Tags:
+        - Key: Project
+          Value: gridguard
+        - Key: Environment
+          Value: aws-sandbox
+        - Key: ManagedBy
+          Value: cloudformation
+        - Key: Purpose
+          Value: github-image-evidence
+
+Outputs:
+  GitHubImageEvidencePolicyArn:
+    Description: Read-only ECR evidence policy and permissions boundary ARN.
+    Value: !Ref GitHubImageEvidencePolicy
+  GitHubImageEvidenceRoleArn:
+    Description: Role ARN for the AWS_IMAGE_EVIDENCE_ROLE_TO_ASSUME secret.
+    Value: !GetAtt GitHubImageEvidenceRole.Arn
+  TrustedSubject:
+    Description: Exact GitHub OIDC subject accepted by the role.
+    Value: !Sub 'repo:${GitHubRepository}:environment:${GitHubEnvironment}'
