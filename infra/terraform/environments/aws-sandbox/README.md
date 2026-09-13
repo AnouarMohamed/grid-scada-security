@@ -171,11 +171,13 @@ for image in \
   gridguard-influxdb; do
   trivy image --exit-code 0 --ignore-unfixed --scanners vuln \
     --severity HIGH,CRITICAL "$image"
-  trivy image --exit-code 1 --ignore-unfixed --scanners vuln \
+  trivy image --exit-code 1 --scanners vuln \
     --severity CRITICAL "$image"
 done
 ```
 
+The reporting pass focuses on actionable high and critical findings. The gate
+includes findings without a vendor fix and rejects any known critical finding.
 Scan the four local images before publishing. Then use the foundation outputs
 to tag and push versions that match `image_tags`:
 
@@ -185,15 +187,15 @@ INGESTOR_REPO="$(terraform output -json ecr_repository_urls | jq -r '."modbus-in
 INFLUXDB_REPO="$(terraform output -json ecr_repository_urls | jq -r '.influxdb')"
 GRAFANA_REPO="$(terraform output -json ecr_repository_urls | jq -r '.grafana')"
 
-docker tag gridguard-power-sim "${POWER_SIM_REPO}:0.1.0"
-docker tag gridguard-modbus-ingestor "${INGESTOR_REPO}:0.1.0"
-docker tag gridguard-influxdb "${INFLUXDB_REPO}:2.9.1"
-docker tag gridguard-grafana "${GRAFANA_REPO}:12.4.10"
+docker tag gridguard-power-sim "${POWER_SIM_REPO}:0.1.1"
+docker tag gridguard-modbus-ingestor "${INGESTOR_REPO}:0.1.1"
+docker tag gridguard-influxdb "${INFLUXDB_REPO}:2.9.1-gridguard.1"
+docker tag gridguard-grafana "${GRAFANA_REPO}:12.4.10-gridguard.1"
 
-docker push "${POWER_SIM_REPO}:0.1.0"
-docker push "${INGESTOR_REPO}:0.1.0"
-docker push "${INFLUXDB_REPO}:2.9.1"
-docker push "${GRAFANA_REPO}:12.4.10"
+docker push "${POWER_SIM_REPO}:0.1.1"
+docker push "${INGESTOR_REPO}:0.1.1"
+docker push "${INFLUXDB_REPO}:2.9.1-gridguard.1"
+docker push "${GRAFANA_REPO}:12.4.10-gridguard.1"
 ```
 
 ECR tag mutability is disabled, so publish a new version instead of replacing a

@@ -16,7 +16,7 @@ for dependency, workflow, protocol, container, and infrastructure changes.
 | HTTP ingestion | 1 MiB snapshot ceiling, 4 KiB error-body ceiling, line-protocol escaping | Python tests |
 | Containers | Immutable bases, non-root application users, dropped capabilities, no privilege escalation, read-only application filesystems, PID/memory/CPU limits | Docker and Compose validation |
 | Networks | Loopback-only host ports and an internal OT simulation network | Compose validation and smoke tests |
-| Images | Fixed high/critical findings reported; fixed critical findings block CI | Trivy image scans |
+| Images | Fixed high/critical findings reported; every known critical finding blocks CI | Trivy image scans |
 | Terraform | Format, offline initialization, validation, and mocked native tests | `make terraform` |
 | Deployment | Manual sandbox-only dispatch, protected environment, OIDC, remote encrypted state, apply from `main` only | Deploy workflow |
 
@@ -45,14 +45,20 @@ Never replace a digest with a floating tag to work around an update failure.
 
 The filesystem scan blocks fixed high and critical dependency or
 misconfiguration findings. Built-image scans report fixed high and critical
-findings and block fixed critical findings. The high image findings remain
-visible because upstream observability images can bundle tools that GridGuard
-does not execute; each update still requires review of reachability and a scan
-comparison. No vulnerability is silently ignored in a repository allow-list.
+findings and block every known critical finding, including findings without an
+available vendor fix. The high image findings remain visible because upstream
+observability images can bundle tools that GridGuard does not execute; each
+update still requires review of reachability and a scan comparison. No
+vulnerability is silently ignored in a repository allow-list.
 
 The current local stack uses InfluxDB 2.9.1 Alpine and Grafana 12.4.10. Their
 manifest digests are recorded directly in Dockerfiles, Compose defaults, and
 `.env.example`. Application images use digest-pinned Python slim bases.
+
+The first AWS scan and subsequent patched candidates are covered by the
+[container remediation record](deployment-records/2026-09-13-container-remediation.md).
+It records the scanner discrepancy, fixed operating-system packages, unresolved
+findings compiled into vendor Go binaries, and the resulting runtime block.
 
 ## Runtime Boundaries
 
