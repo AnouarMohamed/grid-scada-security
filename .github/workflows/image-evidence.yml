@@ -215,14 +215,23 @@ jobs:
           subject-digest: ${{ matrix.digest }}
           sbom-path: evidence/${{ matrix.component }}.spdx.json
 
+      - name: Stage and validate attestation bundle
+        run: |
+          bundle="evidence/${{ matrix.component }}.attestation.json"
+          cp "${{ steps.attest.outputs.bundle-path }}" "${bundle}"
+          jq -e '
+            .mediaType == "application/vnd.dev.sigstore.bundle.v0.3+json" and
+            (.dsseEnvelope.signatures | length) == 1 and
+            (.verificationMaterial.tlogEntries | length) >= 1 and
+            (.verificationMaterial.certificate.rawBytes | length) > 0
+          ' "${bundle}" > /dev/null
+
       - name: Upload evidence bundle
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: image-evidence-${{ matrix.component }}-${{ github.run_id }}
-          path: |
-            evidence/
-            ${{ steps.attest.outputs.bundle-path }}
+          path: evidence/
           if-no-files-found: error
           retention-days: 90
 

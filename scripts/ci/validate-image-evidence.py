@@ -109,5 +109,9 @@ require(
     "image inspect --platform" not in shell,
     "workflow must remain compatible with GitHub-hosted Docker",
 )
+require(
+    ".attestation.json" in shell and "tlogentries" in shell,
+    "workflow must stage and validate a named Sigstore bundle",
+)
 
 print("Validated manual signed-SBOM workflow and four immutable runnable digests.")
