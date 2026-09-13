@@ -63,7 +63,8 @@ and the follow-up apply completed. The final post-apply plan reported no drift.
 ## Remaining Gates
 
 - Publish the four release images only after the documented Trivy report and
-  fixed-critical gate pass; record the resulting ECR manifest digests.
+  fixed-critical gate pass; use the temporary exact-repository publisher
+  policy and record the resulting ECR manifest digests.
 - Remove the temporary CloudFormation template bucket after the stack update
   artifact is no longer needed. Never remove the Terraform state bucket.
 - Configure and review GitHub OIDC, the runtime deployment policy, and the

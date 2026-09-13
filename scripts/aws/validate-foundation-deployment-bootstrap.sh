@@ -30,9 +30,9 @@ validation_json="$(aws --profile "${AWS_PROFILE}" --region "${AWS_REGION}" \
 jq -e '
   (.Capabilities | index("CAPABILITY_NAMED_IAM")) != null and
   ([.Parameters[].ParameterKey] | sort) ==
-    (["DeploymentRoleName", "OperatorUserName", "StateAccessPolicyArn"] | sort)
+    (["DeploymentRoleName", "EnableOperatorImagePublish", "OperatorUserName", "StateAccessPolicyArn"] | sort)
 ' >/dev/null <<<"${validation_json}"
 
 printf 'PASS  CloudFormation accepted %s\n' "${TEMPLATE#"${REPOSITORY_ROOT}/"}"
-printf 'PASS  Named-IAM capability and three expected parameters are declared\n'
+printf 'PASS  Named-IAM capability and four expected parameters are declared\n'
 printf 'PASS  Validation made no AWS resource changes\n'
