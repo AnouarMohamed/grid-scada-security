@@ -9,7 +9,9 @@ without a manual workflow dispatch.
 The default-off AWS foundation was applied in `us-east-1` and verified on
 2026-09-12. Remote state, termination-protected bootstrap stacks, the cost
 budget, anomaly monitoring, isolated routes, VPC flow logs, bounded workload
-roles, four empty ECR repositories, and the ECS capacity providers are healthy.
+roles, four ECR repositories, and the ECS capacity providers are healthy. Four
+immutable release images were published and verified on 2026-09-13; see the
+[sanitized image publication record](deployment-records/2026-09-13-aws-image-publication.md).
 No Fargate task, ECS service, task definition, load balancer, EFS file system,
 VPC endpoint, NAT gateway, Elastic IP, or runtime secret exists yet. See the
 [sanitized foundation deployment record](deployment-records/2026-09-12-aws-foundation.md).
@@ -22,9 +24,9 @@ VPC endpoint, NAT gateway, Elastic IP, or runtime secret exists yet. See the
   public-ingress, cloud-core, and isolated OT subnets.
 - Security groups allow only the documented application paths; the ingestor is
   the sole service that initiates traffic into the OT simulation zone.
-- ECR scanning and immutable tags, encrypted EFS, VPC flow logs, private AWS
-  endpoints, Secrets Manager containers, and ECS deployment rollback are
-  configured.
+- Registry-level basic ECR scan-on-push for the GridGuard repository prefix and
+  immutable tags, encrypted EFS, VPC flow logs, private AWS endpoints, Secrets
+  Manager containers, and ECS deployment rollback are configured.
 - Billable runtime resources, endpoints, NAT, public Grafana, and GitHub OIDC
   are disabled by default. ECS desired counts also default to zero.
 - Terraform formatting, validation, and mocked plan tests run in CI.
@@ -113,7 +115,8 @@ procedure are documented in the
 
 ## Next
 
-The next action is to build, scan, and publish the four immutable ECR images.
-Do not enable runtime until the image digests, OIDC deployment role,
-environment approval, private access path, and secret-handling procedure are
-all ready.
+The next account action is to remove the temporary image-publisher policy,
+apply the reviewed registry-level basic scan-on-push rule, and manually scan
+the four images that predate that rule. Do not enable runtime until those scan
+results, the OIDC deployment role, environment approval, private access path,
+and secret-handling procedure are all ready.

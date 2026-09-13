@@ -14,6 +14,19 @@ resource "aws_ecr_repository" "service" {
   }
 }
 
+resource "aws_ecr_registry_scanning_configuration" "this" {
+  scan_type = "BASIC"
+
+  rule {
+    scan_frequency = "SCAN_ON_PUSH"
+
+    repository_filter {
+      filter      = "${local.name}/*"
+      filter_type = "WILDCARD"
+    }
+  }
+}
+
 resource "aws_ecr_lifecycle_policy" "service" {
   for_each = aws_ecr_repository.service
 

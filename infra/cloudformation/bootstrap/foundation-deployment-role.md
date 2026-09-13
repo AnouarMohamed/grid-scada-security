@@ -23,7 +23,10 @@ endpoint, load balancer, EFS, Secrets Manager, ECS task definition, ECS
 service, and image-push mutations. It can create only the reviewed foundation:
 the VPC and subnet routing structure, security groups, VPC Flow Logs, scoped
 CloudWatch log groups, four ECR repositories, one ECS cluster, and bounded IAM
-workload roles. Changing a runtime flag cannot bypass this policy gate.
+workload roles. Its account-level ECR write is limited to configuring scanning
+in the selected region; Terraform restricts that scan-on-push rule to
+`gridguard-aws-sandbox/*`. It can manually start scans only for repositories
+under that same prefix. Changing a runtime flag cannot bypass this policy gate.
 
 Every IAM role created by this deployment role must carry the retained
 `gridguard-aws-sandbox-workload-boundary`. The deployment role cannot remove or
@@ -87,7 +90,7 @@ to those four repositories, so enable it only for the publication session and
 do not leave the console or workstation unattended.
 
 After all four images are present, record their AWS-returned manifest digests
-and confirm each enhanced scan completes. Then update the same stack with
+and confirm each configured ECR scan completes. Then update the same stack with
 `EnableOperatorImagePublish` set back to `false`. The cleanup change set must
 remove only `OperatorEcrPublishPolicy`. Execute it, wait for
 `UPDATE_COMPLETE`, run `docker logout` for the account registry, and verify the
