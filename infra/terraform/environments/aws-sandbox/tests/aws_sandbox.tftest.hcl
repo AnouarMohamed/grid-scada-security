@@ -1,4 +1,12 @@
 mock_provider "aws" {
+  override_resource {
+    target          = aws_ecr_repository.service
+    override_during = plan
+    values = {
+      repository_url = "123456789012.dkr.ecr.us-east-1.amazonaws.com/gridguard-aws-sandbox/test"
+    }
+  }
+
   override_data {
     target = data.aws_availability_zones.available
     values = {
@@ -98,6 +106,16 @@ run "runtime_graph_expands_with_zero_tasks" {
     error_message = "Runtime mode must create the InfluxDB and Grafana secret containers."
   }
 
+  assert {
+    condition = alltrue([
+      endswith(local.image_uris.power_sim, "@${var.image_digests.power_sim}"),
+      endswith(local.image_uris.modbus_ingestor, "@${var.image_digests.modbus_ingestor}"),
+      endswith(local.image_uris.influxdb, "@${var.image_digests.influxdb}"),
+      endswith(local.image_uris.grafana, "@${var.image_digests.grafana}"),
+    ])
+    error_message = "Every ECS task definition must select its verified runnable manifest digest."
+  }
+
 
   assert {
     condition = alltrue([
@@ -180,6 +198,21 @@ run "mutable_latest_image_tags_are_rejected" {
   }
 
   expect_failures = [var.image_tags]
+}
+
+run "malformed_image_digests_are_rejected" {
+  command = plan
+
+  variables {
+    image_digests = {
+      power_sim       = "sha256:not-a-digest"
+      modbus_ingestor = "sha256:18e13b46ed9fe4d89290ae8219b6cd897e3a8e3c6675f3069541779b49e2caa7"
+      influxdb        = "sha256:66e4f468821b9a47f9eb0808d2e87c70d6ddd92c741450e9d78eff70ae856d67"
+      grafana         = "sha256:1fbc7b35e2e71e9ccf8178dc7b05369bc85a9000320ee40031743a868f566c5c"
+    }
+  }
+
+  expect_failures = [var.image_digests]
 }
 
 run "public_vpc_space_is_rejected" {
