@@ -29,17 +29,20 @@ packages for the pinned 3.23 and 3.24 base releases.
 | --- | --- | --- |
 | Power simulator | `0.1.1` | Digest-pinned Python 3.14 Trixie base; current distribution upgrades; `msgpack==1.2.1` |
 | Modbus ingestor | `0.1.1` | Digest-pinned Python 3.12 Trixie base; current distribution upgrades |
+| Fake telemetry | Local only | Digest-pinned Python 3.12 Trixie base; current distribution upgrades |
 | InfluxDB | `2.9.1-gridguard.1` | Retain pinned InfluxDB 2.9.1 Alpine base; upgrade installed Alpine packages |
 | Grafana | `12.4.10-gridguard.1` | Retain pinned Grafana 12.4.10 base; upgrade installed Alpine packages |
 
 Trivy 0.70.0 with its 2026-09-13 database reported zero critical findings,
-including unfixed findings, for all four candidates. The actionable
-`--ignore-unfixed` high-finding comparison was:
+including unfixed findings, for all four release candidates and the local-only
+fake-telemetry image. The actionable `--ignore-unfixed` high-finding comparison
+was:
 
 | Image | Fixed high findings | Disposition |
 | --- | ---: | --- |
 | Power simulator | 2 | Stale base-layer metadata; runtime packages verified below |
 | Modbus ingestor | 0 | Clear |
+| Fake telemetry | 0 | Clear; local-only image, not published to AWS |
 | InfluxDB | 69 | Unresolved vendor-compiled Go dependencies |
 | Grafana | 5 | Unresolved vendor-compiled Go dependencies |
 
