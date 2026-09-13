@@ -84,15 +84,13 @@ permissions boundary, default-off AWS foundation, and immutable-subject OIDC
 plan role are deployed. The protected GitHub environment produced a no-change
 remote plan using short-lived credentials. A separate least-privilege runtime
 deployment policy, environment approval, secrets, and the private operator
-access path remain blocked from runtime enablement. Registry-side SBOM
-attestation, image signing, and provenance verification become enforceable only
-after the signing identity exists.
+access path remain blocked from runtime enablement.
 
 The remediated ECR image digests and scans are recorded, and ECS task
 definitions are pinned to the verified runnable manifests. A separately
-bounded, manual signed-SBOM workflow and its read-only ECR role are prepared;
-their local verification and the current finding delta are captured in the
-[image-evidence readiness record](deployment-records/2026-09-13-image-evidence-readiness.md).
-The role still needs an owner-reviewed CloudFormation deployment and a
-successful evidence run. Runtime remains blocked pending the documented high
-finding decision.
+bounded, manual signed-SBOM workflow and its read-only ECR role are deployed.
+The successful run produced signed attestations and retained evidence for all
+four exact runnable manifests; the immutable identifiers and independent
+verification are captured in the
+[signed image evidence completion record](deployment-records/2026-09-13-signed-image-evidence.md).
+Runtime remains blocked pending the documented high-finding decision.
