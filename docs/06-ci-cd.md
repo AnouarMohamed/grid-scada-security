@@ -45,15 +45,14 @@ and cloud deployment targets.
      `make stack-up`.
 
 5. **Cloud deployment**
-   - Deployment is manual through `.github/workflows/deploy.yml`.
-   - `plan` is the default action.
+   - Cloud planning is manual through `.github/workflows/deploy.yml`.
    - The workflow is fixed to `infra/terraform/environments/aws-sandbox` and
      the `sandbox` GitHub environment. Local metadata is validated in CI and is
      never a cloud deployment target.
-   - `apply` is guarded to `main`; every run requires an OIDC role and durable,
-     encrypted remote state.
-   - The `sandbox` environment should require approval before real cloud
-     credentials are configured.
+   - The workflow can run `terraform plan`, but it has no apply path. Every run
+     requires a plan-only OIDC role and durable, encrypted remote state.
+   - Runtime deployment remains an operator-controlled local procedure until a
+     separate apply role and policy receive their own security review.
 
 ## Branch Protection
 
@@ -80,22 +79,25 @@ For AWS, configure these values on the target GitHub environment:
 - Environment variable: `AWS_REGION`
 - Secret: `AWS_ROLE_TO_ASSUME`
 - Environment variable: `TF_STATE_BUCKET`
+- Environment variable: `TF_STATE_KMS_KEY_ARN`
 - Optional environment variable: `TF_STATE_KEY`
 - Optional non-secret JSON variable object: `TF_VARS_JSON`
 
-The AWS role should trust this repository through GitHub's OIDC provider and
-should be scoped to the exact Terraform state/backend and runtime resources
-needed by the target environment.
+The AWS role trusts only this repository's `sandbox` environment through
+GitHub's OIDC provider. The reviewed plan role can read only the exact state
+object, manage only its exact `.tflock` object, use only the state KMS key, and
+read AWS resource metadata. It cannot write Terraform state, read secret
+values, pass roles, or mutate infrastructure.
 
-The deploy workflow requires the remote state bucket for every AWS plan and
-apply. It validates `TF_VARS_JSON` as an object and writes it only to the
-ephemeral runner; Terraform secrets must still be populated directly in
-Secrets Manager, never passed through that object.
+The workflow requires the remote state bucket and KMS key for every plan. It
+validates `TF_VARS_JSON` as an object and writes it only to the ephemeral
+runner; Terraform secrets must still be populated directly in Secrets Manager,
+never passed through that object.
 
-The AWS Terraform root can create the constrained trust role, but attaches no
-deployment permissions unless an account-managed policy ARN is explicitly
-provided. See the [AWS cloud handoff](11-aws-cloud-handoff.md) before enabling
-the workflow.
+An account owner creates the retained provider, policy, and role through the
+reviewed [OIDC plan-role bootstrap](../infra/cloudformation/bootstrap/github-oidc-plan-role.md).
+Leave Terraform's embedded OIDC creation switches disabled for this account so
+ownership remains unambiguous.
 
 ## Local Commands
 
@@ -109,6 +111,7 @@ Run a focused gate:
 
 ```bash
 make docs
+make cloudformation
 make python
 make workflows
 make modbus-contracts

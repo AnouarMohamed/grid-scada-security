@@ -239,28 +239,25 @@ are capped at one task to prevent unsupported multi-writer access to EFS.
 
 ## GitHub OIDC Bootstrap
 
-The OIDC provider is account-wide. Check for an existing provider before using
-`create_github_oidc_provider = true`. Otherwise pass its ARN through
-`github_oidc_provider_arn`.
+For this account, create the OIDC provider and plan-only role with the retained
+[CloudFormation bootstrap](../../../cloudformation/bootstrap/github-oidc-plan-role.md).
+Keep `create_github_oidc_provider = false`, `github_oidc_provider_arn = null`,
+and `github_deploy_policy_arn = null` in this Terraform root. Those variables
+remain a reusable alternative for accounts that deliberately choose Terraform
+ownership, but mixing both ownership paths would create drift.
 
-The role trusts only this repository and the listed GitHub environments, with
-audience `sts.amazonaws.com`. It deliberately receives no AWS permissions
-unless `github_deploy_policy_arn` names an account-managed policy. Use a
-permissions boundary through `github_role_permissions_boundary_arn` where your
-account supports one.
+The bootstrap role trusts only this repository's exact `sandbox` environment
+subject and audience `sts.amazonaws.com`. Its policy is also its permissions
+boundary. It can read the exact Terraform state object, manage the exact lock
+object, use the state KMS key, and read resource metadata. It cannot write
+state, retrieve secret values, pass roles, or apply infrastructure changes.
 
-The repository intentionally does not provide a generic administrator policy.
-Build the account-managed policy around the selected state bucket and the
-planned GridGuard resource names, review it with IAM Access Analyzer, and never
-attach `AdministratorAccess` to the deployment role.
+After bootstrap, place its `GitHubPlanRoleArn` output in the `sandbox` GitHub
+environment as `AWS_ROLE_TO_ASSUME`. Set `AWS_REGION`, `TF_STATE_BUCKET`, and
+`TF_STATE_KMS_KEY_ARN` as environment variables. Optionally override
+`TF_STATE_KEY`, whose default is `gridguard/aws-sandbox/terraform.tfstate`.
 
-After bootstrap, place the `github_deploy_role_arn` output in the selected
-GitHub environment as `AWS_ROLE_TO_ASSUME`, and set `AWS_REGION` as an
-environment variable. Set `TF_STATE_BUCKET` and `TF_STATE_KMS_KEY_ARN` from
-the state-bootstrap outputs; optionally override `TF_STATE_KEY`, whose default
-is `gridguard/aws-sandbox/terraform.tfstate`.
-
-The deployment workflow uses Terraform defaults unless the environment variable
+The plan workflow uses Terraform defaults unless the environment variable
 `TF_VARS_JSON` contains a valid non-secret JSON object of variable overrides.
 Keep credentials out of this object. A sandbox runtime example is:
 
@@ -276,6 +273,11 @@ Keep credentials out of this object. A sandbox runtime example is:
   }
 }
 ```
+
+The committed workflow has no apply input or apply step. Treat any future apply
+role as a separate privileged system: define a resource-scoped policy, validate
+it independently, require environment approval, and review the workflow change
+through the protected branch before granting access.
 
 ## Grafana Exposure
 

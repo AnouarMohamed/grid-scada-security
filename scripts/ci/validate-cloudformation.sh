@@ -1,0 +1,221 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+python - <<'PY'
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+
+class CloudFormationLoader(yaml.SafeLoader):
+    pass
+
+
+def construct_intrinsic(
+    loader: CloudFormationLoader,
+    tag_suffix: str,
+    node: yaml.Node,
+) -> dict[str, Any]:
+    if isinstance(node, yaml.ScalarNode):
+        value = loader.construct_scalar(node)
+    elif isinstance(node, yaml.SequenceNode):
+        value = loader.construct_sequence(node)
+    else:
+        value = loader.construct_mapping(node)
+    return {f"!{tag_suffix}": value}
+
+
+CloudFormationLoader.add_multi_constructor("!", construct_intrinsic)
+
+root = Path("infra/cloudformation/bootstrap")
+templates: dict[str, dict[str, Any]] = {}
+for path in sorted(root.glob("*.yaml")):
+    document = yaml.load(path.read_text(encoding="utf-8"), Loader=CloudFormationLoader)
+    if not isinstance(document, dict) or not isinstance(document.get("Resources"), dict):
+        raise SystemExit(f"{path}: expected a CloudFormation object with Resources")
+    templates[path.name] = document
+
+name = "github-oidc-plan-role.yaml"
+template = templates.get(name)
+if template is None:
+    raise SystemExit(f"missing required template: {root / name}")
+
+resources = template["Resources"]
+expected_resources = {"GitHubOidcProvider", "GitHubPlanPolicy", "GitHubPlanRole"}
+if set(resources) != expected_resources:
+    raise SystemExit(f"{name}: resource set must be exactly {sorted(expected_resources)}")
+
+for logical_id, resource in resources.items():
+    if resource.get("DeletionPolicy") != "Retain":
+        raise SystemExit(f"{name}: {logical_id} must use DeletionPolicy Retain")
+    if resource.get("UpdateReplacePolicy") != "Retain":
+        raise SystemExit(f"{name}: {logical_id} must use UpdateReplacePolicy Retain")
+
+provider = resources["GitHubOidcProvider"]["Properties"]
+if provider.get("Url") != "https://token.actions.githubusercontent.com":
+    raise SystemExit(f"{name}: unexpected OIDC provider URL")
+if provider.get("ClientIdList") != ["sts.amazonaws.com"]:
+    raise SystemExit(f"{name}: OIDC audience must be exactly sts.amazonaws.com")
+if "ThumbprintList" in provider:
+    raise SystemExit(f"{name}: let IAM retrieve the current CA thumbprint")
+
+role = resources["GitHubPlanRole"]["Properties"]
+policy_ref = {"!Ref": "GitHubPlanPolicy"}
+if role.get("ManagedPolicyArns") != [policy_ref]:
+    raise SystemExit(f"{name}: role must attach only GitHubPlanPolicy")
+if role.get("PermissionsBoundary") != policy_ref:
+    raise SystemExit(f"{name}: GitHubPlanPolicy must also be the permissions boundary")
+if role.get("Path") != "/gridguard/" or role.get("MaxSessionDuration") != 3600:
+    raise SystemExit(f"{name}: role path or session duration changed unexpectedly")
+if "Policies" in role:
+    raise SystemExit(f"{name}: inline role policies are not permitted")
+
+trust = role["AssumeRolePolicyDocument"]["Statement"]
+if len(trust) != 1:
+    raise SystemExit(f"{name}: role trust must contain exactly one statement")
+trust_statement = trust[0]
+if trust_statement.get("Action") != "sts:AssumeRoleWithWebIdentity":
+    raise SystemExit(f"{name}: trust action must be AssumeRoleWithWebIdentity")
+if trust_statement.get("Effect") != "Allow":
+    raise SystemExit(f"{name}: trust statement must be Allow")
+if trust_statement.get("Principal") != {"Federated": {"!Ref": "GitHubOidcProvider"}}:
+    raise SystemExit(f"{name}: trust principal must be only the template OIDC provider")
+conditions = trust_statement.get("Condition", {}).get("StringEquals", {})
+expected_condition_keys = {
+    "token.actions.githubusercontent.com:aud",
+    "token.actions.githubusercontent.com:sub",
+}
+if set(conditions) != expected_condition_keys:
+    raise SystemExit(f"{name}: trust must bind only exact audience and subject claims")
+if conditions["token.actions.githubusercontent.com:aud"] != "sts.amazonaws.com":
+    raise SystemExit(f"{name}: trust audience is not sts.amazonaws.com")
+expected_subject = {"!Sub": "repo:${GitHubRepository}:environment:${GitHubEnvironment}"}
+if conditions["token.actions.githubusercontent.com:sub"] != expected_subject:
+    raise SystemExit(f"{name}: trust subject is not the exact repository environment")
+
+statements = resources["GitHubPlanPolicy"]["Properties"]["PolicyDocument"]["Statement"]
+by_sid = {statement["Sid"]: statement for statement in statements}
+if len(by_sid) != len(statements):
+    raise SystemExit(f"{name}: policy statement Sids must be unique")
+expected_sids = {
+    "ReadStateBucketMetadata",
+    "ListExactStateObjects",
+    "ReadExactState",
+    "ManageExactStateLock",
+    "UseStateEncryptionKey",
+    "DenyStateMutation",
+    "DenyPrivilegeAndSecretAccess",
+    "ReadTerraformMetadata",
+}
+if set(by_sid) != expected_sids:
+    raise SystemExit(f"{name}: unexpected policy statement set")
+
+bucket_arn = {"!Sub": "arn:${AWS::Partition}:s3:::${StateBucketName}"}
+state_arn = {"!Sub": "arn:${AWS::Partition}:s3:::${StateBucketName}/${StateKey}"}
+lock_arn = {"!Sub": "arn:${AWS::Partition}:s3:::${StateBucketName}/${StateKey}.tflock"}
+
+
+def require_statement(
+    sid: str,
+    effect: str,
+    actions: set[str],
+    resource: object,
+) -> dict[str, Any]:
+    statement = by_sid[sid]
+    actual_actions = statement["Action"]
+    actual = set(actual_actions if isinstance(actual_actions, list) else [actual_actions])
+    if statement.get("Effect") != effect or actual != actions:
+        raise SystemExit(f"{name}: {sid} effect or actions changed unexpectedly")
+    if statement.get("Resource") != resource:
+        raise SystemExit(f"{name}: {sid} resource boundary changed unexpectedly")
+    return statement
+
+
+require_statement(
+    "ReadStateBucketMetadata",
+    "Allow",
+    {"s3:GetBucketLocation", "s3:GetBucketVersioning"},
+    bucket_arn,
+)
+list_statement = require_statement(
+    "ListExactStateObjects", "Allow", {"s3:ListBucket"}, bucket_arn
+)
+expected_prefixes = [{"!Ref": "StateKey"}, {"!Sub": "${StateKey}.tflock"}]
+if list_statement.get("Condition") != {
+    "StringEquals": {"s3:prefix": expected_prefixes}
+}:
+    raise SystemExit(f"{name}: state bucket list prefixes changed unexpectedly")
+require_statement(
+    "ReadExactState",
+    "Allow",
+    {"s3:GetObject", "s3:GetObjectVersion"},
+    state_arn,
+)
+require_statement(
+    "ManageExactStateLock",
+    "Allow",
+    {"s3:DeleteObject", "s3:GetObject", "s3:PutObject"},
+    lock_arn,
+)
+require_statement(
+    "UseStateEncryptionKey",
+    "Allow",
+    {"kms:Decrypt", "kms:DescribeKey", "kms:Encrypt", "kms:GenerateDataKey"},
+    {"!Ref": "StateKmsKeyArn"},
+)
+require_statement(
+    "DenyStateMutation",
+    "Deny",
+    {"s3:DeleteObject", "s3:DeleteObjectVersion", "s3:PutObject"},
+    state_arn,
+)
+require_statement(
+    "DenyPrivilegeAndSecretAccess",
+    "Deny",
+    {"iam:PassRole", "secretsmanager:GetSecretValue", "sts:AssumeRole"},
+    "*",
+)
+expected_metadata_actions = {
+    "ec2:Describe*",
+    "ec2:GetManagedPrefixListEntries",
+    "ecr:Describe*",
+    "ecr:GetLifecyclePolicy",
+    "ecr:GetRegistryPolicy",
+    "ecr:GetRegistryScanningConfiguration",
+    "ecr:ListImages",
+    "ecr:ListTagsForResource",
+    "ecs:Describe*",
+    "ecs:List*",
+    "elasticfilesystem:Describe*",
+    "elasticloadbalancing:Describe*",
+    "iam:GetOpenIDConnectProvider",
+    "iam:GetPolicy",
+    "iam:GetPolicyVersion",
+    "iam:GetRole",
+    "iam:GetRolePolicy",
+    "iam:ListAttachedRolePolicies",
+    "iam:ListInstanceProfilesForRole",
+    "iam:ListOpenIDConnectProviders",
+    "iam:ListPolicyTags",
+    "iam:ListPolicyVersions",
+    "iam:ListRolePolicies",
+    "iam:ListRoleTags",
+    "logs:Describe*",
+    "logs:GetDataProtectionPolicy",
+    "logs:ListTagsForResource",
+    "secretsmanager:DescribeSecret",
+    "secretsmanager:GetResourcePolicy",
+    "secretsmanager:ListSecrets",
+    "secretsmanager:ListSecretVersionIds",
+    "servicediscovery:Get*",
+    "servicediscovery:List*",
+    "sts:GetCallerIdentity",
+}
+require_statement(
+    "ReadTerraformMetadata", "Allow", expected_metadata_actions, "*"
+)
+
+print(f"Validated {len(templates)} CloudFormation bootstrap templates.")
+print("Validated plan-only OIDC trust, state boundary, and action boundary.")
+PY

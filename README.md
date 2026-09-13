@@ -140,7 +140,8 @@ path. The default-off AWS foundation is deployed in a dedicated `us-east-1`
 sandbox with its VPC, flow logs, security groups, private ECR repositories, ECS
 cluster, and bounded IAM roles verified. Billable runtime resources remain
 disabled; EFS, ALB, endpoints, secret containers, task definitions, services,
-and OIDC integration are still gated Terraform definitions.
+and OIDC integration remain off. A retained, plan-only OIDC bootstrap is ready
+for owner review; no GitHub workflow can apply infrastructure.
 
 Current CI is intentionally future-ready:
 
@@ -235,6 +236,8 @@ CI jobs:
 - **Repository Hygiene**: line endings, final newline, trailing whitespace,
   ignored tracked files, oversized files, and secret-ignore sanity checks.
 - **Documentation**: Markdown fence balance and relative-link validation.
+- **CloudFormation**: template parsing and exact plan-only OIDC policy/trust
+  invariants.
 - **Python Lint, Test, SAST, and Audit**: reproducibly pinned tooling, Ruff,
   Bandit, pip-audit, pytest on Python 3.12 and 3.14, and an 80% aggregate
   coverage floor.
@@ -249,10 +252,11 @@ CI jobs:
 - **CI Gate**: single required status check for branch protection.
 
 Manual deployment is defined in
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It supports
-Terraform `plan` and `apply` only for the repository's AWS sandbox root, uses
-the protected `sandbox` GitHub environment, and authenticates through OIDC
-instead of static access keys. Applies require `main` and remain manual.
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It runs only
+Terraform `plan` for the repository's AWS sandbox root, uses the protected
+`sandbox` GitHub environment, and authenticates through a bounded OIDC role
+instead of static access keys. Runtime apply remains a separate local operator
+procedure.
 
 The `main` branch is protected with:
 
@@ -296,11 +300,10 @@ Details are in
 
 Near-term:
 
-- Publish the reviewed release images to private ECR and record their immutable
-  registry digests.
-- Configure the OIDC deployment role, environment approval, private operator
-  access, and secret procedure; then enable runtime with zero tasks before
-  scaling services to one.
+- Deploy and prove the reviewed plan-only OIDC role, then separately design the
+  apply role and environment approval.
+- Configure private operator access and the secret procedure; then enable
+  runtime with zero tasks before scaling services to one.
 - Calibrate the balanced feeder approximation against published IEEE reference
   results or promote it to an unbalanced model.
 - Add a residual/state-estimation detector beyond envelope checks.
