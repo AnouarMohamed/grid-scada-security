@@ -209,13 +209,27 @@ variable "image_digests" {
 }
 
 variable "github_repository" {
-  description = "GitHub owner/repository allowed to request deployment credentials."
+  description = "Human-readable GitHub owner/repository used in resource tags."
   type        = string
   default     = "AnouarMohamed/grid-scada-security"
 
   validation {
     condition     = can(regex("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", var.github_repository))
     error_message = "github_repository must use owner/repository form."
+  }
+}
+
+variable "github_oidc_subject_repository" {
+  description = "Immutable GitHub owner@owner-id/repository@repository-id OIDC subject prefix."
+  type        = string
+  default     = "AnouarMohamed@235483559/grid-scada-security@1307773501"
+
+  validation {
+    condition = can(regex(
+      "^[A-Za-z0-9_.-]+@[0-9]+/[A-Za-z0-9_.-]+@[0-9]+$",
+      var.github_oidc_subject_repository,
+    ))
+    error_message = "github_oidc_subject_repository must use immutable owner@owner-id/repository@repository-id form."
   }
 }
 

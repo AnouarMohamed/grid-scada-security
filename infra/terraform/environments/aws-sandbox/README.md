@@ -246,11 +246,13 @@ and `github_deploy_policy_arn = null` in this Terraform root. Those variables
 remain a reusable alternative for accounts that deliberately choose Terraform
 ownership, but mixing both ownership paths would create drift.
 
-The bootstrap role trusts only this repository's exact `sandbox` environment
-subject and audience `sts.amazonaws.com`. Its policy is also its permissions
-boundary. It can read the exact Terraform state object, manage the exact lock
-object, use the state KMS key, and read resource metadata. It cannot write
-state, retrieve secret values, pass roles, or apply infrastructure changes.
+The bootstrap role trusts only this repository's immutable owner/repository ID
+prefix, exact `sandbox` environment, and audience `sts.amazonaws.com`. Verify
+the current prefix through GitHub's repository OIDC settings API before every
+trust update. Its policy is also its permissions boundary. It can read the
+exact Terraform state object, manage the exact lock object, use the state KMS
+key, and read resource metadata. It cannot write state, retrieve secret values,
+pass roles, or apply infrastructure changes.
 
 After bootstrap, place its `GitHubPlanRoleArn` output in the `sandbox` GitHub
 environment as `AWS_ROLE_TO_ASSUME`. Set `AWS_REGION`, `TF_STATE_BUCKET`, and

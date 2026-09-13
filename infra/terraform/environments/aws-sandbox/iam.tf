@@ -96,7 +96,7 @@ locals {
   )
   github_subjects = [
     for environment in var.github_environments :
-    "repo:${var.github_repository}:environment:${environment}"
+    "repo:${var.github_oidc_subject_repository}:environment:${environment}"
   ]
 }
 
@@ -114,8 +114,6 @@ resource "aws_iam_role" "github_deploy" {
       Condition = {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-        }
-        StringLike = {
           "token.actions.githubusercontent.com:sub" = local.github_subjects
         }
       }
