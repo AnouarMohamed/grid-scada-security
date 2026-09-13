@@ -223,6 +223,156 @@ require_statement(
     "ReadTerraformMetadata", "Allow", expected_metadata_actions, "*"
 )
 
+name = "github-oidc-image-evidence-role.yaml"
+template = templates.get(name)
+if template is None:
+    raise SystemExit(f"missing required template: {root / name}")
+
+resources = template["Resources"]
+expected_resources = {"GitHubImageEvidencePolicy", "GitHubImageEvidenceRole"}
+if set(resources) != expected_resources:
+    raise SystemExit(f"{name}: resource set must be exactly {sorted(expected_resources)}")
+
+for logical_id, resource in resources.items():
+    if resource.get("DeletionPolicy") != "Retain":
+        raise SystemExit(f"{name}: {logical_id} must use DeletionPolicy Retain")
+    if resource.get("UpdateReplacePolicy") != "Retain":
+        raise SystemExit(f"{name}: {logical_id} must use UpdateReplacePolicy Retain")
+
+immutable_repository = "AnouarMohamed@235483559/grid-scada-security@1307773501"
+repository_parameter = template["Parameters"]["GitHubRepository"]
+if repository_parameter.get("Default") != immutable_repository:
+    raise SystemExit(f"{name}: immutable GitHub repository identifier changed")
+if template["Parameters"]["GitHubEnvironment"].get("Default") != "sandbox":
+    raise SystemExit(f"{name}: GitHub environment must default to sandbox")
+if template["Parameters"]["RepositoryPrefix"].get("Default") != "gridguard-aws-sandbox":
+    raise SystemExit(f"{name}: unexpected ECR repository prefix")
+
+role = resources["GitHubImageEvidenceRole"]["Properties"]
+policy_ref = {"!Ref": "GitHubImageEvidencePolicy"}
+if role.get("ManagedPolicyArns") != [policy_ref]:
+    raise SystemExit(f"{name}: role must attach only GitHubImageEvidencePolicy")
+if role.get("PermissionsBoundary") != policy_ref:
+    raise SystemExit(f"{name}: evidence policy must also be the permissions boundary")
+if role.get("Path") != "/gridguard/" or role.get("MaxSessionDuration") != 3600:
+    raise SystemExit(f"{name}: role path or session duration changed unexpectedly")
+if "Policies" in role:
+    raise SystemExit(f"{name}: inline role policies are not permitted")
+
+trust = role["AssumeRolePolicyDocument"]["Statement"]
+if len(trust) != 1:
+    raise SystemExit(f"{name}: role trust must contain exactly one statement")
+trust_statement = trust[0]
+if trust_statement.get("Action") != "sts:AssumeRoleWithWebIdentity":
+    raise SystemExit(f"{name}: trust action must be AssumeRoleWithWebIdentity")
+if trust_statement.get("Effect") != "Allow":
+    raise SystemExit(f"{name}: trust statement must be Allow")
+if trust_statement.get("Principal") != {"Federated": {"!Ref": "GitHubOidcProviderArn"}}:
+    raise SystemExit(f"{name}: trust principal must be the supplied OIDC provider")
+conditions = trust_statement.get("Condition", {}).get("StringEquals", {})
+expected_conditions = {
+    "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+    "token.actions.githubusercontent.com:sub": {
+        "!Sub": "repo:${GitHubRepository}:environment:${GitHubEnvironment}"
+    },
+}
+if conditions != expected_conditions:
+    raise SystemExit(f"{name}: trust must bind the exact audience and environment subject")
+
+statements = resources["GitHubImageEvidencePolicy"]["Properties"]
+statements = statements["PolicyDocument"]["Statement"]
+by_sid = {statement["Sid"]: statement for statement in statements}
+if len(by_sid) != len(statements):
+    raise SystemExit(f"{name}: policy statement Sids must be unique")
+expected_sids = {
+    "AuthenticateToEcr",
+    "PullExactImageRepositories",
+    "ReadCallerIdentity",
+    "DenyEcrMutation",
+    "DenyPrivilegeAndSecretAccess",
+}
+if set(by_sid) != expected_sids:
+    raise SystemExit(f"{name}: unexpected policy statement set")
+
+
+def require_evidence_statement(
+    sid: str,
+    effect: str,
+    actions: set[str],
+    resource: object,
+) -> dict[str, Any]:
+    statement = by_sid[sid]
+    actual_actions = statement["Action"]
+    actual = set(actual_actions if isinstance(actual_actions, list) else [actual_actions])
+    if statement.get("Effect") != effect or actual != actions:
+        raise SystemExit(f"{name}: {sid} effect or actions changed unexpectedly")
+    if statement.get("Resource") != resource:
+        raise SystemExit(f"{name}: {sid} resource boundary changed unexpectedly")
+    return statement
+
+
+require_evidence_statement(
+    "AuthenticateToEcr", "Allow", {"ecr:GetAuthorizationToken"}, "*"
+)
+repository_arns = [
+    {
+        "!Sub": (
+            "arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:"
+            f"repository/${{RepositoryPrefix}}/{component}"
+        )
+    }
+    for component in ("power-sim", "modbus-ingestor", "influxdb", "grafana")
+]
+require_evidence_statement(
+    "PullExactImageRepositories",
+    "Allow",
+    {
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:DescribeImages",
+        "ecr:GetDownloadUrlForLayer",
+    },
+    repository_arns,
+)
+require_evidence_statement(
+    "ReadCallerIdentity", "Allow", {"sts:GetCallerIdentity"}, "*"
+)
+require_evidence_statement(
+    "DenyEcrMutation",
+    "Deny",
+    {
+        "ecr:BatchDeleteImage",
+        "ecr:CompleteLayerUpload",
+        "ecr:CreateRepository",
+        "ecr:DeleteLifecyclePolicy",
+        "ecr:DeleteRegistryPolicy",
+        "ecr:DeleteRepository",
+        "ecr:DeleteRepositoryPolicy",
+        "ecr:InitiateLayerUpload",
+        "ecr:PutImage",
+        "ecr:PutImageScanningConfiguration",
+        "ecr:PutImageTagMutability",
+        "ecr:PutLifecyclePolicy",
+        "ecr:PutRegistryPolicy",
+        "ecr:PutRegistryScanningConfiguration",
+        "ecr:PutReplicationConfiguration",
+        "ecr:ReplicateImage",
+        "ecr:SetRepositoryPolicy",
+        "ecr:StartImageScan",
+        "ecr:TagResource",
+        "ecr:UntagResource",
+        "ecr:UploadLayerPart",
+    },
+    "*",
+)
+require_evidence_statement(
+    "DenyPrivilegeAndSecretAccess",
+    "Deny",
+    {"iam:PassRole", "secretsmanager:GetSecretValue", "sts:AssumeRole"},
+    "*",
+)
+
 print(f"Validated {len(templates)} CloudFormation bootstrap templates.")
 print("Validated plan-only OIDC trust, state boundary, and action boundary.")
+print("Validated read-only image-evidence trust and four-repository boundary.")
 PY
