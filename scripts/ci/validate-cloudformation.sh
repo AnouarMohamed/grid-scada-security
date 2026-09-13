@@ -60,6 +60,13 @@ if provider.get("ClientIdList") != ["sts.amazonaws.com"]:
 if "ThumbprintList" in provider:
     raise SystemExit(f"{name}: let IAM retrieve the current CA thumbprint")
 
+repository_parameter = template["Parameters"]["GitHubRepository"]
+immutable_repository = "AnouarMohamed@235483559/grid-scada-security@1307773501"
+if repository_parameter.get("Default") != immutable_repository:
+    raise SystemExit(f"{name}: immutable GitHub repository identifier changed")
+if "@[0-9]+" not in repository_parameter.get("AllowedPattern", ""):
+    raise SystemExit(f"{name}: GitHub repository parameter must require immutable IDs")
+
 role = resources["GitHubPlanRole"]["Properties"]
 policy_ref = {"!Ref": "GitHubPlanPolicy"}
 if role.get("ManagedPolicyArns") != [policy_ref]:

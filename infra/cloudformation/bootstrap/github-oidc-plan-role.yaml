@@ -21,7 +21,7 @@ Metadata:
           - StateKmsKeyArn
     ParameterLabels:
       GitHubRepository:
-        default: Trusted GitHub owner/repository
+        default: Trusted immutable GitHub owner/repository identifier
       GitHubEnvironment:
         default: Trusted GitHub environment
       RoleName:
@@ -38,11 +38,13 @@ Metadata:
 Parameters:
   GitHubRepository:
     Type: String
-    Default: AnouarMohamed/grid-scada-security
-    MinLength: 3
+    Default: AnouarMohamed@235483559/grid-scada-security@1307773501
+    MinLength: 7
     MaxLength: 200
-    AllowedPattern: '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'
-    ConstraintDescription: Use the exact GitHub owner/repository form.
+    AllowedPattern: '^[A-Za-z0-9_.-]+@[0-9]+/[A-Za-z0-9_.-]+@[0-9]+$'
+    ConstraintDescription: >-
+      Use the exact immutable GitHub owner@owner-id/repository@repository-id
+      prefix returned by the repository OIDC settings API.
   GitHubEnvironment:
     Type: String
     Default: sandbox

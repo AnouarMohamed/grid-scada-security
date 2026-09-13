@@ -8,11 +8,11 @@ GridGuard stage. It creates exactly three retained IAM resources:
 - One role that attaches that policy and uses the same policy as its
   permissions boundary.
 
-The role trusts only
-`repo:AnouarMohamed/grid-scada-security:environment:sandbox` with audience
-`sts.amazonaws.com`. It can read the exact Terraform state object, create and
-delete only that object's `.tflock`, use the exact state KMS key, and read the
-AWS metadata needed by Terraform refresh and plan.
+The role trusts only the immutable subject
+`repo:AnouarMohamed@235483559/grid-scada-security@1307773501:environment:sandbox`
+with audience `sts.amazonaws.com`. It can read the exact Terraform state
+object, create and delete only that object's `.tflock`, use the exact state KMS
+key, and read the AWS metadata needed by Terraform refresh and plan.
 
 It cannot write or delete Terraform state, read secret values, pass a role,
 assume another role, or mutate GridGuard infrastructure. The committed GitHub
@@ -30,8 +30,20 @@ Before using an owner session:
 
 1. Merge the reviewed repository change through the protected branch.
 2. Confirm the state-backend and foundation stacks are healthy.
-3. Confirm no GitHub OIDC provider already exists in the account.
-4. Run both validation layers with the non-root profile.
+3. For first-time creation, confirm no GitHub OIDC provider already exists in
+   the account. For an update, confirm the existing provider is the output of
+   this stack.
+4. Confirm the repository's immutable OIDC subject prefix.
+5. Run both validation layers with the non-root profile.
+
+```bash
+gh api repos/AnouarMohamed/grid-scada-security/actions/oidc/customization/sub
+```
+
+The expected response includes `"use_immutable_subject":true` and
+`"sub_claim_prefix":"repo:AnouarMohamed@235483559/grid-scada-security@1307773501"`.
+Stop if either value differs; the AWS trust must match GitHub's current token
+format exactly.
 
 ```bash
 make cloudformation
@@ -57,9 +69,10 @@ aws iam list-open-id-connect-providers \
   --output table
 ```
 
-Stop if an ARN ending in `/token.actions.githubusercontent.com` already exists.
-Do not create a duplicate. Review whether that provider has the exact
-`sts.amazonaws.com` client ID and decide on ownership before proceeding.
+When creating the stack, stop if an ARN ending in
+`/token.actions.githubusercontent.com` already exists; do not create a
+duplicate. When updating this stack, that ARN must match its
+`GitHubOidcProviderArn` output and have the exact `sts.amazonaws.com` client ID.
 
 ## Owner-Created Change Set
 
@@ -91,7 +104,7 @@ test -n "$STATE_BUCKET" && test "$STATE_BUCKET" != "None"
 test -n "$STATE_KMS_KEY_ARN" && test "$STATE_KMS_KEY_ARN" != "None"
 ```
 
-Create, but do not execute, the change set:
+Create, but do not execute, the create or update change set:
 
 ```bash
 aws --profile "$OWNER_PROFILE" cloudformation deploy \
@@ -99,7 +112,7 @@ aws --profile "$OWNER_PROFILE" cloudformation deploy \
   --stack-name "$OIDC_STACK" \
   --template-file infra/cloudformation/bootstrap/github-oidc-plan-role.yaml \
   --parameter-overrides \
-    GitHubRepository="AnouarMohamed/grid-scada-security" \
+    GitHubRepository="AnouarMohamed@235483559/grid-scada-security@1307773501" \
     GitHubEnvironment="sandbox" \
     RoleName="gridguard-aws-sandbox-github-plan" \
     PolicyName="gridguard-aws-sandbox-github-plan" \
@@ -128,8 +141,8 @@ aws --profile "$OWNER_PROFILE" \
   --output table
 ```
 
-The table must show exactly these three additions and no modification,
-replacement, import, or deletion:
+For initial creation, the table must show exactly these three additions and no
+modification, replacement, import, or deletion:
 
 | Action | Logical ID | Type |
 | --- | --- | --- |
@@ -137,8 +150,12 @@ replacement, import, or deletion:
 | Add | `GitHubPlanPolicy` | `AWS::IAM::ManagedPolicy` |
 | Add | `GitHubPlanRole` | `AWS::IAM::Role` |
 
-Stop if the output differs. Execute only the reviewed change-set ID, wait for
-completion, and immediately enable termination protection:
+For an existing stack whose subject needs correction, the table must instead
+show exactly one `Modify` action for `GitHubPlanRole`, with replacement `False`.
+The provider and policy must not change. Stop if the output differs.
+
+Execute only the reviewed change-set ID, wait for completion, and immediately
+enable termination protection after initial creation:
 
 ```bash
 aws --profile "$OWNER_PROFILE" \

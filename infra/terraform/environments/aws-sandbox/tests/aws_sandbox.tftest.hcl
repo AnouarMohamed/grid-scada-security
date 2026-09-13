@@ -140,6 +140,15 @@ run "github_role_accepts_existing_oidc_provider" {
     condition     = length(aws_iam_role.github_deploy) == 1
     error_message = "An existing GitHub OIDC provider must support deployment-role creation."
   }
+
+  assert {
+    condition = contains(
+      jsondecode(aws_iam_role.github_deploy[0].assume_role_policy)
+      .Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"],
+      "repo:AnouarMohamed@235483559/grid-scada-security@1307773501:environment:sandbox",
+    )
+    error_message = "GitHub role trust must use the immutable owner and repository IDs."
+  }
 }
 
 run "runtime_requires_private_endpoints" {

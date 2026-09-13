@@ -83,11 +83,11 @@ For AWS, configure these values on the target GitHub environment:
 - Optional environment variable: `TF_STATE_KEY`
 - Optional non-secret JSON variable object: `TF_VARS_JSON`
 
-The AWS role trusts only this repository's `sandbox` environment through
-GitHub's OIDC provider. The reviewed plan role can read only the exact state
-object, manage only its exact `.tflock` object, use only the state KMS key, and
-read AWS resource metadata. It cannot write Terraform state, read secret
-values, pass roles, or mutate infrastructure.
+The AWS role trusts only this repository's immutable owner/repository IDs and
+`sandbox` environment through GitHub's OIDC provider. The reviewed plan role
+can read only the exact state object, manage only its exact `.tflock` object,
+use only the state KMS key, and read AWS resource metadata. It cannot write
+Terraform state, read secret values, pass roles, or mutate infrastructure.
 
 The workflow requires the remote state bucket and KMS key for every plan. It
 validates `TF_VARS_JSON` as an object and writes it only to the ephemeral
