@@ -79,7 +79,8 @@ The manual `image-evidence.yml` workflow:
 6. Generates complete high/critical JSON with pinned Trivy 0.74.0 and fails on
    any critical finding.
 7. Signs and stores an SPDX SBOM attestation with GitHub's official attestation
-   action and retains the SBOM, scan, summary, and bundle for 90 days.
+   action, validates the Sigstore bundle structure, and retains four plainly
+   named files per component for 90 days: SBOM, scan, summary, and attestation.
 
 The supporting CloudFormation role can only authenticate to ECR, read image
 metadata, and download layers from the four named repositories. Its sole
