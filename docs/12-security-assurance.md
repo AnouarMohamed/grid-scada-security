@@ -79,16 +79,15 @@ default, so repository validation never creates cloud resources.
 ## Residual Work
 
 The state backend, cost budget, anomaly monitor, MFA-gated foundation role,
-permissions boundary, and default-off AWS foundation are deployed. The AWS
-owner must still execute the reviewed plan-only OIDC bootstrap and configure
-the GitHub environment. A separate least-privilege runtime deployment policy,
-environment approval, secrets, and the private operator access path remain
-blocked from runtime enablement. Registry-side SBOM attestation, image signing,
-and provenance verification become enforceable only after the signing identity
-exists.
+permissions boundary, default-off AWS foundation, and immutable-subject OIDC
+plan role are deployed. The protected GitHub environment produced a no-change
+remote plan using short-lived credentials. A separate least-privilege runtime
+deployment policy, environment approval, secrets, and the private operator
+access path remain blocked from runtime enablement. Registry-side SBOM
+attestation, image signing, and provenance verification become enforceable only
+after the signing identity exists.
 
 The remediated ECR image digests and scans are recorded, and ECS task
-definitions are pinned to the verified runnable manifests. The next account
-step is to prove the plan-only GitHub identity; the next repository work is to
-close the documented high findings and add signed SBOM attestations to the
-publication workflow.
+definitions are pinned to the verified runnable manifests. The next repository
+work is to close the documented high findings and add signed SBOM attestations
+to the publication workflow.

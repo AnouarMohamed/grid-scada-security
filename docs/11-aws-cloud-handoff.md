@@ -13,6 +13,9 @@ roles, four ECR repositories, and the ECS capacity providers are healthy. The
 initial and remediated immutable image sets were published and verified on
 2026-09-13; see the [initial publication record](deployment-records/2026-09-13-aws-image-publication.md)
 and [remediated publication record](deployment-records/2026-09-13-aws-remediated-image-publication.md).
+The retained GitHub OIDC plan role was deployed with immutable repository IDs
+and produced a no-change remote plan on 2026-09-13; see the
+[OIDC plan identity record](deployment-records/2026-09-13-aws-github-oidc-plan.md).
 No Fargate task, ECS service, load balancer, EFS file system,
 VPC endpoint, NAT gateway, Elastic IP, or runtime secret exists yet. See the
 [sanitized foundation deployment record](deployment-records/2026-09-12-aws-foundation.md).
@@ -37,6 +40,8 @@ VPC endpoint, NAT gateway, Elastic IP, or runtime secret exists yet. See the
   force pushes and deletion.
 - GitHub private vulnerability reporting is enabled and `SECURITY.md` points to
   that private channel.
+- The protected `sandbox` environment can run metadata-only Terraform plans
+  through short-lived OIDC credentials; the workflow and role cannot apply.
 
 ## AWS Owner Checklist
 
@@ -118,9 +123,9 @@ procedure are documented in the
 
 ## Next
 
-ECS task definitions are pinned to the verified runnable image digests. The
-next account action is to deploy the reviewed plan-only OIDC bootstrap and
-prove the GitHub plan workflow. After that, close or explicitly accept the
-documented remaining high findings and separately design an apply role. Do not
-enable runtime until those controls, the private access path, and the
-secret-handling procedure are ready.
+ECS task definitions are pinned to the verified runnable image digests, and the
+plan-only GitHub identity is operational with a no-change result. The next
+repository action is to close or explicitly accept the documented remaining
+high findings and add signed SBOM provenance. Separately design an apply role;
+do not enable runtime until those controls, environment approval, the private
+access path, and the secret-handling procedure are ready.

@@ -140,8 +140,8 @@ path. The default-off AWS foundation is deployed in a dedicated `us-east-1`
 sandbox with its VPC, flow logs, security groups, private ECR repositories, ECS
 cluster, and bounded IAM roles verified. Billable runtime resources remain
 disabled; EFS, ALB, endpoints, secret containers, task definitions, services,
-and OIDC integration remain off. A retained, plan-only OIDC bootstrap is ready
-for owner review; no GitHub workflow can apply infrastructure.
+and runtime remain off. A retained immutable-subject OIDC role produced a clean
+remote Terraform plan; no GitHub workflow can apply infrastructure.
 
 Current CI is intentionally future-ready:
 
@@ -300,8 +300,8 @@ Details are in
 
 Near-term:
 
-- Deploy and prove the reviewed plan-only OIDC role, then separately design the
-  apply role and environment approval.
+- Separately design the apply role and environment approval without broadening
+  the verified plan-only identity.
 - Configure private operator access and the secret procedure; then enable
   runtime with zero tasks before scaling services to one.
 - Calibrate the balanced feeder approximation against published IEEE reference
