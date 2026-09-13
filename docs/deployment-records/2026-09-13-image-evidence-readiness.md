@@ -71,7 +71,8 @@ The manual `image-evidence.yml` workflow:
 
 1. Uses the protected `sandbox` environment and a dedicated OIDC role.
 2. Pulls only the four exact runnable ECR digests.
-3. Verifies the selected Docker manifest descriptor before scanning.
+3. Verifies the digest-qualified Docker repository reference and the selected
+   Linux/AMD64 platform before scanning.
 4. Logs out of ECR and clears temporary AWS credentials before third-party
    analysis actions run.
 5. Generates SPDX JSON with pinned Syft 1.51.1.

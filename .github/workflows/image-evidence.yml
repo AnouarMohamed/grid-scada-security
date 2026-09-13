@@ -88,14 +88,15 @@ jobs:
           image_ref="${subject_name}@${{ matrix.digest }}"
           docker pull --platform linux/amd64 "${image_ref}"
 
-          actual_digest="$(docker image inspect --platform linux/amd64 \
-            "${image_ref}" --format '{{.Descriptor.digest}}')"
-          if [[ "${actual_digest}" != "${{ matrix.digest }}" ]]; then
-            echo "::error::Runnable digest mismatch: ${actual_digest}"
+          repo_digests="$(docker image inspect "${image_ref}" \
+            --format '{{range .RepoDigests}}{{println .}}{{end}}')"
+          if ! grep --fixed-strings --line-regexp --quiet \
+            "${image_ref}" <<< "${repo_digests}"; then
+            echo "::error::Pulled image does not expose the expected repository digest."
             exit 1
           fi
-          image_platform="$(docker image inspect --platform linux/amd64 \
-            "${image_ref}" --format '{{.Os}}/{{.Architecture}}')"
+          image_platform="$(docker image inspect "${image_ref}" \
+            --format '{{.Os}}/{{.Architecture}}')"
           if [[ "${image_platform}" != "linux/amd64" ]]; then
             echo "::error::Unexpected image platform: ${image_platform}"
             exit 1
@@ -173,8 +174,9 @@ jobs:
             .VulnerabilityID] | unique | length' "${report}")"
 
           jq -e \
-            --arg digest "${{ matrix.digest }}" \
-            '.Trivy.Version == "0.74.0" and .Metadata.ImageID == $digest' \
+            --arg imageRef "${{ steps.image.outputs.image-ref }}" \
+            '.Trivy.Version == "0.74.0" and
+            (.Metadata.RepoDigests | index($imageRef)) != null' \
             "${report}" > /dev/null
 
           jq -n \
