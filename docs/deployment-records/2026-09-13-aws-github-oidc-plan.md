@@ -82,6 +82,14 @@ succeeded from protected `main`. The run:
 5. Reported `No changes. Your infrastructure matches the configuration.`
 6. Exited without any Terraform apply step.
 
+After the deployment workflow moved to the official Node 24
+`aws-actions/configure-aws-credentials` v6.2.4 commit, final run
+[`34767027873`](https://github.com/AnouarMohamed/grid-scada-security/actions/runs/34767027873)
+also completed with no changes. It enforced the expected AWS account, masked
+the account after authentication, and used the auditable STS session name
+`gridguard-plan-34767027873`. The earlier Node 20 deprecation warning was no
+longer present.
+
 The GitHub `sandbox` environment is restricted to protected branches and holds
 one role secret plus the five non-secret backend/configuration variables. No
 static AWS access key is stored in GitHub.
