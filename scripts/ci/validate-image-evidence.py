@@ -104,5 +104,10 @@ for forbidden in ("docker push", "ecr put-image", "ecr batch-delete-image"):
     require(forbidden not in shell, f"forbidden mutation command found: {forbidden}")
 require("docker logout" in shell, "workflow must remove the ECR registry credential")
 require("aws_secret_access_key=" in shell, "workflow must clear temporary AWS credentials")
+require(".repodigests" in shell, "workflow must verify the digest-qualified image reference")
+require(
+    "image inspect --platform" not in shell,
+    "workflow must remain compatible with GitHub-hosted Docker",
+)
 
 print("Validated manual signed-SBOM workflow and four immutable runnable digests.")
