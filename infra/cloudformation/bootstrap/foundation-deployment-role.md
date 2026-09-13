@@ -78,11 +78,13 @@ publish images. Update this stack with the current template and set
 `EnableOperatorImagePublish` to `true`. The reviewed change set must add only
 `OperatorEcrPublishPolicy`; it must not replace or delete another resource.
 
-The policy allows registry authentication plus the five layer and manifest
-upload actions Docker requires. Its resources are the exact `power-sim`,
+The policy allows registry authentication plus the six image push actions in
+the AWS ECR push-permissions example. Its resources are the exact `power-sim`,
 `modbus-ingestor`, `influxdb`, and `grafana` repositories in this account and
 region. Repository immutability remains the independent control against tag
-replacement.
+replacement. While this policy is enabled, the operator can publish new tags
+to those four repositories, so enable it only for the publication session and
+do not leave the console or workstation unattended.
 
 After all four images are present, record their AWS-returned manifest digests
 and confirm each enhanced scan completes. Then update the same stack with
@@ -90,6 +92,10 @@ and confirm each enhanced scan completes. Then update the same stack with
 remove only `OperatorEcrPublishPolicy`. Execute it, wait for
 `UPDATE_COMPLETE`, run `docker logout` for the account registry, and verify the
 policy is no longer attached to the operator.
+
+The ECR registry token can remain cached by Docker after publication. Logging
+out removes that local credential; removing the IAM policy is the authoritative
+AWS-side revocation of the temporary push permission.
 
 ## Local Role Profile
 
