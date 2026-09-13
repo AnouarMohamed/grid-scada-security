@@ -57,6 +57,15 @@ run "foundation_defaults_are_safe" {
   }
 
   assert {
+    condition = (
+      aws_ecr_registry_scanning_configuration.this.scan_type == "BASIC" &&
+      one(aws_ecr_registry_scanning_configuration.this.rule).scan_frequency == "SCAN_ON_PUSH" &&
+      one(one(aws_ecr_registry_scanning_configuration.this.rule).repository_filter).filter == "gridguard-aws-sandbox/*"
+    )
+    error_message = "The registry must scan every GridGuard image on push."
+  }
+
+  assert {
     condition = alltrue([
       aws_iam_role.flow.permissions_boundary == var.workload_role_permissions_boundary_arn,
       aws_iam_role.ecs_execution.permissions_boundary == var.workload_role_permissions_boundary_arn,
