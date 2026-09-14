@@ -1,9 +1,9 @@
 # InfluxDB Dasel Remediation Record
 
-This record captures a local hardening candidate for the GridGuard InfluxDB
+This record captures the hardening and verification of the GridGuard InfluxDB
 image. It reduces the signed-evidence scan findings without rebuilding the
-InfluxDB product from source. The candidate is not published to ECR and is not
-approved for runtime use.
+InfluxDB product from source. The verified candidate was subsequently published
+to ECR, but it is not approved for runtime use.
 
 ## Trigger And Scope
 
@@ -99,6 +99,13 @@ bundled in the image. Replacing either tool with a locally rebuilt binary would
 create a maintenance and provenance obligation that this change deliberately
 does not accept.
 
+## Publication
+
+The candidate was rebuilt from merged commit `c39ed69` and published on
+2026-09-14 as immutable tag `2.9.1-gridguard.2`. The exact ECR identifiers,
+post-push scan, privilege cleanup, and inactive runtime verification are in the
+[publication record](2026-09-14-aws-influxdb-image-publication.md).
+
 ## Decision And Next Gate
 
 The candidate is a strict improvement and retains the supported vendor
@@ -106,10 +113,8 @@ entrypoint. Runtime remains blocked because 32 unique high CVEs are still
 compiled into the required `influxd` server, while the required `influx` client
 and `dasel` tool contain additional fixed findings.
 
-After this source change is merged, the next release step is to build the
-merged commit, repeat the functional and Trivy checks, and publish a new
-immutable ECR tag through the temporary owner-approved publication path. Only
-then can the repository record the ECR parent and runnable digests, update
-Terraform, and generate replacement signed evidence. Publication alone does
-not approve runtime; the remaining server findings still require a fixed
-vendor release or explicit, time-bounded CVE review.
+Publication and the Terraform digest update do not approve runtime. The next
+evidence gate is a successful manual signed-SBOM workflow against the new
+runnable digest. The remaining server findings still require a fixed vendor
+release or explicit, time-bounded CVE review before any desired count becomes
+nonzero.

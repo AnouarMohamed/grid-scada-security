@@ -18,7 +18,7 @@ EXPECTED_IMAGES = [
     {
         "component": "influxdb",
         "repository": "gridguard-aws-sandbox/influxdb",
-        "digest": "sha256:66e4f468821b9a47f9eb0808d2e87c70d6ddd92c741450e9d78eff70ae856d67",
+        "digest": "sha256:359adac56f03b03f1b7072cc2d34bd0a49262e920961ed74cb490ea6a21d8fb0",
     },
     {
         "component": "grafana",
