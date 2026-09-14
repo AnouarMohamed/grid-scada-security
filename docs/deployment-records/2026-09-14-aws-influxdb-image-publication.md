@@ -48,8 +48,9 @@ remain visible and block runtime approval.
 
 ## Release Decision
 
-Terraform defaults and the signed-image evidence workflow now select the exact
-runnable digest above. The image is retained for evidence and future rescans,
-but remains blocked from runtime use pending resolution or explicit review of
-the documented vendor-binary findings. A successful replacement signed-SBOM
-workflow run is the next release evidence gate.
+Terraform defaults and the signed-image evidence workflow select the exact
+runnable digest above. The replacement
+[signed-image evidence run](2026-09-14-signed-image-evidence.md) completed
+successfully against that digest. The image is retained for evidence and future
+rescans, but remains blocked from runtime use pending resolution or explicit
+review of the documented vendor-binary findings.

@@ -98,5 +98,5 @@ bounded, manual signed-SBOM workflow and its read-only ECR role are deployed.
 The successful run produced signed attestations and retained evidence for all
 four exact runnable manifests; the immutable identifiers and independent
 verification are captured in the
-[signed image evidence completion record](deployment-records/2026-09-13-signed-image-evidence.md).
+[replacement signed image evidence record](deployment-records/2026-09-14-signed-image-evidence.md).
 Runtime remains blocked pending the documented high-finding decision.
