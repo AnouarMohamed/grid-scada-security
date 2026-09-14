@@ -61,6 +61,10 @@ The first AWS scan and subsequent patched candidates are covered by the
 [container remediation record](deployment-records/2026-09-13-container-remediation.md).
 It records the scanner discrepancy, fixed operating-system packages, unresolved
 findings compiled into vendor Go binaries, and the resulting runtime block.
+The follow-up
+[InfluxDB dasel remediation](deployment-records/2026-09-14-influxdb-dasel-remediation.md)
+removes five unique high CVEs from a locally verified candidate, but does not
+waive the remaining vendor-binary findings or approve runtime.
 
 ## Runtime Boundaries
 
