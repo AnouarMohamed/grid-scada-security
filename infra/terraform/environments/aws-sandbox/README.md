@@ -189,12 +189,12 @@ GRAFANA_REPO="$(terraform output -json ecr_repository_urls | jq -r '.grafana')"
 
 docker tag gridguard-power-sim "${POWER_SIM_REPO}:0.1.1"
 docker tag gridguard-modbus-ingestor "${INGESTOR_REPO}:0.1.1"
-docker tag gridguard-influxdb "${INFLUXDB_REPO}:2.9.1-gridguard.1"
+docker tag gridguard-influxdb "${INFLUXDB_REPO}:2.9.1-gridguard.2"
 docker tag gridguard-grafana "${GRAFANA_REPO}:12.4.10-gridguard.1"
 
 docker push "${POWER_SIM_REPO}:0.1.1"
 docker push "${INGESTOR_REPO}:0.1.1"
-docker push "${INFLUXDB_REPO}:2.9.1-gridguard.1"
+docker push "${INFLUXDB_REPO}:2.9.1-gridguard.2"
 docker push "${GRAFANA_REPO}:12.4.10-gridguard.1"
 ```
 

@@ -216,7 +216,7 @@ run "malformed_image_digests_are_rejected" {
     image_digests = {
       power_sim       = "sha256:not-a-digest"
       modbus_ingestor = "sha256:18e13b46ed9fe4d89290ae8219b6cd897e3a8e3c6675f3069541779b49e2caa7"
-      influxdb        = "sha256:66e4f468821b9a47f9eb0808d2e87c70d6ddd92c741450e9d78eff70ae856d67"
+      influxdb        = "sha256:359adac56f03b03f1b7072cc2d34bd0a49262e920961ed74cb490ea6a21d8fb0"
       grafana         = "sha256:1fbc7b35e2e71e9ccf8178dc7b05369bc85a9000320ee40031743a868f566c5c"
     }
   }

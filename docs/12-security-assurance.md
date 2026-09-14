@@ -65,6 +65,8 @@ The follow-up
 [InfluxDB dasel remediation](deployment-records/2026-09-14-influxdb-dasel-remediation.md)
 removes five unique high CVEs from a locally verified candidate, but does not
 waive the remaining vendor-binary findings or approve runtime.
+The exact ECR artifacts and temporary-access cleanup are captured in the
+[InfluxDB publication record](deployment-records/2026-09-14-aws-influxdb-image-publication.md).
 
 ## Runtime Boundaries
 
