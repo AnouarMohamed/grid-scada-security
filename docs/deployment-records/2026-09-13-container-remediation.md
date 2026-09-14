@@ -85,3 +85,9 @@ is closed.
 Publication and cleanup completed on 2026-09-13. The exact artifacts, ECR scan
 results, remaining zlib finding, and privilege cleanup are recorded in the
 [AWS remediated image publication record](2026-09-13-aws-remediated-image-publication.md).
+
+A subsequent local candidate upgrades the vendor entrypoint's bundled `dasel`
+binary and removes five unique high CVEs without changing the InfluxDB server.
+Its exact inputs, functional test, scan delta, and remaining runtime block are
+captured in the
+[InfluxDB dasel remediation record](2026-09-14-influxdb-dasel-remediation.md).
