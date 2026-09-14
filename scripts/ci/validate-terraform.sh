@@ -29,6 +29,9 @@ fi
 
 terraform fmt -check -recursive
 
+terraform_data_root="$(mktemp -d)"
+trap 'rm -rf "${terraform_data_root}"' EXIT
+
 declare -A seen_dirs=()
 terraform_dirs=()
 
@@ -40,11 +43,15 @@ for file in "${terraform_files[@]}"; do
   fi
 done
 
-for dir in "${terraform_dirs[@]}"; do
-  terraform -chdir="${dir}" init -backend=false -input=false
-  terraform -chdir="${dir}" validate
+for index in "${!terraform_dirs[@]}"; do
+  dir="${terraform_dirs[${index}]}"
+  data_dir="${terraform_data_root}/${index}"
+  mkdir -p "${data_dir}"
+
+  TF_DATA_DIR="${data_dir}" terraform -chdir="${dir}" init -backend=false -input=false
+  TF_DATA_DIR="${data_dir}" terraform -chdir="${dir}" validate
 
   if [[ -d "${dir}/tests" ]]; then
-    terraform -chdir="${dir}" test
+    TF_DATA_DIR="${data_dir}" terraform -chdir="${dir}" test
   fi
 done
