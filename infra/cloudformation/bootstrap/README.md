@@ -7,6 +7,10 @@ This directory also contains separately reviewed bootstraps for the
 OIDC provider but has its own ECR pull-only policy. Each bootstrap has an
 independent change set, ownership boundary, and removal procedure.
 
+The [temporary runtime deployment policy](runtime-deployment-policy.md)
+attaches only while the reviewed runtime is being created, exercised, and
+removed. Delete its one-resource stack after teardown.
+
 This CloudFormation template breaks Terraform's backend bootstrap dependency
 without keeping the backend itself in local Terraform state. It creates only:
 
