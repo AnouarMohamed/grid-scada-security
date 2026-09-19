@@ -24,6 +24,7 @@ Resources:
           - Sid: ReadRuntimeMetadata
             Effect: Allow
             Action:
+              - ec2:GetSecurityGroupsForVpc
               - ecs:Describe*
               - ecs:List*
               - elasticfilesystem:Describe*
@@ -31,6 +32,9 @@ Resources:
               - secretsmanager:DescribeSecret
               - secretsmanager:GetResourcePolicy
               - secretsmanager:ListSecretVersionIds
+              - route53:GetHostedZone
+              - route53:ListHostedZonesByName
+              - route53:ListTagsForResource
               - servicediscovery:Get*
               - servicediscovery:List*
             Resource: '*'
@@ -70,6 +74,7 @@ Resources:
               - elasticfilesystem:DeleteMountTarget
               - elasticfilesystem:ModifyMountTargetSecurityGroups
               - elasticfilesystem:PutBackupPolicy
+              - elasticfilesystem:PutLifecycleConfiguration
               - elasticfilesystem:TagResource
               - elasticfilesystem:UntagResource
             Resource: '*'
@@ -99,6 +104,13 @@ Resources:
             Condition:
               StringEquals:
                 aws:RequestedRegion: !Ref AWS::Region
+          - Sid: ManageRuntimePrivateDns
+            Effect: Allow
+            Action:
+              - route53:ChangeTagsForResource
+              - route53:CreateHostedZone
+              - route53:DeleteHostedZone
+            Resource: '*'
           - Sid: ManageRuntimeDiscovery
             Effect: Allow
             Action:
