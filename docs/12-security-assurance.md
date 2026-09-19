@@ -99,4 +99,10 @@ The successful run produced signed attestations and retained evidence for all
 four exact runnable manifests; the immutable identifiers and independent
 verification are captured in the
 [replacement signed image evidence record](deployment-records/2026-09-14-signed-image-evidence.md).
-Runtime remains blocked pending the documented high-finding decision.
+The remaining InfluxDB vendor-binary findings are covered by a single
+[conditional risk acceptance](deployment-records/2026-09-19-influxdb-runtime-risk-acceptance.md)
+for the exact digest, synthetic non-production data, private network path, and
+an eight-hour maximum supervised run. It expires on 2026-10-19 and does not
+alter CI scanner thresholds or authorize production use. Runtime evidence and
+the required zero-task teardown follow the
+[AWS runtime evidence runbook](13-aws-runtime-evidence.md).
