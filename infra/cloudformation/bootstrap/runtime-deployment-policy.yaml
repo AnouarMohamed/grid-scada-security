@@ -130,6 +130,7 @@ Resources:
             Action:
               - secretsmanager:CreateSecret
               - secretsmanager:DeleteSecret
+              - secretsmanager:PutSecretValue
               - secretsmanager:RestoreSecret
               - secretsmanager:TagResource
               - secretsmanager:UntagResource
