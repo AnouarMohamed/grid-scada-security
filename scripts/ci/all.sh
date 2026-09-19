@@ -7,6 +7,7 @@ checks=(
   validate-repo-hygiene.sh
   validate-docs.sh
   validate-cloudformation.sh
+  validate-aws-scripts.sh
   validate-python.sh
   validate-workflows.sh
   validate-modbus-contracts.sh

@@ -16,8 +16,9 @@ and [remediated publication record](deployment-records/2026-09-13-aws-remediated
 The retained GitHub OIDC plan role was deployed with immutable repository IDs
 and produced a no-change remote plan on 2026-09-13; see the
 [OIDC plan identity record](deployment-records/2026-09-13-aws-github-oidc-plan.md).
-No Fargate task, ECS service, load balancer, EFS file system,
-VPC endpoint, NAT gateway, Elastic IP, or runtime secret exists yet. See the
+Runtime infrastructure and dormant services have since been created through
+reviewed Terraform applies, while desired counts remain zero outside bounded
+experiments. NAT, Elastic IPs, and public Grafana remain disabled. See the
 [sanitized foundation deployment record](deployment-records/2026-09-12-aws-foundation.md).
 
 ## Complete In The Repository
@@ -123,9 +124,9 @@ procedure are documented in the
 
 ## Next
 
-ECS task definitions are pinned to the verified runnable image digests, and the
-plan-only GitHub identity is operational with a no-change result. The next
-repository action is to close or explicitly accept the documented remaining
-high findings and add signed SBOM provenance. Separately design an apply role;
-do not enable runtime until those controls, environment approval, the private
-access path, and the secret-handling procedure are ready.
+ECS task definitions are pinned to verified runnable image digests, signed SBOM
+evidence is complete, and the remaining InfluxDB findings have a conditional,
+exact-digest [risk acceptance](deployment-records/2026-09-19-influxdb-runtime-risk-acceptance.md).
+The next action is one supervised, maximum-eight-hour exercise under those
+conditions, using the [runtime evidence runbook](13-aws-runtime-evidence.md),
+followed immediately by a zero-task teardown and cost review.

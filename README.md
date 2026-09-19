@@ -98,6 +98,7 @@ Important entry points:
 | Local red/blue lab | [docs/10-local-red-blue-lab.md](docs/10-local-red-blue-lab.md) |
 | AWS cloud handoff | [docs/11-aws-cloud-handoff.md](docs/11-aws-cloud-handoff.md) |
 | Security assurance controls | [docs/12-security-assurance.md](docs/12-security-assurance.md) |
+| AWS runtime evidence | [docs/13-aws-runtime-evidence.md](docs/13-aws-runtime-evidence.md) |
 | AWS Terraform runbook | [infra/terraform/environments/aws-sandbox/README.md](infra/terraform/environments/aws-sandbox/README.md) |
 | Power track plan | [docs/power-track/execution-plan.md](docs/power-track/execution-plan.md) |
 | DevSecOps track plan | [docs/devsecops-track/execution-plan.md](docs/devsecops-track/execution-plan.md) |
@@ -139,9 +140,10 @@ while naive and coordinated in-envelope attack replays exercise the detection
 path. The default-off AWS foundation is deployed in a dedicated `us-east-1`
 sandbox with its VPC, flow logs, security groups, private ECR repositories, ECS
 cluster, and bounded IAM roles verified. Billable runtime resources remain
-disabled; EFS, ALB, endpoints, secret containers, task definitions, services,
-and runtime remain off. A retained immutable-subject OIDC role produced a clean
-remote Terraform plan; no GitHub workflow can apply infrastructure.
+disabled outside supervised experiments; runtime infrastructure and dormant
+services exist with desired counts at zero. A retained immutable-subject OIDC
+role produced a clean remote Terraform plan; no GitHub workflow can apply
+infrastructure.
 
 Current CI is intentionally future-ready:
 

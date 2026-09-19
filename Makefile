@@ -1,4 +1,4 @@
-.PHONY: ci docs cloudformation python workflows modbus-contracts terraform docker hygiene aws-preflight aws-state-bootstrap-validate aws-foundation-bootstrap-validate aws-github-oidc-bootstrap-validate aws-image-evidence-bootstrap-validate stack-up stack-modbus-up stack-live-up stack-naive-up stack-stealthy-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke stack-live-smoke stack-attack-smoke stack-naive-smoke stack-stealthy-smoke stack-dashboard-smoke
+.PHONY: ci docs cloudformation aws-scripts python workflows modbus-contracts terraform docker hygiene aws-preflight aws-runtime-evidence aws-state-bootstrap-validate aws-foundation-bootstrap-validate aws-github-oidc-bootstrap-validate aws-image-evidence-bootstrap-validate stack-up stack-modbus-up stack-live-up stack-naive-up stack-stealthy-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke stack-live-smoke stack-attack-smoke stack-naive-smoke stack-stealthy-smoke stack-dashboard-smoke
 
 ci:
 	bash scripts/ci/all.sh
@@ -11,6 +11,9 @@ docs:
 
 cloudformation:
 	bash scripts/ci/validate-cloudformation.sh
+
+aws-scripts:
+	bash scripts/ci/validate-aws-scripts.sh
 
 python:
 	bash scripts/ci/validate-python.sh
@@ -29,6 +32,9 @@ docker:
 
 aws-preflight:
 	bash scripts/aws/preflight-audit.sh
+
+aws-runtime-evidence:
+	bash scripts/aws/capture-runtime-evidence.sh
 
 aws-state-bootstrap-validate:
 	bash scripts/aws/validate-state-bootstrap.sh
