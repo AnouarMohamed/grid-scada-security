@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Temporary runtime deployment permissions for the existing MFA-gated
+  GridGuard Terraform deployment role.
+
+Parameters:
+  DeploymentRoleName:
+    Type: String
+    Default: gridguard-aws-sandbox-foundation-deploy
+    AllowedPattern: '^[A-Za-z0-9_+=,.@-]{1,64}$'
+
+Resources:
+  RuntimeDeploymentPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: gridguard-aws-sandbox-runtime-deploy
+      Path: /gridguard/
+      Description: Temporary lifecycle access for the reviewed GridGuard sandbox runtime.
+      Roles:
+        - !Ref DeploymentRoleName
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ReadRuntimeMetadata
+            Effect: Allow
+            Action:
+              - ecs:Describe*
+              - ecs:List*
+              - elasticfilesystem:Describe*
+              - elasticloadbalancing:Describe*
+              - secretsmanager:DescribeSecret
+              - secretsmanager:GetResourcePolicy
+              - secretsmanager:ListSecretVersionIds
+              - servicediscovery:Get*
+              - servicediscovery:List*
+            Resource: '*'
+          - Sid: ManagePrivateEndpoints
+            Effect: Allow
+            Action:
+              - ec2:CreateVpcEndpoint
+              - ec2:DeleteVpcEndpoints
+              - ec2:ModifyVpcEndpoint
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !Ref AWS::Region
+          - Sid: ManageRuntimeEcs
+            Effect: Allow
+            Action:
+              - ecs:CreateService
+              - ecs:DeleteService
+              - ecs:DeregisterTaskDefinition
+              - ecs:RegisterTaskDefinition
+              - ecs:TagResource
+              - ecs:UntagResource
+              - ecs:UpdateService
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !Ref AWS::Region
+          - Sid: ManageRuntimeEfs
+            Effect: Allow
+            Action:
+              - elasticfilesystem:CreateAccessPoint
+              - elasticfilesystem:CreateFileSystem
+              - elasticfilesystem:CreateMountTarget
+              - elasticfilesystem:DeleteAccessPoint
+              - elasticfilesystem:DeleteBackupPolicy
+              - elasticfilesystem:DeleteFileSystem
+              - elasticfilesystem:DeleteMountTarget
+              - elasticfilesystem:ModifyMountTargetSecurityGroups
+              - elasticfilesystem:PutBackupPolicy
+              - elasticfilesystem:TagResource
+              - elasticfilesystem:UntagResource
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !Ref AWS::Region
+          - Sid: ManageRuntimeLoadBalancer
+            Effect: Allow
+            Action:
+              - elasticloadbalancing:AddTags
+              - elasticloadbalancing:CreateListener
+              - elasticloadbalancing:CreateLoadBalancer
+              - elasticloadbalancing:CreateTargetGroup
+              - elasticloadbalancing:DeleteListener
+              - elasticloadbalancing:DeleteLoadBalancer
+              - elasticloadbalancing:DeleteTargetGroup
+              - elasticloadbalancing:DeregisterTargets
+              - elasticloadbalancing:ModifyListener
+              - elasticloadbalancing:ModifyLoadBalancerAttributes
+              - elasticloadbalancing:ModifyTargetGroup
+              - elasticloadbalancing:ModifyTargetGroupAttributes
+              - elasticloadbalancing:RegisterTargets
+              - elasticloadbalancing:RemoveTags
+              - elasticloadbalancing:SetSecurityGroups
+              - elasticloadbalancing:SetSubnets
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !Ref AWS::Region
+          - Sid: ManageRuntimeDiscovery
+            Effect: Allow
+            Action:
+              - servicediscovery:CreatePrivateDnsNamespace
+              - servicediscovery:CreateService
+              - servicediscovery:DeleteNamespace
+              - servicediscovery:DeleteService
+              - servicediscovery:TagResource
+              - servicediscovery:UntagResource
+              - servicediscovery:UpdateService
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !Ref AWS::Region
+          - Sid: ManageRuntimeSecretContainers
+            Effect: Allow
+            Action:
+              - secretsmanager:CreateSecret
+              - secretsmanager:DeleteSecret
+              - secretsmanager:RestoreSecret
+              - secretsmanager:TagResource
+              - secretsmanager:UntagResource
+              - secretsmanager:UpdateSecret
+            Resource: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:gridguard-aws-sandbox/*'
+          - Sid: CreateRequiredServiceLinkedRole
+            Effect: Allow
+            Action: iam:CreateServiceLinkedRole
+            Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing'
+            Condition:
+              StringEquals:
+                iam:AWSServiceName: elasticloadbalancing.amazonaws.com
+
+Outputs:
+  RuntimeDeploymentPolicyArn:
+    Value: !Ref RuntimeDeploymentPolicy
