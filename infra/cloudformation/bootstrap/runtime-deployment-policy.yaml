@@ -155,13 +155,13 @@ Resources:
             Condition:
               StringEquals:
                 iam:AWSServiceName: elasticloadbalancing.amazonaws.com
-          - Sid: CreateBackupServiceLinkedRole
+          - Sid: CreateEfsServiceLinkedRole
             Effect: Allow
             Action: iam:CreateServiceLinkedRole
-            Resource: '*'
+            Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/elasticfilesystem.amazonaws.com/AWSServiceRoleForAmazonElasticFileSystem'
             Condition:
               StringEquals:
-                iam:AWSServiceName: backup.amazonaws.com
+                iam:AWSServiceName: elasticfilesystem.amazonaws.com
 
 Outputs:
   RuntimeDeploymentPolicyArn:
