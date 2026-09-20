@@ -81,11 +81,16 @@ spec:
               memory: 512Mi
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
           volumeMounts:
             - name: data
               mountPath: /var/lib/grafana
+            - name: logs
+              mountPath: /var/log/grafana
+            - name: tmp
+              mountPath: /tmp
             - name: datasource
               mountPath: /etc/grafana/provisioning/datasources
               readOnly: true
@@ -102,6 +107,12 @@ spec:
         - name: data
           emptyDir:
             sizeLimit: 1Gi
+        - name: logs
+          emptyDir:
+            sizeLimit: 128Mi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 128Mi
         - name: datasource
           configMap:
             name: grafana-datasource

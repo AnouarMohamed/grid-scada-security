@@ -95,6 +95,8 @@ def validate_deployments(documents: list[dict[str, Any]]) -> None:
         security = container.get("securityContext", {})
         if security.get("allowPrivilegeEscalation") is not False:
             fail(f"{identity} must disable privilege escalation")
+        if security.get("readOnlyRootFilesystem") is not True:
+            fail(f"{identity} must use a read-only root filesystem")
         if security.get("privileged") is True:
             fail(f"{identity} cannot run privileged")
         if security.get("capabilities", {}).get("drop") != ["ALL"]:

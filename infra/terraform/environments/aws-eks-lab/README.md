@@ -38,8 +38,10 @@ connection probes behave as specified.
 The four application images are pulled from the existing private ECR
 repositories by exact runnable digest. Workloads run as non-root, drop all
 Linux capabilities, disable privilege escalation and service-account token
-mounting, use `RuntimeDefault` seccomp, and define health probes plus resource
-requests and limits. Services remain `ClusterIP` only.
+mounting, use read-only root filesystems and `RuntimeDefault` seccomp, and
+define health probes plus resource requests and limits. Services remain
+`ClusterIP` only. Bounded `emptyDir` mounts provide only the runtime paths that
+InfluxDB and Grafana must write.
 
 InfluxDB and Grafana use bounded `emptyDir` volumes because this cluster is a
 short-lived evidence environment. The previous ECS exercise separately proved
@@ -52,6 +54,25 @@ managed-policy versions: `AmazonEKSClusterPolicy` v10,
 `AmazonEC2ContainerRegistryPullOnly` v1. The boundary deliberately excludes
 load-balancer, dynamic-volume, and upstream-import actions that this lab does
 not use.
+
+## Reviewed Scanner Exceptions
+
+Two resource-scoped Trivy ignores are attached directly to the EKS cluster:
+
+- `AVD-AWS-0039`: EKS 1.36 receives envelope encryption for all Kubernetes API
+  data by default through an AWS-owned KMS key. AWS states that clusters on
+  Kubernetes 1.28 or later require no configuration or additional permission.
+  Adding a customer-managed key would duplicate the control and add KMS cost.
+- `AVD-AWS-0040`: the public API endpoint is needed for this short-lived lab's
+  local `kubectl` evidence workflow. It is not open to the internet: Terraform
+  requires one operator IPv4 `/32`, enables the private endpoint, and rejects
+  `0.0.0.0/0`. AWS documents this public-plus-private, single-CIDR pattern.
+
+These exceptions do not weaken the repository-wide Trivy severity gate and
+apply only to `aws_eks_cluster.this`. Confirm the encryption state in the EKS
+console during evidence capture. References: [EKS default envelope
+encryption](https://docs.aws.amazon.com/eks/latest/userguide/envelope-encryption.html)
+and [EKS endpoint access](https://docs.aws.amazon.com/eks/latest/userguide/config-cluster-endpoint.html).
 
 ## Owner-Reviewed Bootstraps
 

@@ -64,15 +64,26 @@ spec:
               memory: 1Gi
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
           volumeMounts:
             - name: data
               mountPath: /var/lib/influxdb2
+            - name: config
+              mountPath: /etc/influxdb2
+            - name: tmp
+              mountPath: /tmp
       volumes:
         - name: data
           emptyDir:
             sizeLimit: 2Gi
+        - name: config
+          emptyDir:
+            sizeLimit: 16Mi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 128Mi
 ---
 apiVersion: v1
 kind: Service

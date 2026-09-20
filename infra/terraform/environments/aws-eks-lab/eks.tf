@@ -3,6 +3,11 @@ resource "aws_cloudwatch_log_group" "cluster" {
   retention_in_days = var.log_retention_days
 }
 
+# EKS 1.28+ encrypts all Kubernetes API data with an AWS-owned KMS key by
+# default. A customer-managed key would duplicate that control and add cost.
+# Public API access is deliberately limited to the operator's validated /32;
+# private access remains enabled so node/control-plane traffic stays in the VPC.
+#trivy:ignore:AVD-AWS-0039 trivy:ignore:AVD-AWS-0040
 resource "aws_eks_cluster" "this" {
   name                      = local.name
   role_arn                  = aws_iam_role.cluster.arn
@@ -95,4 +100,3 @@ resource "aws_eks_node_group" "this" {
     aws_vpc_endpoint.s3,
   ]
 }
-
