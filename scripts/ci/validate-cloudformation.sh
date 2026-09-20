@@ -372,7 +372,181 @@ require_evidence_statement(
     "*",
 )
 
+name = "state-backend.yaml"
+template = templates.get(name)
+if template is None:
+    raise SystemExit(f"missing required template: {root / name}")
+if template["Parameters"]["StateKey"].get("Default") != (
+    "gridguard/aws-sandbox/terraform.tfstate"
+):
+    raise SystemExit(f"{name}: sandbox state key changed unexpectedly")
+if template["Parameters"]["EksStateKey"].get("Default") != (
+    "gridguard/aws-eks-lab/terraform.tfstate"
+):
+    raise SystemExit(f"{name}: EKS state key changed unexpectedly")
+
+state_statements = template["Resources"]["StateAccessPolicy"]["Properties"]
+state_statements = state_statements["PolicyDocument"]["Statement"]
+state_by_sid = {statement["Sid"]: statement for statement in state_statements}
+expected_prefixes = [
+    {"!Ref": "StateKey"},
+    {"!Sub": "${StateKey}.tflock"},
+    {"!Ref": "EksStateKey"},
+    {"!Sub": "${EksStateKey}.tflock"},
+]
+actual_prefixes = state_by_sid["ListStateObjects"]["Condition"]["StringEquals"]
+if actual_prefixes.get("s3:prefix") != expected_prefixes:
+    raise SystemExit(f"{name}: state list access must cover exactly two state keys")
+expected_state_objects = [
+    {"!Sub": "${StateBucket.Arn}/${StateKey}"},
+    {"!Sub": "${StateBucket.Arn}/${StateKey}.tflock"},
+    {"!Sub": "${StateBucket.Arn}/${EksStateKey}"},
+    {"!Sub": "${StateBucket.Arn}/${EksStateKey}.tflock"},
+]
+if state_by_sid["ReadWriteState"].get("Resource") != expected_state_objects:
+    raise SystemExit(f"{name}: read/write access must cover exactly two states and locks")
+expected_lock_objects = [
+    {"!Sub": "${StateBucket.Arn}/${StateKey}.tflock"},
+    {"!Sub": "${StateBucket.Arn}/${EksStateKey}.tflock"},
+]
+if state_by_sid["DeleteLockOnly"].get("Resource") != expected_lock_objects:
+    raise SystemExit(f"{name}: delete access must remain limited to two lock objects")
+
+name = "eks-lab-deployment-policy.yaml"
+template = templates.get(name)
+if template is None:
+    raise SystemExit(f"missing required template: {root / name}")
+
+resources = template["Resources"]
+expected_resources = {"EksLabDeploymentPolicy", "EksLabRoleBoundary"}
+if set(resources) != expected_resources:
+    raise SystemExit(f"{name}: resource set must be exactly {sorted(expected_resources)}")
+
+deployment_properties = resources["EksLabDeploymentPolicy"]["Properties"]
+if deployment_properties.get("Roles") != [{"!Ref": "DeploymentRoleName"}]:
+    raise SystemExit(f"{name}: deployment policy must attach only to DeploymentRoleName")
+
+statements = deployment_properties["PolicyDocument"]["Statement"]
+by_sid = {statement["Sid"]: statement for statement in statements}
+expected_sids = {
+    "ReadEksLabMetadata",
+    "ManageExactEksCluster",
+    "ManageExactEksNodeGroup",
+    "ManageExactVpcCniAddon",
+    "ManageExactEksAccessEntry",
+    "ManageEksPrivateEndpoints",
+    "ManageEksEndpointSecurityGroup",
+    "ManageEksControlPlaneLogs",
+    "CreateBoundedEksRoles",
+    "ManageBoundedEksRoles",
+    "AttachReviewedEksPolicies",
+    "PassExactEksRoles",
+    "CreateRequiredServiceLinkedRoles",
+}
+if set(by_sid) != expected_sids or len(by_sid) != len(statements):
+    raise SystemExit(f"{name}: unexpected or duplicate deployment-policy Sids")
+
+for statement in statements:
+    actions = statement["Action"]
+    actions = actions if isinstance(actions, list) else [actions]
+    if "*" in actions or "iam:*" in actions or "eks:*" in actions:
+        raise SystemExit(f"{name}: {statement['Sid']} contains a wildcard action")
+    if "secretsmanager:GetSecretValue" in actions:
+        raise SystemExit(f"{name}: deployment policy cannot read secret values")
+
+for sid in (
+    "ManageExactEksCluster",
+    "ManageExactEksNodeGroup",
+    "ManageExactVpcCniAddon",
+    "ManageExactEksAccessEntry",
+):
+    serialized = str(by_sid[sid].get("Resource"))
+    if "gridguard-aws-eks-lab" not in serialized:
+        raise SystemExit(f"{name}: {sid} is not scoped to the exact cluster name")
+
+create_roles = by_sid["CreateBoundedEksRoles"]
+expected_boundary = {"!Ref": "EksLabRoleBoundary"}
+actual_boundary = create_roles.get("Condition", {}).get("ArnEquals", {}).get(
+    "iam:PermissionsBoundary"
+)
+if actual_boundary != expected_boundary:
+    raise SystemExit(f"{name}: EKS role creation must require EksLabRoleBoundary")
+
+attachment_condition = by_sid["AttachReviewedEksPolicies"]["Condition"]["ArnEquals"]
+policy_arns = attachment_condition["iam:PolicyARN"]
+if len(policy_arns) != 4:
+    raise SystemExit(f"{name}: exactly four reviewed AWS managed policies are allowed")
+
+boundary_statements = resources["EksLabRoleBoundary"]["Properties"]
+boundary_statements = boundary_statements["PolicyDocument"]["Statement"]
+boundary_by_sid = {statement["Sid"]: statement for statement in boundary_statements}
+expected_boundary_sids = {
+    "DescribeEksRuntime",
+    "ManagePodNetworkInterfaces",
+    "TagEksRuntimeNetworkResources",
+    "AuthenticateToEcr",
+    "PullGridGuardImages",
+}
+if set(boundary_by_sid) != expected_boundary_sids:
+    raise SystemExit(f"{name}: unexpected EKS role-boundary statement set")
+for statement in boundary_statements:
+    actions = statement["Action"]
+    actions = actions if isinstance(actions, list) else [actions]
+    if "*" in actions or any(action.startswith("iam:") for action in actions):
+        raise SystemExit(f"{name}: role boundary cannot grant wildcard or IAM actions")
+
+expected_runtime_reads = {
+    "ec2:DescribeAvailabilityZones",
+    "ec2:DescribeDhcpOptions",
+    "ec2:DescribeInstances",
+    "ec2:DescribeInstanceTopology",
+    "ec2:DescribeInstanceTypes",
+    "ec2:DescribeNetworkInterfaces",
+    "ec2:DescribeRouteTables",
+    "ec2:DescribeSecurityGroups",
+    "ec2:DescribeSubnets",
+    "ec2:DescribeTags",
+    "ec2:DescribeVolumes",
+    "ec2:DescribeVolumesModifications",
+    "ec2:DescribeVpcs",
+    "eks:DescribeCluster",
+    "eks-auth:AssumeRoleForPodIdentity",
+    "kms:DescribeKey",
+}
+actual_runtime_reads = set(boundary_by_sid["DescribeEksRuntime"]["Action"])
+if actual_runtime_reads != expected_runtime_reads:
+    raise SystemExit(f"{name}: reviewed EKS runtime read set changed")
+
+expected_eni_actions = {
+    "ec2:AssignPrivateIpAddresses",
+    "ec2:AttachNetworkInterface",
+    "ec2:CreateNetworkInterface",
+    "ec2:DeleteNetworkInterface",
+    "ec2:DetachNetworkInterface",
+    "ec2:ModifyNetworkInterfaceAttribute",
+    "ec2:UnassignPrivateIpAddresses",
+}
+actual_eni_actions = set(boundary_by_sid["ManagePodNetworkInterfaces"]["Action"])
+if actual_eni_actions != expected_eni_actions:
+    raise SystemExit(f"{name}: reviewed VPC CNI mutation set changed")
+
+expected_tag_resources = [
+    {
+        "!Sub": "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+    },
+    {
+        "!Sub": "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*"
+    },
+]
+tag_statement = boundary_by_sid["TagEksRuntimeNetworkResources"]
+if tag_statement.get("Action") != "ec2:CreateTags":
+    raise SystemExit(f"{name}: EKS runtime tagging action changed")
+if tag_statement.get("Resource") != expected_tag_resources:
+    raise SystemExit(f"{name}: EKS runtime tagging scope changed")
+
 print(f"Validated {len(templates)} CloudFormation bootstrap templates.")
 print("Validated plan-only OIDC trust, state boundary, and action boundary.")
 print("Validated read-only image-evidence trust and four-repository boundary.")
+print("Validated exact-object access for the sandbox and EKS state backends.")
+print("Validated temporary EKS role boundary and deployment-policy scope.")
 PY

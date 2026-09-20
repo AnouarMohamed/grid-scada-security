@@ -103,6 +103,7 @@ required_diagrams = {
     "gridguard-architecture.svg",
     "gridguard-aws-deployment.svg",
     "gridguard-detection-flow.svg",
+    "gridguard-eks-segmentation.svg",
 }
 missing_diagrams = required_diagrams - {path.name for path in diagram_files}
 for name in sorted(missing_diagrams):

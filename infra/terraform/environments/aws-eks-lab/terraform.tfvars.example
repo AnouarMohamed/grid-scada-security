@@ -1,0 +1,17 @@
+aws_region         = "us-east-1"
+expected_account_id = "227755136916"
+
+vpc_id               = "REPLACE_VPC_ID"
+vpc_cidr             = "10.40.0.0/16"
+cloud_subnet_ids      = ["REPLACE_SUBNET_A", "REPLACE_SUBNET_B"]
+cloud_subnet_cidrs    = ["10.40.10.0/24", "10.40.11.0/24"]
+cloud_route_table_id  = "REPLACE_ROUTE_TABLE_ID"
+operator_cidr         = "REPLACE_PUBLIC_IPV4/32"
+
+cluster_admin_principal_arn       = "arn:aws:iam::227755136916:role/gridguard-aws-sandbox-foundation-deploy"
+eks_role_permissions_boundary_arn = "arn:aws:iam::227755136916:policy/gridguard/gridguard-aws-eks-lab-role-boundary"
+
+kubernetes_version = "1.36"
+node_instance_types = ["t3.medium"]
+node_count          = 2
+log_retention_days  = 7

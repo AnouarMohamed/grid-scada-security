@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: influxdb
+  namespace: gridguard-observability
+  labels:
+    app.kubernetes.io/name: influxdb
+    app.kubernetes.io/part-of: gridguard
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: influxdb
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: influxdb
+        app.kubernetes.io/part-of: gridguard
+    spec:
+      serviceAccountName: influxdb
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: influxdb
+          image: gridguard/influxdb:k8s
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: influxdb-runtime
+          ports:
+            - name: http
+              containerPort: 8086
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 18
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/influxdb2
+      volumes:
+        - name: data
+          emptyDir:
+            sizeLimit: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb
+  namespace: gridguard-observability
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: influxdb
+  ports:
+    - name: http
+      port: 8086
+      targetPort: http
+      protocol: TCP

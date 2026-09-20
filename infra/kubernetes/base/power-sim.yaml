@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: power-sim
+  namespace: gridguard-ot
+  labels:
+    app.kubernetes.io/name: power-sim
+    app.kubernetes.io/part-of: gridguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: power-sim
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: power-sim
+        app.kubernetes.io/part-of: gridguard
+    spec:
+      serviceAccountName: power-sim
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: power-sim
+          image: gridguard/power-sim:k8s
+          imagePullPolicy: IfNotPresent
+          args: ["serve"]
+          env:
+            - name: GRIDGUARD_MODBUS_HOST
+              value: "0.0.0.0"
+            - name: GRIDGUARD_MODBUS_PORT
+              value: "1502"
+            - name: GRIDGUARD_MODBUS_UNIT_ID
+              value: "1"
+            - name: GRIDGUARD_SIM_INTERVAL_SECONDS
+              value: "2"
+            - name: GRIDGUARD_SIM_START_HOUR
+              value: "0"
+            - name: GRIDGUARD_SCENARIO
+              value: baseline-modbus
+            - name: GRIDGUARD_REGISTER_MAP
+              value: /etc/gridguard/register-map.json
+          ports:
+            - name: modbus
+              containerPort: 1502
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command: ["python", "-m", "power_sim", "healthcheck"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          livenessProbe:
+            exec:
+              command: ["python", "-m", "power_sim", "healthcheck"]
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 32Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: power-sim
+  namespace: gridguard-ot
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: power-sim
+  ports:
+    - name: modbus
+      port: 1502
+      targetPort: modbus
+      protocol: TCP
+

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gridguard-ot
+  labels:
+    gridguard.io/zone: ot
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gridguard-ingestion
+  labels:
+    gridguard.io/zone: ingestion
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gridguard-observability
+  labels:
+    gridguard.io/zone: observability
+

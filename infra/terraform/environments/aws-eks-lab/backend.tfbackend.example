@@ -1,0 +1,8 @@
+# Copy to backend.tfbackend, replace the placeholders, and keep the copy local.
+bucket       = "REPLACE-gridguard-terraform-state"
+key          = "gridguard/aws-eks-lab/terraform.tfstate"
+region       = "us-east-1"
+encrypt      = true
+kms_key_id   = "REPLACE-gridguard-terraform-state-kms-key-arn"
+use_lockfile = true
+
