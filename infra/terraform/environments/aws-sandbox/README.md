@@ -23,11 +23,16 @@ Security groups enforce these application paths:
 ```text
 operator CIDRs -> Grafana ALB -> Grafana -> InfluxDB
 
-Modbus ingestor -> power-sim:502
+Modbus ingestor -> power-sim:1502
 Modbus ingestor -> InfluxDB:8086
 tasks -> private AWS endpoints:443 and S3 prefix list:443
 InfluxDB/Grafana -> EFS:2049
 ```
+
+The AWS runtime maps Modbus/TCP to unprivileged port `1502` so the power
+simulator can retain its non-root user and read-only root filesystem. The local
+Compose lab continues to use the conventional port `502` inside its isolated
+Docker network.
 
 The ingestor is the only application service that can initiate traffic across
 the modeled OT/cloud boundary. VPC flow logs capture accepted and rejected

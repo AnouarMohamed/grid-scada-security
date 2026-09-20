@@ -32,6 +32,7 @@ locals {
   endpoint_services = toset(["ecr.api", "ecr.dkr", "logs", "secretsmanager"])
   service_names     = toset(["power-sim", "modbus-ingestor", "influxdb", "grafana"])
   stateful_services = toset(["influxdb", "grafana"])
+  modbus_port       = 1502
 
   grafana_listener_port     = var.grafana_public ? 443 : 80
   grafana_listener_protocol = var.grafana_public ? "HTTPS" : "HTTP"

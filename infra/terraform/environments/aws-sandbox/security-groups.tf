@@ -87,18 +87,18 @@ resource "aws_vpc_security_group_ingress_rule" "power_modbus" {
   security_group_id            = aws_security_group.power_sim.id
   description                  = "Modbus TCP from the boundary ingestor"
   referenced_security_group_id = aws_security_group.modbus_ingestor.id
-  from_port                    = 502
+  from_port                    = local.modbus_port
   ip_protocol                  = "tcp"
-  to_port                      = 502
+  to_port                      = local.modbus_port
 }
 
 resource "aws_vpc_security_group_egress_rule" "ingestor_modbus" {
   security_group_id            = aws_security_group.modbus_ingestor.id
   description                  = "Poll the OT-side Modbus simulator"
   referenced_security_group_id = aws_security_group.power_sim.id
-  from_port                    = 502
+  from_port                    = local.modbus_port
   ip_protocol                  = "tcp"
-  to_port                      = 502
+  to_port                      = local.modbus_port
 }
 
 resource "aws_vpc_security_group_ingress_rule" "influx_ingestor" {
