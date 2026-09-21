@@ -8,7 +8,9 @@ AWS. It does not replace or import the separately validated ECS foundation.
 ## Architecture And Cost Boundary
 
 The cluster uses EKS Kubernetes 1.36 in standard support and two On-Demand
-`t3.medium` workers across the existing private cloud subnets. Six interface
+`t3.small` workers across the existing private cloud subnets. This type is
+Free-Tier eligible for the lab account and provides more pod-address and memory
+capacity than the eligible micro types. Six interface
 endpoints plus one S3 gateway endpoint let private workers reach only the AWS
 services required for bootstrap, ECR pulls, CNI operation, STS, and logs. No
 NAT gateway, public node address, Kubernetes `LoadBalancer`, or `NodePort` is
