@@ -98,7 +98,7 @@ variable "kubernetes_version" {
 variable "node_instance_types" {
   description = "On-Demand EC2 types for the short-lived managed node group."
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.small"]
 }
 
 variable "node_count" {
@@ -117,4 +117,3 @@ variable "log_retention_days" {
   type        = number
   default     = 7
 }
-

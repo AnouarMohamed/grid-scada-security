@@ -82,7 +82,7 @@
   <text x="1218" y="480" class="mono" text-anchor="middle">TCP/3000 · 1 pod</text>
   <text x="946" y="594" class="node-sub">default deny ingress + egress</text>
 
-  <text x="318" y="684" class="node-title">Managed node group · 2 × t3.medium On-Demand · private subnets us-east-1a + us-east-1b</text>
+  <text x="318" y="684" class="node-title">Managed node group · 2 × t3.small On-Demand · private subnets us-east-1a + us-east-1b</text>
   <text x="318" y="704" class="mono">PODS SCHEDULE ACROSS BOTH WORKERS · VPC CNI STRICT MODE · CLUSTERIP SERVICES ONLY</text>
   <path d="M430 650H1180" class="deny"/>
   <text x="805" y="644" class="label" text-anchor="middle" fill="#C2413A">ALL UNDECLARED EAST-WEST PATHS DENIED</text>

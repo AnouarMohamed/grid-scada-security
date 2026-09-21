@@ -12,6 +12,6 @@ cluster_admin_principal_arn       = "arn:aws:iam::227755136916:role/gridguard-aw
 eks_role_permissions_boundary_arn = "arn:aws:iam::227755136916:policy/gridguard/gridguard-aws-eks-lab-role-boundary"
 
 kubernetes_version = "1.36"
-node_instance_types = ["t3.medium"]
+node_instance_types = ["t3.small"]
 node_count          = 2
 log_retention_days  = 7
