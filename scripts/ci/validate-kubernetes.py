@@ -26,6 +26,12 @@ EXPECTED_AWS_IMAGES = {
     "gridguard/influxdb",
     "gridguard/grafana",
 }
+EXPECTED_RUNTIME_IDS = {
+    ("gridguard-ot", "power-sim"): 999,
+    ("gridguard-ingestion", "modbus-ingestor"): 999,
+    ("gridguard-observability", "influxdb"): 1000,
+    ("gridguard-observability", "grafana"): 472,
+}
 
 
 def fail(message: str) -> None:
@@ -86,6 +92,11 @@ def validate_deployments(documents: list[dict[str, Any]]) -> None:
         pod_security = template.get("securityContext", {})
         if pod_security.get("runAsNonRoot") is not True:
             fail(f"{identity} must run as non-root")
+        expected_runtime_id = EXPECTED_RUNTIME_IDS[identity]
+        if pod_security.get("runAsUser") != expected_runtime_id:
+            fail(f"{identity} must run as numeric UID {expected_runtime_id}")
+        if pod_security.get("runAsGroup") != expected_runtime_id:
+            fail(f"{identity} must run as numeric GID {expected_runtime_id}")
         if pod_security.get("seccompProfile", {}).get("type") != "RuntimeDefault":
             fail(f"{identity} must use the RuntimeDefault seccomp profile")
 
