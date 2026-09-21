@@ -50,10 +50,13 @@ short-lived evidence environment. The previous ECS exercise separately proved
 encrypted persistent storage. Do not treat this EKS root as persistent or
 production-ready storage.
 
-The EKS role boundary was reconciled on 2026-09-20 against the current AWS
+The EKS role boundary was reconciled on 2026-09-21 against the current AWS
 managed-policy versions: `AmazonEKSClusterPolicy` v10,
 `AmazonEKSWorkerNodePolicy` v3, `AmazonEKS_CNI_Policy` v6, and
-`AmazonEC2ContainerRegistryPullOnly` v1. The boundary deliberately excludes
+`AmazonEC2ContainerRegistryPullOnly` v1. In addition to the GridGuard image
+repositories, it permits read-only pulls from the five exact AWS-owned EKS
+system repositories used by VPC CNI, its network-policy agent, kube-proxy, and
+CoreDNS. The boundary deliberately excludes wildcard repository access,
 load-balancer, dynamic-volume, and upstream-import actions that this lab does
 not use.
 

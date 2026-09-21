@@ -25,13 +25,17 @@ Use the `EksLabRoleBoundaryArn` output in the ignored EKS Terraform variables.
 Terraform then creates only the exact cluster and node roles named in this
 policy, and both roles must carry that boundary.
 
-The boundary was reconciled on 2026-09-20 against `AmazonEKSClusterPolicy` v10,
+The boundary was reconciled on 2026-09-21 against `AmazonEKSClusterPolicy` v10,
 `AmazonEKSWorkerNodePolicy` v3, `AmazonEKS_CNI_Policy` v6, and
 `AmazonEC2ContainerRegistryPullOnly` v1. It permits the documented minimum
 cluster operations, the exact worker and VPC CNI operations used by this lab,
-and pulls from only the four GridGuard ECR repositories. Load-balancer,
-dynamic-volume, and upstream-image-import actions remain outside the boundary
-because this lab creates none of those resources.
+pulls from only the four GridGuard ECR repositories, and read-only pulls from
+the five AWS-owned repositories observed in the live `aws-node`, `kube-proxy`,
+and `coredns` specifications. This explicit system-image allowlist corrected
+the initial `403 Forbidden` bootstrap failure without granting wildcard ECR
+repository access. Load-balancer, dynamic-volume, and upstream-image-import
+actions remain outside the boundary because this lab creates none of those
+resources.
 
 After the EKS Terraform root has a zero-resource state and AWS independently
 confirms the cluster, node group, and endpoints are gone, delete this
