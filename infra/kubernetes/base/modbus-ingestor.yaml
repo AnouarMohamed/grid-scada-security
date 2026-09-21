@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modbus-ingestor
+  namespace: gridguard-ingestion
+  labels:
+    app.kubernetes.io/name: modbus-ingestor
+    app.kubernetes.io/part-of: gridguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: modbus-ingestor
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: modbus-ingestor
+        app.kubernetes.io/part-of: gridguard
+    spec:
+      serviceAccountName: modbus-ingestor
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: modbus-ingestor
+          image: gridguard/modbus-ingestor:k8s
+          imagePullPolicy: IfNotPresent
+          args: ["ingest"]
+          env:
+            - name: GRIDGUARD_MODBUS_MODE
+              value: tcp
+            - name: GRIDGUARD_MODBUS_SOURCE_ID
+              value: modbus_tcp
+            - name: GRIDGUARD_MODBUS_HOST
+              value: power-sim.gridguard-ot.svc.cluster.local
+            - name: GRIDGUARD_MODBUS_PORT
+              value: "1502"
+            - name: GRIDGUARD_MODBUS_UNIT_ID
+              value: "1"
+            - name: GRIDGUARD_REGISTER_MAP
+              value: /etc/gridguard/register-map.json
+            - name: GRIDGUARD_MODBUS_INGEST_INTERVAL_SECONDS
+              value: "2"
+            - name: GRIDGUARD_MODBUS_TIMEOUT_SECONDS
+              value: "5"
+            - name: GRIDGUARD_MODBUS_STATUS_FILE
+              value: /tmp/gridguard-modbus-ingestor-ready
+            - name: GRIDGUARD_SCENARIO
+              value: baseline-modbus
+            - name: GRIDGUARD_ATTACK_FLAG
+              value: "0"
+            - name: GRIDGUARD_INFLUX_URL
+              value: http://influxdb.gridguard-observability.svc.cluster.local:8086
+            - name: GRIDGUARD_INFLUX_ORG
+              value: gridguard
+            - name: GRIDGUARD_INFLUX_BUCKET
+              value: gridguard_telemetry
+            - name: GRIDGUARD_INFLUX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: modbus-ingestor-runtime
+                  key: GRIDGUARD_INFLUX_TOKEN
+          readinessProbe:
+            exec:
+              command: ["python", "-m", "gridguard_modbus_ingestor", "healthcheck"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          livenessProbe:
+            exec:
+              command: ["python", "-m", "gridguard_modbus_ingestor", "healthcheck"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 32Mi
+

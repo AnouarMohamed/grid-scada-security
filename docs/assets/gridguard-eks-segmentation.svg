@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="auto" viewBox="0 0 1440 860" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="gge-title gge-desc">
+  <title id="gge-title">GridGuard single-cluster Amazon EKS segmentation architecture</title>
+  <desc id="gge-desc">One temporary Amazon EKS cluster spans two private subnets. Three default-deny Kubernetes namespaces separate the OT simulator, Modbus ingestion, and observability workloads. Explicit network policies allow only DNS, Modbus TCP 1502, InfluxDB TCP 8086, and operator access to Grafana TCP 3000. Private VPC endpoints pull four digest-pinned images from ECR without a NAT gateway.</desc>
+  <defs>
+    <marker id="gge-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0L8 4L0 8Z" fill="#2563EB"/>
+    </marker>
+    <style>
+      .title{font:400 32px Georgia,serif;fill:#14221B}.subtitle{font:400 14px Inter,"Segoe UI",Arial,sans-serif;fill:#53645A}.eyebrow{font:600 10px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#53645A}.zone{fill:#FFFFFF;fill-opacity:.72;stroke:#87958C;stroke-width:1}.cluster{fill:#ED7100;fill-opacity:.025;stroke:#ED7100;stroke-width:1.5;stroke-dasharray:7 6}.ns-ot{fill:#C2413A;fill-opacity:.035;stroke:#C2413A;stroke-width:1.5}.ns-ingest{fill:#0B7A53;fill-opacity:.04;stroke:#0B7A53;stroke-width:1.5}.ns-obs{fill:#2563EB;fill-opacity:.035;stroke:#2563EB;stroke-width:1.5}.node{fill:#FFFFFF;stroke:#87958C;stroke-width:1}.node-title{font:600 14px Inter,"Segoe UI",Arial,sans-serif;fill:#14221B}.node-sub{font:400 11px Inter,"Segoe UI",Arial,sans-serif;fill:#53645A}.mono{font:500 10px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#405148}.flow{fill:none;stroke:#2563EB;stroke-width:2.2;marker-end:url(#gge-arrow)}.support{fill:none;stroke:#53645A;stroke-width:1.4;stroke-dasharray:5 4;marker-end:url(#gge-arrow)}.deny{fill:none;stroke:#C2413A;stroke-width:1.5;stroke-dasharray:5 4}.label{font:600 10px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#405148}.legend{font:500 11px Inter,"Segoe UI",Arial,sans-serif;fill:#53645A}
+    </style>
+  </defs>
+  <rect width="1440" height="860" fill="#F7F8F5"/>
+  <text x="40" y="52" class="eyebrow">AWS / SINGLE REAL CLOUD CLUSTER / TEMPORARY EVIDENCE ENVIRONMENT</text>
+  <text x="40" y="88" class="title">Default-deny namespaces around one narrow OT bridge</text>
+  <text x="40" y="116" class="subtitle">Private workers in two availability zones; no NAT gateway, public node address, LoadBalancer, or NodePort.</text>
+
+  <rect x="40" y="148" width="1360" height="100" rx="8" class="zone"/>
+  <rect x="56" y="140" width="214" height="20" fill="#F7F8F5"/>
+  <text x="64" y="154" class="eyebrow">AWS REGIONAL SERVICES</text>
+  <rect x="96" y="172" width="270" height="52" rx="6" class="node"/>
+  <image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNDBweCIgaGVpZ2h0PSI0MHB4IiB2aWV3Qm94PSIwIDAgNDAgNDAiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvMzIvQXJjaF9BbWF6b24tRWxhc3RpYy1LdWJlcm5ldGVzLVNlcnZpY2VfMzI8L3RpdGxlPgogIDxnIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPGcgZmlsbD0iI0VENzEwMCI+CiAgICAgIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIvPgogICAgPC9nPgogICAgPHBhdGggZD0iTTE5LjQwMywxNi4xNDMzNzQxIEwxOS40MDMsMTkuNDU1MTQxNiBMMjIuMjczLDE2LjE0MzM3NDEgTDIzLjcxNiwxNi4xNDMzNzQxIEwyMC40NjUsMjAuMTQ4NzM2MyBMMjMuODgyLDI0LjM3MDIzMjkgTDIyLjQ1OSwyNC4zNzAyMzI5IEwxOS40MDMsMjAuNTY1Mjg2MSBMMTkuNDAzLDI0LjM1NjQ3ODkgTDE4LjExNywyNC4zNTY0Nzg5IEwxOC4xMTcsMTYuMTQzMzc0MSBMMTkuNDAzLDE2LjE0MzM3NDEgWiBNMzIsMjQuMjQ5Mzk0MSBMMjgsMjEuODkyNTQ3NCBMMjgsMTUuODI1MDY3MiBDMjgsMTUuNjM1NDU4NCAyNy44ODgsMTUuNDYyNTUwOSAyNy43MTMsMTUuMzgxMDA5MyBMMjIsMTIuNzM2MzExIEwyMiw4LjI4NDkyNjExIEwzMiwxMy4xODIzMzM3IEwzMiwyNC4yNDkzOTQxIFogTTMyLjcyMiwxMi40Mzg2MzUxIEwyMS43MjIsNy4wNTE5Nzc5NyBDMjEuNTY3LDYuOTc1MzQ4NTIgMjEuMzgzLDYuOTg0MTkwMzggMjEuMjM3LDcuMDczNTkxNCBDMjEuMDksNy4xNjI5OTI0MiAyMSw3LjMyMTE2MzQ2IDIxLDcuNDkxMTIzNjQgTDIxLDEzLjA0Nzc0MDkgQzIxLDEzLjIzNzM0OTcgMjEuMTExLDEzLjQxMTIzOTYgMjEuMjg3LDEzLjQ5MTc5ODggTDI3LDE2LjEzNjQ5NzEgTDI3LDIyLjE3MDU3NDggQzI3LDIyLjM0MzQ4MjMgMjcuMDkxLDIyLjUwMjYzNTcgMjcuMjQzLDIyLjU5MTA1NDMgTDMyLjI0MywyNS41MzgzNDA3IEMzMi4zMjIsMjUuNTg1NDk3MyAzMi40MTEsMjUuNjA5MDc1NiAzMi41LDI1LjYwOTA3NTYgQzMyLjU4NSwyNS42MDkwNzU2IDMyLjY3LDI1LjU4NzQ2MjIgMzIuNzQ2LDI1LjU0NTIxNzcgQzMyLjkwMywyNS40NTc3ODE2IDMzLDI1LjI5NDY5ODQgMzMsMjUuMTE3ODYxMiBMMzMsMTIuODc3NzgwOCBDMzMsMTIuNjkyMTAxNyAzMi44OTIsMTIuNTIxMTU5MSAzMi43MjIsMTIuNDM4NjM1MSBaIE0xOS45OTUsMzIuOTUxNzQ4NSBMOSwyNy4zMTY1MzY5IEw5LDEzLjE2ODU3OTcgTDE4LDguMzIwMjkzNTUgTDE4LDEyLjc2MTg1NDIgTDEzLjI1NCwxNS4zOTc3MTA2IEMxMy4wOTYsMTUuNDg1MTQ2OCAxMywxNS42NDgyMyAxMywxNS44MjUwNjcyIEwxMywyNC42NjY5MjY0IEMxMywyNC44NDU3Mjg0IDEzLjA5OSwyNS4wMTA3NzY1IDEzLjI1OCwyNS4wOTcyMzAyIEwxOS43NTgsMjguNjEyMzYwNSBDMTkuOTA5LDI4LjY5MzkwMiAyMC4wOTEsMjguNjkzOTAyIDIwLjI0LDI4LjYxMzM0MjkgTDI2LjQ5LDI1LjI0MTY0NzIgTDMwLjAzNiwyNy41NzE5Njg0IEwxOS45OTUsMzIuOTUxNzQ4NSBaIE0yNi43OTQsMjQuMjU5MjE4NCBDMjYuNjM4LDI0LjE1NzA0NTggMjYuNDM5LDI0LjE0OTE4NjQgMjYuMjc1LDI0LjIzNjYyMjYgTDIwLDI3LjYyMjA3MjIgTDE0LDI0LjM3NzEwOTkgTDE0LDE2LjExMTkzNjQgTDE4Ljc0NiwxMy40NzUwOTc1IEMxOC45MDMsMTMuMzg4NjQzNyAxOSwxMy4yMjQ1NzgxIDE5LDEzLjA0Nzc0MDkgTDE5LDcuNDkxMTIzNjQgQzE5LDcuMzE3MjMzNzQgMTguOTA3LDcuMTU3MDk3ODUgMTguNzU1LDcuMDY4Njc5MjYgQzE4LjYwMyw2Ljk4MDI2MDY3IDE4LjQxNSw2Ljk3NzMxMzM4IDE4LjI1OSw3LjA1OTgzNzQgTDguMjU5LDEyLjQ0NzQ3NjkgQzguMDk5LDEyLjUzMzkzMDcgOCwxMi42OTg5Nzg3IDgsMTIuODc3NzgwOCBMOCwyNy42MTQyMTI4IEM4LDI3Ljc5NzkyNyA4LjEwMywyNy45NjQ5Mzk5IDguMjY4LDI4LjA1MDQxMTIgTDE5Ljc2OCwzMy45NDQ5ODQgQzE5Ljg0LDMzLjk4MTMzMzkgMTkuOTIxLDM0IDIwLDM0IEMyMC4wODIsMzQgMjAuMTY1LDMzLjk4MDM1MTQgMjAuMjM5LDMzLjk0MDA3MTggTDMxLjIzOSwyOC4wNDU0OTkgQzMxLjM5MiwyNy45NjI5NzUgMzEuNDkxLDI3LjgwODczMzcgMzEuNDk5LDI3LjYzNjgwODcgQzMxLjUwNywyNy40NjQ4ODM2IDMxLjQyNCwyNy4zMDE4MDA0IDMxLjI3OCwyNy4yMDY1MDQ4IEwyNi43OTQsMjQuMjU5MjE4NCBaIiBmaWxsPSIjRkZGRkZGIi8+CiAgPC9nPgo8L3N2Zz4K" x="111" y="182" width="32" height="32"/>
+  <text x="157" y="193" class="node-title">Amazon EKS 1.36</text>
+  <text x="157" y="211" class="node-sub">managed control plane · audit logs</text>
+  <rect x="1074" y="172" width="270" height="52" rx="6" class="node"/>
+  <image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNDBweCIgaGVpZ2h0PSI0MHB4IiB2aWV3Qm94PSIwIDAgNDAgNDAiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvMzIvQXJjaF9BbWF6b24tRWxhc3RpYy1Db250YWluZXItUmVnaXN0cnlfMzI8L3RpdGxlPgogICAgPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLzMyL0FyY2hfQW1hem9uLUVsYXN0aWMtQ29udGFpbmVyLVJlZ2lzdHJ5XzMyIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8ZyBpZD0iSWNvbi1BcmNoaXRlY3R1cmUtQkcvMzIvQ29tcHV0ZSIgZmlsbD0iI0VENzEwMCI+CiAgICAgICAgICAgIDxyZWN0IGlkPSJSZWN0YW5nbGUiIHg9IjAiIHk9IjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PC9yZWN0PgogICAgICAgIDwvZz4KICAgICAgICA8cGF0aCBkPSJNMTkuNDA0LDE5LjAwNTkyMDUgQzE5LjE1NSwxOS4xNDY2OTYxIDE5LDE5LjQwOTU0MjkgMTksMTkuNjkyMDc4NiBMMTksMzIuODc0Nzc5NSBMOSwyNy4xOTA1OTUgTDksMTQuNDA3NTc4NiBMMjAuMjUzLDguMDExNjQwNDcgTDMwLjIyLDEyLjg1ODA2MjUgTDE5LjQwNCwxOS4wMDU5MjA1IFogTTMxLjQ1NSwxMi44NDMyOTU4IEMzMS40NTUsMTIuNTY1NjgyMyAzMS4zMDMsMTIuMzA3NzU3OCAzMS4wMzEsMTIuMTU1MTY4OCBMMjAuNjM5LDcuMTAyMDEzNDMgQzIwLjM5Myw2Ljk2NjE2MDA0IDIwLjA5Miw2Ljk2NTE3NTU5IDE5Ljg1LDcuMTAzOTgyMzIgTDguNDA0LDEzLjYxMDE3ODMgQzguMTU1LDEzLjc0OTk2OTUgOCwxNC4wMTI4MTYzIDgsMTQuMjk2MzM2NCBMOCwyNy4zMDI4MjE3IEM4LDI3LjU4NTM1NzQgOC4xNTUsMjcuODQ4MjA0MSA4LjQwMiwyNy45ODc5OTUzIEwxOC43OTQsMzMuODk0NjY0NCBDMTguOTE4LDMzLjk2NTU0NDQgMTkuMDU3LDM0IDE5LjE5NiwzNCBDMTkuMzM1LDM0IDE5LjQ3NCwzMy45NjU1NDQ0IDE5LjU5OCwzMy44OTQ2NjQ0IEMxOS44NDUsMzMuNzUzODg4OCAyMCwzMy40OTEwNDIgMjAsMzMuMjA5NDkwOCBMMjAsMTkuODA0MzA1MyBMMzEuMDU4LDEzLjUxODYyNDkgQzMxLjMwMywxMy4zNzk4MTgyIDMxLjQ1NSwxMy4xMjA5MDkyIDMxLjQ1NSwxMi44NDMyOTU4IEwzMS40NTUsMTIuODQzMjk1OCBaIE0zMiwyNy41MzQxNjYyIEwyMi45NjEsMzIuODIzNTg4NCBMMjIuOTYxLDI3Ljg2MTk4NjQgTDI3Ljk1NSwyNC44NjIzODI5IEwyNy45ODgsMjQuNjMxMDM4NCBDMjcuOTk3LDI0LjU3MDk4NzIgMjgsMjQuNTcwOTg3MiAyOCwyNC4yOTA0MjA1IEwyOCwxOC43NDQwNTgyIEwzMiwxNi40Njk5OTA2IEwzMiwyNy41MzQxNjYyIFogTTMyLjU5OCwxNS40NTEwOTAyIEMzMi4zNSwxNS4zMDkzMzAxIDMyLjA0MiwxNS4zMDkzMzAxIDMxLjc5NCwxNS40NTAxMDU3IEwyNy4zMjIsMTcuOTkyOTI2OCBDMjcuMTI3LDE4LjEwNTE1MzUgMjcsMTguMzIyNzE1OCAyNywxOC41NDUyMDAzIEwyNywyNC4yODI1NDQ5IEwyMi4zNTcsMjcuMDcwNDkyNyBDMjIuMTEyLDI3LjIxMjI1MjggMjEuOTYxLDI3LjQ3MzEzMDcgMjEuOTYxLDI3Ljc1MjcxMyBMMjEuOTYxLDMzLjE2MzIyMTkgQzIxLjk2MSwzMy40NDg3MTA5IDIyLjExMSwzMy43MDQ2NjY1IDIyLjM2MiwzMy44NDgzOTU1IEMyMi40ODUsMzMuOTE4MjkxMSAyMi42MjQsMzMuOTUzNzMxMSAyMi43NjIsMzMuOTUzNzMxMSBDMjIuOTAzLDMzLjk1MzczMTEgMjMuMDQ1LDMzLjkxNzMwNjYgMjMuMTczLDMzLjg0NTQ0MjIgTDMyLjU5NSwyOC4zMzA1ODIxIEMzMi44NDQsMjguMTkwNzkxIDMzLDI3LjkyNzk0NDIgMzMsMjcuNjQ0NDI0MSBMMzMsMTYuMTM1Mjc5NCBDMzMsMTUuODQ5NzkwMyAzMi44NDksMTUuNTkzODM0NyAzMi41OTgsMTUuNDUxMDkwMiBMMzIuNTk4LDE1LjQ1MTA5MDIgWiIgaWQ9IkFtYXpvbi1FbGFzdGljLUNvbnRhaW5lci1SZWdpc3RyeV9JY29uXzMyX1NxdWlkIiBmaWxsPSIjRkZGRkZGIj48L3BhdGg+CiAgICA8L2c+Cjwvc3ZnPgo=" x="1089" y="182" width="32" height="32"/>
+  <text x="1135" y="193" class="node-title">Amazon ECR · 4 images</text>
+  <text x="1135" y="211" class="node-sub">private · immutable · digest-pinned</text>
+
+  <rect x="40" y="276" width="1360" height="500" rx="8" class="zone"/>
+  <rect x="56" y="268" width="190" height="20" fill="#F7F8F5"/>
+  <text x="64" y="282" class="eyebrow">VPC 10.40.0.0/16</text>
+  <rect x="72" y="324" width="190" height="142" rx="6" class="node"/>
+  <text x="88" y="350" class="node-title">PrivateLink endpoints</text>
+  <text x="88" y="374" class="mono">EC2 · ECR API/DKR</text>
+  <text x="88" y="394" class="mono">EKS · Logs · STS</text>
+  <text x="88" y="414" class="mono">S3 gateway</text>
+  <text x="88" y="446" class="node-sub">TLS from worker subnets only</text>
+
+  <rect x="290" y="308" width="1078" height="430" rx="8" class="cluster"/>
+  <rect x="310" y="300" width="330" height="20" fill="#F7F8F5"/>
+  <text x="318" y="314" class="eyebrow">EKS CLUSTER · gridguard-aws-eks-lab</text>
+  <path d="M262 395H290" class="support"/>
+  <path d="M1080 224V276H1210V308" class="support"/>
+  <path d="M546 505H630" class="flow"/>
+  <path d="M846 505H930" class="flow"/>
+  <path d="M1218 490V558H1126V544" class="flow"/>
+  <rect x="562" y="488" width="52" height="20" fill="#F7F8F5"/>
+  <text x="588" y="501" class="label" text-anchor="middle">:1502</text>
+  <rect x="862" y="488" width="52" height="20" fill="#F7F8F5"/>
+  <text x="888" y="501" class="label" text-anchor="middle">:8086</text>
+  <rect x="1146" y="548" width="52" height="20" fill="#F7F8F5"/>
+  <text x="1172" y="561" class="label" text-anchor="middle">:8086</text>
+
+  <rect x="336" y="392" width="210" height="226" rx="6" class="ns-ot"/>
+  <text x="352" y="418" class="eyebrow" fill="#C2413A">gridguard-ot</text>
+  <rect x="362" y="466" width="158" height="78" rx="5" class="node"/>
+  <circle cx="441" cy="486" r="10" fill="#C2413A"/>
+  <text x="441" y="490" text-anchor="middle" font-family="Arial" font-size="9" font-weight="700" fill="#FFFFFF">OT</text>
+  <text x="441" y="516" class="node-title" text-anchor="middle">Power simulator</text>
+  <text x="441" y="534" class="mono" text-anchor="middle">TCP/1502 · 1 pod</text>
+  <text x="352" y="584" class="node-sub">default deny ingress + egress</text>
+
+  <rect x="630" y="392" width="216" height="226" rx="6" class="ns-ingest"/>
+  <text x="646" y="418" class="eyebrow" fill="#0B7A53">gridguard-ingestion</text>
+  <rect x="656" y="466" width="164" height="78" rx="5" class="node"/>
+  <circle cx="738" cy="486" r="10" fill="#0B7A53"/>
+  <text x="738" y="490" text-anchor="middle" font-family="Arial" font-size="8" font-weight="700" fill="#FFFFFF">ING</text>
+  <text x="738" y="516" class="node-title" text-anchor="middle">Modbus ingestor</text>
+  <text x="738" y="534" class="mono" text-anchor="middle">only OT bridge · 1 pod</text>
+  <text x="646" y="584" class="node-sub">default deny ingress + egress</text>
+
+  <rect x="930" y="382" width="382" height="246" rx="6" class="ns-obs"/>
+  <text x="946" y="408" class="eyebrow" fill="#2563EB">gridguard-observability</text>
+  <rect x="956" y="466" width="170" height="78" rx="5" class="node"/>
+  <image href="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+SW5mbHV4REI8L3RpdGxlPjxwYXRoIGQ9Ik0yMy43NzggMTQuNDgybC0yLjI4Ny05Ljk1OWMtLjEzLS41NDUtLjYyNC0xLjA5LTEuMTY5LTEuMjQ4TDkuODcuMDUxQzkuNzQgMCA5LjU4NCAwIDkuNDI2IDBjLS40NDMgMC0uOTA5LjE4LTEuMjIyLjQ0M0wuNzE2IDcuNDEyQy4zIDcuNzc2LjA5MiA4LjUwNC4yMjIgOS4wMjRsMi40NDUgMTAuNjYyYy4xMy41NDUuNjI0IDEuMDkyIDEuMTY5IDEuMjQ4bDkuNzc1IDMuMDE1Yy4xMy4wNTEuMjg1LjA1MS40NDMuMDUxLjQ0MyAwIC45MS0uMTggMS4yMjMtLjQ0M2w4LjAwNy03LjQzNWMuNDE4LS4zOS42MjQtMS4wOTItLjQ5NC0xLjY0ek0xMC45NjIgMi40MTdsNy4xNzUgMi4yMWMuMjg1LjA4LjI4NS4yMSAwIC4yODZsLTMuNzcuODU4Yy0uMjg1LjA4LS42NzQtLjA1LS44ODMtLjI2bC0yLjYyNi0yLjgzNGMtLjIzNS0uMjMyLS4xODQtLjMzNi4xMDQtLjI2em00LjQ3IDEyLjg3MmMuMDc5LjI4Ni0uMTA1LjQ0NC0uMzkuMzY1bC03Ljc0OC0yLjM5MmMtLjI4NS0uMDc5LS4zMzgtLjMxMy0uMTMtLjUybDUuOTMtNS41MTRjLjIwOS0uMjA5LjQ0My0uMTMuNTIuMTU2ek0yLjY2NyA4LjI2N2w2LjI5My01Ljg1Yy4yMS0uMjA5LjU0NS0uMTguNzU0LjAyNUwxMi44NiA1Ljg1Yy4yMDkuMjEuMTguNTQ1LS4wMjYuNzU0bC02LjI5MyA1Ljg1Yy0uMjEuMjEtLjU0NS4xODEtLjc1NC0uMDI1TDIuNjQgOS4wMjRhLjUzNi41MzYgMCAwMS4wMjYtLjc1N3ptMS41MzYgOS4yODRMMi41NCAxMC4yNDRjLS4wOC0uMjg1LjA1LS4zNC4yMzQtLjEzTDUuNCAxMi45NDljLjIwOS4yMDkuMjg1LjYyNC4yMDkuOTA5TDQuNDYyIDE3LjU1Yy0uMDc5LjI4NS0uMjA4LjI4NS0uMjYgMHptOS4yMDIgNC4yNjRsLTguMjE3LTIuNTIyYS41NDcuNTQ3IDAgMDEtLjM2NC0uNjc1bDEuMzc4LTQuNDIxYS41NDcuNTQ3IDAgMDEuNjc1LS4zNjVsOC4yMTYgMi41MjJjLjI4NS4wNzkuNDQzLjM5LjM2NC42NzVMMTQuMDggMjEuNDVhLjU1My41NTMgMCAwMS0uNjc0LjM2NXptNy4yNzktNS45OEwxNS4yIDIwLjkzYy0uMjA5LjIwOS0uMzEuMTMtLjIzNC0uMTU1bDEuMTQ0LTMuNjk0Yy4wNzktLjI4NS4zOS0uNTczLjY3NC0uNjI0bDMuNzctLjg1OGMuMjg4LS4wNzYuMzM5LjA1NC4xMy4yMzR6bS41OTgtMS4wOWwtNC41MjMgMS4wMzlhLjUzNC41MzQgMCAwMS0uNjUtLjM5bC0xLjkyMi04LjM3MmEuNTM0LjUzNCAwIDAxLjM5LS42NUwxOS4xIDUuMzM1YS41MzQuNTM0IDAgMDEuNjQ5LjM5bDEuOTIzIDguMzcxYy4wNzkuMzEtLjEwMi41OTYtLjM5LjY1WiIvPjwvc3ZnPgo=" x="1029" y="474" width="24" height="24"/>
+  <text x="1041" y="516" class="node-title" text-anchor="middle">InfluxDB</text>
+  <text x="1041" y="534" class="mono" text-anchor="middle">TCP/8086 · 1 pod</text>
+  <rect x="1150" y="412" width="136" height="78" rx="5" class="node"/>
+  <circle cx="1218" cy="432" r="10" fill="#F05A28"/>
+  <text x="1218" y="436" text-anchor="middle" font-family="Arial" font-size="8" font-weight="700" fill="#FFFFFF">G</text>
+  <text x="1218" y="462" class="node-title" text-anchor="middle">Grafana</text>
+  <text x="1218" y="480" class="mono" text-anchor="middle">TCP/3000 · 1 pod</text>
+  <text x="946" y="594" class="node-sub">default deny ingress + egress</text>
+
+  <text x="318" y="684" class="node-title">Managed node group · 2 × t3.medium On-Demand · private subnets us-east-1a + us-east-1b</text>
+  <text x="318" y="704" class="mono">PODS SCHEDULE ACROSS BOTH WORKERS · VPC CNI STRICT MODE · CLUSTERIP SERVICES ONLY</text>
+  <path d="M430 650H1180" class="deny"/>
+  <text x="805" y="644" class="label" text-anchor="middle" fill="#C2413A">ALL UNDECLARED EAST-WEST PATHS DENIED</text>
+
+  <rect x="40" y="800" width="1360" height="36" rx="6" fill="#FFFFFF" stroke="#CDD5CF"/>
+  <text x="64" y="823" class="legend"><tspan font-weight="600" fill="#2563EB">ALLOW</tspan><tspan dx="12">DNS · ingestor→simulator :1502 · ingestor/Grafana→InfluxDB :8086 · operator→Grafana :3000</tspan></text>
+  <text x="1376" y="823" class="legend" text-anchor="end">Source: infra/kubernetes + aws-eks-lab Terraform</text>
+</svg>

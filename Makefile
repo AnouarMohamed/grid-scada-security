@@ -1,4 +1,4 @@
-.PHONY: ci docs cloudformation aws-scripts python workflows modbus-contracts terraform docker hygiene aws-preflight aws-runtime-evidence aws-state-bootstrap-validate aws-foundation-bootstrap-validate aws-github-oidc-bootstrap-validate aws-image-evidence-bootstrap-validate stack-up stack-modbus-up stack-live-up stack-naive-up stack-stealthy-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke stack-live-smoke stack-attack-smoke stack-naive-smoke stack-stealthy-smoke stack-dashboard-smoke
+.PHONY: ci docs cloudformation aws-scripts python workflows modbus-contracts kubernetes terraform docker hygiene aws-preflight aws-runtime-evidence aws-state-bootstrap-validate aws-foundation-bootstrap-validate aws-github-oidc-bootstrap-validate aws-image-evidence-bootstrap-validate stack-up stack-modbus-up stack-live-up stack-naive-up stack-stealthy-up stack-down stack-reset stack-logs stack-ps stack-smoke stack-modbus-smoke stack-live-smoke stack-attack-smoke stack-naive-smoke stack-stealthy-smoke stack-dashboard-smoke eks-app-deploy eks-baseline eks-naive eks-stealthy eks-status eks-forward eks-segmentation-smoke eks-app-remove
 
 ci:
 	bash scripts/ci/all.sh
@@ -23,6 +23,33 @@ workflows:
 
 modbus-contracts:
 	bash scripts/ci/validate-modbus-contracts.sh
+
+kubernetes:
+	python scripts/ci/validate-kubernetes.py
+
+eks-app-deploy:
+	bash scripts/dev/eks-lab.sh deploy
+
+eks-baseline:
+	bash scripts/dev/eks-lab.sh baseline
+
+eks-naive:
+	bash scripts/dev/eks-lab.sh naive
+
+eks-stealthy:
+	bash scripts/dev/eks-lab.sh stealthy
+
+eks-status:
+	bash scripts/dev/eks-lab.sh status
+
+eks-forward:
+	bash scripts/dev/eks-lab.sh forward
+
+eks-segmentation-smoke:
+	bash scripts/smoke/kubernetes_segmentation_smoke.sh
+
+eks-app-remove:
+	bash scripts/dev/eks-lab.sh remove-app
 
 terraform:
 	bash scripts/ci/validate-terraform.sh

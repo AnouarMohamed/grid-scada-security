@@ -11,6 +11,11 @@ The [temporary runtime deployment policy](runtime-deployment-policy.md)
 attaches only while the reviewed runtime is being created, exercised, and
 removed. Delete its one-resource stack after teardown.
 
+The [temporary EKS lab deployment policy](eks-lab-deployment-policy.md)
+similarly exists only during the single-cluster EKS evidence window. It adds a
+name-scoped deployment policy and a boundary for the two temporary EKS roles;
+delete its two-resource stack after the EKS root has been destroyed.
+
 This CloudFormation template breaks Terraform's backend bootstrap dependency
 without keeping the backend itself in local Terraform state. It creates only:
 
@@ -21,10 +26,10 @@ without keeping the backend itself in local Terraform state. It creates only:
 
 The bucket uses the dedicated KMS key, S3 Bucket Keys, versioning,
 bucket-owner-enforced object ownership, and all four S3 Block Public Access
-settings. The IAM policy can list only the configured state keys, can read and
-write the state and lock objects, and can delete only the `.tflock` object. It
-cannot delete Terraform state. No DynamoDB table, compute, or network resource
-is created.
+settings. The IAM policy can list only the configured sandbox and EKS-lab
+state keys, can read and write those state and lock objects, and can delete
+only their `.tflock` objects. It cannot delete Terraform state. No DynamoDB
+table, compute, or network resource is created.
 
 The customer-managed KMS key costs approximately `$1/month`, prorated hourly,
 before request charges. S3 storage and requests remain usage-billed. KMS has a
@@ -84,6 +89,7 @@ aws cloudformation deploy \
   --parameter-overrides \
     StateBucketName="REPLACE_UNIQUE_BUCKET_NAME" \
     StateKey="gridguard/aws-sandbox/terraform.tfstate" \
+    EksStateKey="gridguard/aws-eks-lab/terraform.tfstate" \
     OperatorUserName="REPLACE_NON_ROOT_USER" \
   --capabilities CAPABILITY_NAMED_IAM \
   --no-execute-changeset
@@ -104,6 +110,12 @@ aws cloudformation update-termination-protection \
 
 Return to the non-root operator session after the owner-only bootstrap. Do not
 continue if CloudFormation reports a replacement or deletion.
+
+When adding the EKS state key to an existing backend stack, create and inspect
+an update change set first. It must modify only `StateAccessPolicy` in place;
+the bucket, bucket policy, KMS key, alias, and physical policy ARN must not be
+replaced. The new grant covers exactly
+`gridguard/aws-eks-lab/terraform.tfstate` and its `.tflock` object.
 
 When a template is uploaded through the CloudFormation console, AWS creates or
 reuses a regional `cf-templates-*` S3 bucket in the account. That helper bucket

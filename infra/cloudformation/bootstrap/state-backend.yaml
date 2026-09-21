@@ -11,6 +11,7 @@ Metadata:
         Parameters:
           - StateBucketName
           - StateKey
+          - EksStateKey
       - Label:
           default: Operator access
         Parameters:
@@ -20,6 +21,8 @@ Metadata:
         default: Globally unique S3 bucket name
       StateKey:
         default: Terraform state object key
+      EksStateKey:
+        default: Temporary EKS lab state object key
       OperatorUserName:
         default: Existing non-root IAM operator user
 
@@ -36,6 +39,15 @@ Parameters:
   StateKey:
     Type: String
     Default: gridguard/aws-sandbox/terraform.tfstate
+    MinLength: 1
+    MaxLength: 512
+    AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9._/-]{0,511}$'
+    ConstraintDescription: >-
+      Start with a letter or number and use only letters, numbers, periods,
+      underscores, slashes, or hyphens.
+  EksStateKey:
+    Type: String
+    Default: gridguard/aws-eks-lab/terraform.tfstate
     MinLength: 1
     MaxLength: 512
     AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9._/-]{0,511}$'
@@ -188,6 +200,8 @@ Resources:
                 s3:prefix:
                   - !Ref StateKey
                   - !Sub '${StateKey}.tflock'
+                  - !Ref EksStateKey
+                  - !Sub '${EksStateKey}.tflock'
           - Sid: ReadWriteState
             Effect: Allow
             Action:
@@ -196,10 +210,14 @@ Resources:
             Resource:
               - !Sub '${StateBucket.Arn}/${StateKey}'
               - !Sub '${StateBucket.Arn}/${StateKey}.tflock'
+              - !Sub '${StateBucket.Arn}/${EksStateKey}'
+              - !Sub '${StateBucket.Arn}/${EksStateKey}.tflock'
           - Sid: DeleteLockOnly
             Effect: Allow
             Action: s3:DeleteObject
-            Resource: !Sub '${StateBucket.Arn}/${StateKey}.tflock'
+            Resource:
+              - !Sub '${StateBucket.Arn}/${StateKey}.tflock'
+              - !Sub '${StateBucket.Arn}/${EksStateKey}.tflock'
           - Sid: UseStateEncryptionKey
             Effect: Allow
             Action:
@@ -222,6 +240,9 @@ Outputs:
   StateKey:
     Description: Object key used by the GridGuard AWS sandbox state.
     Value: !Ref StateKey
+  EksStateKey:
+    Description: Object key reserved for the temporary GridGuard EKS lab state.
+    Value: !Ref EksStateKey
   BackendConfiguration:
     Description: Non-secret partial backend configuration for Terraform.
     Value: !Sub |-

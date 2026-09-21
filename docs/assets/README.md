@@ -10,8 +10,9 @@ source icon files embedded into them.
 | `gridguard-architecture.svg` | System overview and trust boundary | Mixed audience |
 | `gridguard-aws-deployment.svg` | AWS runtime placement and network topology | Engineer |
 | `gridguard-detection-flow.svg` | Scenario-to-alert data flow and recorded outcomes | Engineer |
+| `gridguard-eks-segmentation.svg` | Single-cluster EKS placement and NetworkPolicy paths | Engineer |
 
-All three diagrams are self-contained SVG files. Each logo is embedded as a
+All diagrams are self-contained SVG files. Each logo is embedded as a
 data URI so it renders in GitHub, browsers, PDF pipelines, and offline viewers.
 The readable source copies under `icons/` exist for provenance and future
 updates.
@@ -72,7 +73,7 @@ Wazuh, ELK, or a topology/state-estimator detector. Those remain future work.
 
 | Icons | Source | Snapshot | Notes |
 | --- | --- | --- | --- |
-| AWS services and VPC | [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/) | Q3 package `Icon-package_07312026`, downloaded 2026-09-11 | AWS-approved assets supplied for architecture diagrams |
+| AWS services and VPC | [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/) | Q3 package `Icon-package_07312026`, downloaded 2026-09-11 and 2026-09-20 | AWS-approved assets supplied for architecture diagrams |
 | GitHub Invertocat | [GitHub Brand Toolkit](https://brand.github.com/foundations/logo) | Official logo package dated 2026-01-09 | Black high-contrast mark, used to identify GitHub integration |
 | Grafana | [grafana/grafana](https://github.com/grafana/grafana/blob/a2b62a5683c92ae4c4a3ce36923c4a109293abff/public/img/grafana_icon.svg) | `a2b62a5683c92ae4c4a3ce36923c4a109293abff` | Upstream project asset |
 | Terraform | [hashicorp/vscode-terraform](https://github.com/hashicorp/vscode-terraform/blob/c15fbbf94518dc969bfd3c1a998e363da66cbcf3/assets/icons/terraform_feature.svg) | `c15fbbf94518dc969bfd3c1a998e363da66cbcf3` | Upstream HashiCorp asset |
@@ -93,7 +94,7 @@ For a visual release check, render the native diagrams plus README-width and
 narrow-preview variants:
 
 ```bash
-for name in gridguard-architecture gridguard-aws-deployment gridguard-detection-flow; do
+for name in gridguard-architecture gridguard-aws-deployment gridguard-detection-flow gridguard-eks-segmentation; do
   magick -background none "docs/assets/${name}.svg" "/tmp/${name}.png"
   magick "/tmp/${name}.png" -resize 720x "/tmp/${name}-720.png"
   magick "/tmp/${name}.png" -resize 458x "/tmp/${name}-458.png"
