@@ -70,6 +70,18 @@ Resources:
               - ecr:BatchGetImage
               - ecr:GetDownloadUrlForLayer
             Resource: !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/gridguard-aws-sandbox/*'
+          - Sid: PullEksSystemImages
+            Effect: Allow
+            Action:
+              - ecr:BatchCheckLayerAvailability
+              - ecr:BatchGetImage
+              - ecr:GetDownloadUrlForLayer
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:602401143452:repository/amazon/aws-network-policy-agent'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:602401143452:repository/amazon-k8s-cni'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:602401143452:repository/amazon-k8s-cni-init'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:602401143452:repository/eks/coredns'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:602401143452:repository/eks/kube-proxy'
 
   EksLabDeploymentPolicy:
     Type: AWS::IAM::ManagedPolicy
