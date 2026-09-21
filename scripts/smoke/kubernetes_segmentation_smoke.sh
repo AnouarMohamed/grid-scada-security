@@ -130,8 +130,11 @@ probe "${OT_NAMESPACE}" deny-power-influx \
 probe "${OBSERVABILITY_NAMESPACE}" deny-untrusted-influx \
   "app.kubernetes.io/name=untrusted" "${influx_ip}" 8086 deny
 
-if ! kubectl logs deployment/modbus-ingestor \
-  --namespace "${INGESTION_NAMESPACE}" --tail=200 | grep -q 'modbus_ingest_ok'; then
+ingestor_logs="$(
+  kubectl logs deployment/modbus-ingestor \
+    --namespace "${INGESTION_NAMESPACE}" --tail=200
+)"
+if ! grep -q 'modbus_ingest_ok' <<<"${ingestor_logs}"; then
   echo "The real ingestor has not recorded a successful Modbus-to-Influx cycle." >&2
   exit 1
 fi
