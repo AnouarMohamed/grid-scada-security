@@ -1,0 +1,240 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Temporary deployment permissions and role boundary for the short-lived
+  GridGuard single-cluster EKS evidence lab.
+
+Parameters:
+  DeploymentRoleName:
+    Type: String
+    Default: gridguard-aws-sandbox-foundation-deploy
+    AllowedPattern: '^[A-Za-z0-9_+=,.@-]{1,64}$'
+
+Resources:
+  EksLabRoleBoundary:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: gridguard-aws-eks-lab-role-boundary
+      Path: /gridguard/
+      Description: Maximum runtime permissions for the temporary EKS cluster and node roles.
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DescribeEksRuntime
+            Effect: Allow
+            Action:
+              - ec2:DescribeAvailabilityZones
+              - ec2:DescribeDhcpOptions
+              - ec2:DescribeInstances
+              - ec2:DescribeInstanceTopology
+              - ec2:DescribeInstanceTypes
+              - ec2:DescribeNetworkInterfaces
+              - ec2:DescribeRouteTables
+              - ec2:DescribeSecurityGroups
+              - ec2:DescribeSubnets
+              - ec2:DescribeTags
+              - ec2:DescribeVolumes
+              - ec2:DescribeVolumesModifications
+              - ec2:DescribeVpcs
+              - eks:DescribeCluster
+              - eks-auth:AssumeRoleForPodIdentity
+              - kms:DescribeKey
+            Resource: '*'
+          - Sid: ManagePodNetworkInterfaces
+            Effect: Allow
+            Action:
+              - ec2:AssignPrivateIpAddresses
+              - ec2:AttachNetworkInterface
+              - ec2:CreateNetworkInterface
+              - ec2:DeleteNetworkInterface
+              - ec2:DetachNetworkInterface
+              - ec2:ModifyNetworkInterfaceAttribute
+              - ec2:UnassignPrivateIpAddresses
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !Ref AWS::Region
+          - Sid: TagEksRuntimeNetworkResources
+            Effect: Allow
+            Action: ec2:CreateTags
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*'
+              - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*'
+          - Sid: AuthenticateToEcr
+            Effect: Allow
+            Action: ecr:GetAuthorizationToken
+            Resource: '*'
+          - Sid: PullGridGuardImages
+            Effect: Allow
+            Action:
+              - ecr:BatchCheckLayerAvailability
+              - ecr:BatchGetImage
+              - ecr:GetDownloadUrlForLayer
+            Resource: !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/gridguard-aws-sandbox/*'
+
+  EksLabDeploymentPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: gridguard-aws-eks-lab-deploy
+      Path: /gridguard/
+      Description: Temporary lifecycle access for the reviewed GridGuard EKS lab.
+      Roles:
+        - !Ref DeploymentRoleName
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ReadEksLabMetadata
+            Effect: Allow
+            Action:
+              - autoscaling:Describe*
+              - ec2:Describe*
+              - eks:Describe*
+              - eks:List*
+              - iam:GetRole
+              - iam:ListAttachedRolePolicies
+              - iam:ListInstanceProfilesForRole
+              - iam:ListRolePolicies
+              - logs:DescribeLogGroups
+              - logs:ListTagsForResource
+            Resource: '*'
+          - Sid: ManageExactEksCluster
+            Effect: Allow
+            Action:
+              - eks:CreateCluster
+              - eks:DeleteCluster
+              - eks:TagResource
+              - eks:UntagResource
+              - eks:UpdateClusterConfig
+              - eks:UpdateClusterVersion
+            Resource: !Sub 'arn:${AWS::Partition}:eks:${AWS::Region}:${AWS::AccountId}:cluster/gridguard-aws-eks-lab'
+          - Sid: ManageExactEksNodeGroup
+            Effect: Allow
+            Action:
+              - eks:CreateNodegroup
+              - eks:DeleteNodegroup
+              - eks:TagResource
+              - eks:UntagResource
+              - eks:UpdateNodegroupConfig
+              - eks:UpdateNodegroupVersion
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:eks:${AWS::Region}:${AWS::AccountId}:cluster/gridguard-aws-eks-lab'
+              - !Sub 'arn:${AWS::Partition}:eks:${AWS::Region}:${AWS::AccountId}:nodegroup/gridguard-aws-eks-lab/*/*'
+          - Sid: ManageExactVpcCniAddon
+            Effect: Allow
+            Action:
+              - eks:CreateAddon
+              - eks:DeleteAddon
+              - eks:TagResource
+              - eks:UntagResource
+              - eks:UpdateAddon
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:eks:${AWS::Region}:${AWS::AccountId}:cluster/gridguard-aws-eks-lab'
+              - !Sub 'arn:${AWS::Partition}:eks:${AWS::Region}:${AWS::AccountId}:addon/gridguard-aws-eks-lab/vpc-cni/*'
+          - Sid: ManageExactEksAccessEntry
+            Effect: Allow
+            Action:
+              - eks:AssociateAccessPolicy
+              - eks:CreateAccessEntry
+              - eks:DeleteAccessEntry
+              - eks:DisassociateAccessPolicy
+              - eks:TagResource
+              - eks:UntagResource
+              - eks:UpdateAccessEntry
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:eks:${AWS::Region}:${AWS::AccountId}:cluster/gridguard-aws-eks-lab'
+              - !Sub 'arn:${AWS::Partition}:eks:${AWS::Region}:${AWS::AccountId}:access-entry/gridguard-aws-eks-lab/*/*/*'
+          - Sid: ManageEksPrivateEndpoints
+            Effect: Allow
+            Action:
+              - ec2:CreateVpcEndpoint
+              - ec2:DeleteVpcEndpoints
+              - ec2:ModifyVpcEndpoint
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !Ref AWS::Region
+          - Sid: ManageEksEndpointSecurityGroup
+            Effect: Allow
+            Action:
+              - ec2:AuthorizeSecurityGroupIngress
+              - ec2:CreateSecurityGroup
+              - ec2:CreateTags
+              - ec2:DeleteSecurityGroup
+              - ec2:ModifySecurityGroupRules
+              - ec2:RevokeSecurityGroupIngress
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !Ref AWS::Region
+          - Sid: ManageEksControlPlaneLogs
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:DeleteLogGroup
+              - logs:DeleteRetentionPolicy
+              - logs:PutRetentionPolicy
+              - logs:TagResource
+              - logs:UntagResource
+            Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/eks/gridguard-aws-eks-lab/*'
+          - Sid: CreateBoundedEksRoles
+            Effect: Allow
+            Action: iam:CreateRole
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-eks-lab-cluster'
+              - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-eks-lab-nodes'
+            Condition:
+              ArnEquals:
+                iam:PermissionsBoundary: !Ref EksLabRoleBoundary
+              StringEquals:
+                aws:RequestTag/Project: gridguard
+          - Sid: ManageBoundedEksRoles
+            Effect: Allow
+            Action:
+              - iam:DeleteRole
+              - iam:TagRole
+              - iam:UntagRole
+              - iam:UpdateAssumeRolePolicy
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-eks-lab-cluster'
+              - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-eks-lab-nodes'
+          - Sid: AttachReviewedEksPolicies
+            Effect: Allow
+            Action:
+              - iam:AttachRolePolicy
+              - iam:DetachRolePolicy
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-eks-lab-cluster'
+              - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-eks-lab-nodes'
+            Condition:
+              ArnEquals:
+                iam:PolicyARN:
+                  - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonEKSClusterPolicy'
+                  - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy'
+                  - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonEKS_CNI_Policy'
+                  - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly'
+          - Sid: PassExactEksRoles
+            Effect: Allow
+            Action: iam:PassRole
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-eks-lab-cluster'
+              - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/gridguard-aws-eks-lab-nodes'
+            Condition:
+              StringEquals:
+                iam:PassedToService:
+                  - eks.amazonaws.com
+                  - ec2.amazonaws.com
+          - Sid: CreateRequiredServiceLinkedRoles
+            Effect: Allow
+            Action: iam:CreateServiceLinkedRole
+            Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/*'
+            Condition:
+              StringEquals:
+                iam:AWSServiceName:
+                  - eks.amazonaws.com
+                  - eks-nodegroup.amazonaws.com
+                  - autoscaling.amazonaws.com
+
+Outputs:
+  EksLabDeploymentPolicyArn:
+    Value: !Ref EksLabDeploymentPolicy
+  EksLabRoleBoundaryArn:
+    Value: !Ref EksLabRoleBoundary

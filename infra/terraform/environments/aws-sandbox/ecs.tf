@@ -48,7 +48,10 @@ resource "aws_service_discovery_service" "service" {
     routing_policy = "MULTIVALUE"
   }
 
-  health_check_custom_config {}
+  # ECS manages custom health for private discovery; AWS fixes this value at 1.
+  health_check_custom_config {
+    failure_threshold = 1
+  }
 }
 
 locals {
@@ -93,14 +96,14 @@ resource "aws_ecs_task_definition" "power_sim" {
       portMappings = [
         {
           name          = "modbus"
-          containerPort = 502
-          hostPort      = 502
+          containerPort = local.modbus_port
+          hostPort      = local.modbus_port
           protocol      = "tcp"
         }
       ]
       environment = [
         { name = "GRIDGUARD_MODBUS_HOST", value = "0.0.0.0" },
-        { name = "GRIDGUARD_MODBUS_PORT", value = "502" },
+        { name = "GRIDGUARD_MODBUS_PORT", value = tostring(local.modbus_port) },
         { name = "GRIDGUARD_MODBUS_UNIT_ID", value = "1" },
         { name = "GRIDGUARD_SIM_INTERVAL_SECONDS", value = "2" },
         { name = "GRIDGUARD_SCENARIO", value = "baseline-modbus" },
@@ -248,7 +251,7 @@ resource "aws_ecs_task_definition" "modbus_ingestor" {
         { name = "GRIDGUARD_MODBUS_MODE", value = "tcp" },
         { name = "GRIDGUARD_MODBUS_SOURCE_ID", value = "modbus_tcp" },
         { name = "GRIDGUARD_MODBUS_HOST", value = "power-sim.gridguard.internal" },
-        { name = "GRIDGUARD_MODBUS_PORT", value = "502" },
+        { name = "GRIDGUARD_MODBUS_PORT", value = tostring(local.modbus_port) },
         { name = "GRIDGUARD_MODBUS_UNIT_ID", value = "1" },
         { name = "GRIDGUARD_SCENARIO", value = "baseline-modbus" },
         { name = "GRIDGUARD_ATTACK_FLAG", value = "0" },

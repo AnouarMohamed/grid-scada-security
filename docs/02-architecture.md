@@ -4,11 +4,11 @@ GridGuard has three architecture states:
 
 - **Locally verified:** the complete simulator-to-dashboard path, including two
   attack replays and their detector outcomes.
-- **AWS foundation deployed:** the `us-east-1` sandbox network, flow logs,
-  security groups, ECR repositories, ECS cluster, and bounded IAM roles were
-  applied and verified on 2026-09-12.
-- **Runtime defined, not applied:** ALB, EFS, endpoints, secrets, task
-  definitions, and ECS services remain gated off with all desired counts zero.
+- **AWS deployment exercised:** the `us-east-1` foundation and private runtime
+  have been applied with immutable image digests. Runtime validation and
+  evidence capture precede the same-day teardown procedure.
+- **Default posture:** runtime resources remain gated by `enable_runtime`, and
+  every ECS service defaults to a desired count of zero.
 
 The diagrams keep those states explicit. They do not present future work as
 already deployed.
@@ -73,8 +73,8 @@ one public-ingress subnet, one cloud-core subnet, and one OT-sim subnet.
 | Cloud-core | Internal Application Load Balancer | Operator CIDRs to listener; listener to Grafana `:3000` |
 | Cloud-core | Grafana on ECS/Fargate | Query InfluxDB `:8086`; mount its EFS access point `:2049` |
 | Cloud-core | InfluxDB on ECS/Fargate | Accept ingestor and Grafana `:8086`; mount its EFS access point `:2049` |
-| Cloud-core | Modbus ingestor on ECS/Fargate | Poll power simulator `:502`; write InfluxDB `:8086` |
-| OT-sim | Power simulator on ECS/Fargate | Accept `:502` from the ingestor security group only |
+| Cloud-core | Modbus ingestor on ECS/Fargate | Poll power simulator `:1502`; write InfluxDB `:8086` |
+| OT-sim | Power simulator on ECS/Fargate | Accept `:1502` from the ingestor security group only |
 
 The OT route table has no default Internet Gateway or NAT route. All tasks have
 `assign_public_ip = false`. When enabled, interface endpoints provide private
@@ -152,7 +152,7 @@ that class of attack.
 | Invariant | Local enforcement | AWS enforcement |
 | --- | --- | --- |
 | The simulator remains OT-side | `power-sim` joins only `ot-sim` | ECS service uses isolated OT subnets |
-| The ingestor is the only OT/cloud bridge | Only ingestor joins both Compose networks | Only ingestor SG may egress to simulator SG on `:502` |
+| The ingestor is the only OT/cloud bridge | Only ingestor joins both Compose networks | Only ingestor SG may egress to simulator SG on `:1502` |
 | Databases remain cloud-side | InfluxDB joins only `cloud-core` | InfluxDB uses cloud subnets; SG accepts only ingestor and Grafana |
 | Operator UI is constrained | Ports bind to loopback; anonymous Grafana disabled | Internal ALB by default; CIDR-restricted ingress |
 | Workloads do not receive public IPs | Internal Compose networks | Every ECS service sets `assign_public_ip = false` |
@@ -182,9 +182,9 @@ topology/state-estimator detector remain future options. They should enter a
 diagram only in the same change that adds their code, configuration, and
 verification evidence.
 
-## Next
+## Deployment Evidence
 
-The next step is to publish the four reviewed images to the private ECR
-repositories and record their immutable registry digests. Runtime resources
-remain disabled until the OIDC deployment role, environment approval, private
-Grafana access path, and secret-handling procedure are ready.
+The reproducible architecture remains separate from account-specific evidence.
+Use the [AWS runtime evidence runbook](13-aws-runtime-evidence.md) to capture the
+deployed resource inventory, immutable image digests, service health, target
+health, Cloud Map registrations, and bounded log excerpts before teardown.

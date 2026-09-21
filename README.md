@@ -99,7 +99,10 @@ Important entry points:
 | AWS cloud handoff | [docs/11-aws-cloud-handoff.md](docs/11-aws-cloud-handoff.md) |
 | Security assurance controls | [docs/12-security-assurance.md](docs/12-security-assurance.md) |
 | AWS runtime evidence | [docs/13-aws-runtime-evidence.md](docs/13-aws-runtime-evidence.md) |
+| EKS segmentation evidence | [docs/14-eks-segmentation.md](docs/14-eks-segmentation.md) |
+| Deliverable traceability | [docs/15-deliverable-traceability.md](docs/15-deliverable-traceability.md) |
 | AWS Terraform runbook | [infra/terraform/environments/aws-sandbox/README.md](infra/terraform/environments/aws-sandbox/README.md) |
+| EKS Terraform runbook | [infra/terraform/environments/aws-eks-lab/README.md](infra/terraform/environments/aws-eks-lab/README.md) |
 | Power track plan | [docs/power-track/execution-plan.md](docs/power-track/execution-plan.md) |
 | DevSecOps track plan | [docs/devsecops-track/execution-plan.md](docs/devsecops-track/execution-plan.md) |
 

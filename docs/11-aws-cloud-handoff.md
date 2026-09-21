@@ -16,9 +16,12 @@ and [remediated publication record](deployment-records/2026-09-13-aws-remediated
 The retained GitHub OIDC plan role was deployed with immutable repository IDs
 and produced a no-change remote plan on 2026-09-13; see the
 [OIDC plan identity record](deployment-records/2026-09-13-aws-github-oidc-plan.md).
-Runtime infrastructure and dormant services have since been created through
-reviewed Terraform applies, while desired counts remain zero outside bounded
-experiments. NAT, Elastic IPs, and public Grafana remain disabled. See the
+The complete runtime was validated and removed on 2026-09-20. The retained
+foundation has zero ECS services or tasks and no ALB, EFS file system, Cloud
+Map namespace, runtime secret container, NAT gateway, Elastic IP, or VPC
+endpoint. See the
+[runtime validation record](deployment-records/2026-09-20-aws-runtime-validation.md)
+and the
 [sanitized foundation deployment record](deployment-records/2026-09-12-aws-foundation.md).
 
 ## Complete In The Repository
@@ -124,9 +127,10 @@ procedure are documented in the
 
 ## Next
 
-ECS task definitions are pinned to verified runnable image digests, signed SBOM
-evidence is complete, and the remaining InfluxDB findings have a conditional,
-exact-digest [risk acceptance](deployment-records/2026-09-19-influxdb-runtime-risk-acceptance.md).
-The next action is one supervised, maximum-eight-hour exercise under those
-conditions, using the [runtime evidence runbook](13-aws-runtime-evidence.md),
-followed immediately by a zero-task teardown and cost review.
+The first AWS runtime exercise and teardown are complete. Its
+[validation record](deployment-records/2026-09-20-aws-runtime-validation.md)
+documents the evidence checksums, successful private telemetry path, final
+zero-drift state, and an eight-hour supervision deviation. Before another
+runtime exercise, add an automatic deadline alarm or scheduled scale-to-zero
+control, obtain a fresh image scan and risk decision, review a new saved plan,
+and continue using the [runtime evidence runbook](13-aws-runtime-evidence.md).

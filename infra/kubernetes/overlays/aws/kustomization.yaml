@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+images:
+  - name: gridguard/power-sim
+    newName: 227755136916.dkr.ecr.us-east-1.amazonaws.com/gridguard-aws-sandbox/power-sim
+    digest: sha256:f51d3dd888b3a2a2855bbba40725357a92d91c2a9bd6660fdd8a5a39505a9451
+  - name: gridguard/modbus-ingestor
+    newName: 227755136916.dkr.ecr.us-east-1.amazonaws.com/gridguard-aws-sandbox/modbus-ingestor
+    digest: sha256:18e13b46ed9fe4d89290ae8219b6cd897e3a8e3c6675f3069541779b49e2caa7
+  - name: gridguard/influxdb
+    newName: 227755136916.dkr.ecr.us-east-1.amazonaws.com/gridguard-aws-sandbox/influxdb
+    digest: sha256:359adac56f03b03f1b7072cc2d34bd0a49262e920961ed74cb490ea6a21d8fb0
+  - name: gridguard/grafana
+    newName: 227755136916.dkr.ecr.us-east-1.amazonaws.com/gridguard-aws-sandbox/grafana
+    digest: sha256:1fbc7b35e2e71e9ccf8178dc7b05369bc85a9000320ee40031743a868f566c5c

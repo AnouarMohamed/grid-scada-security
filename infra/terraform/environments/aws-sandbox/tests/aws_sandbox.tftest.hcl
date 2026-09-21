@@ -124,6 +124,17 @@ run "runtime_graph_expands_with_zero_tasks" {
     ])
     error_message = "Every stateful ECS task role must use the required permissions boundary."
   }
+
+  assert {
+    condition = (
+      local.modbus_port == 1502 &&
+      jsondecode(aws_ecs_task_definition.power_sim[0].container_definitions)[0]
+      .portMappings[0].containerPort == 1502 &&
+      aws_vpc_security_group_ingress_rule.power_modbus.from_port == 1502 &&
+      aws_vpc_security_group_egress_rule.ingestor_modbus.to_port == 1502
+    )
+    error_message = "The non-root AWS Modbus path must use unprivileged TCP port 1502 end to end."
+  }
 }
 
 run "github_role_accepts_existing_oidc_provider" {

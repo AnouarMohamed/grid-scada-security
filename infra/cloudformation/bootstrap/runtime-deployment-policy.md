@@ -6,6 +6,11 @@ not create runtime resources itself. Terraform remains responsible for the
 reviewed ECS, EFS, internal ALB, private endpoint, Cloud Map, and secret
 container resources.
 
+EFS mount-target lifecycle includes its documented EC2 network-interface
+dependencies. Enabling automatic EFS backups may first create the Amazon EFS
+service-linked role, restricted to its exact role ARN and the
+`elasticfilesystem.amazonaws.com` service-name condition.
+
 Create and inspect the change set with the non-root `anouar-admin` session:
 
 ```bash
