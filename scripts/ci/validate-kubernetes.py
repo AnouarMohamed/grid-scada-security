@@ -8,6 +8,7 @@ import yaml
 ROOT = Path("infra/kubernetes")
 BASE = ROOT / "base"
 AWS_OVERLAY = ROOT / "overlays" / "aws" / "kustomization.yaml"
+AWS_COREDNS_POLICY = ROOT / "overlays" / "aws" / "coredns-network-policy.yaml"
 EXPECTED_NAMESPACES = {
     "gridguard-ot",
     "gridguard-ingestion",
@@ -171,6 +172,8 @@ def validate_no_committed_secrets(documents: list[dict[str, Any]]) -> None:
 
 def validate_aws_overlay() -> None:
     overlay = yaml.safe_load(AWS_OVERLAY.read_text(encoding="utf-8"))
+    if overlay.get("resources") != ["../../base", "coredns-network-policy.yaml"]:
+        fail("AWS overlay must include only the base and reviewed CoreDNS policy")
     images = overlay.get("images", [])
     by_name = {image.get("name"): image for image in images}
     if set(by_name) != EXPECTED_AWS_IMAGES:
@@ -189,8 +192,54 @@ def validate_aws_overlay() -> None:
             fail(f"{name} cannot use a mutable tag in the AWS overlay")
 
 
+def validate_aws_coredns_policy() -> None:
+    policy = yaml.safe_load(AWS_COREDNS_POLICY.read_text(encoding="utf-8"))
+    if policy.get("kind") != "NetworkPolicy":
+        fail("AWS CoreDNS policy must be a NetworkPolicy")
+    if policy.get("metadata") != {
+        "name": "allow-coredns-aws-runtime",
+        "namespace": "kube-system",
+    }:
+        fail("AWS CoreDNS policy identity changed")
+
+    spec = policy.get("spec", {})
+    if spec.get("podSelector") != {"matchLabels": {"k8s-app": "kube-dns"}}:
+        fail("AWS CoreDNS policy must select only kube-dns pods")
+    if set(spec.get("policyTypes", [])) != {"Ingress", "Egress"}:
+        fail("AWS CoreDNS policy must control ingress and egress")
+
+    expected_worker_sources = [
+        {"ipBlock": {"cidr": "10.40.10.0/24"}},
+        {"ipBlock": {"cidr": "10.40.11.0/24"}},
+    ]
+    expected_health_ports = [
+        {"protocol": "TCP", "port": 8080},
+        {"protocol": "TCP", "port": 8181},
+    ]
+    if spec.get("ingress") != [
+        {"from": expected_worker_sources, "ports": expected_health_ports}
+    ]:
+        fail("AWS CoreDNS ingress must allow only private-node health probes")
+
+    expected_egress = [
+        {
+            "to": expected_worker_sources,
+            "ports": [{"protocol": "TCP", "port": 443}],
+        },
+        {
+            "to": [{"ipBlock": {"cidr": "10.40.0.2/32"}}],
+            "ports": [
+                {"protocol": "UDP", "port": 53},
+                {"protocol": "TCP", "port": 53},
+            ],
+        },
+    ]
+    if spec.get("egress") != expected_egress:
+        fail("AWS CoreDNS egress must allow only the private API and VPC resolver")
+
+
 def main() -> None:
-    if not ROOT.is_dir() or not AWS_OVERLAY.is_file():
+    if not ROOT.is_dir() or not AWS_OVERLAY.is_file() or not AWS_COREDNS_POLICY.is_file():
         fail("expected base and AWS overlay directories")
     documents = load_documents()
     validate_namespaces(documents)
@@ -199,6 +248,7 @@ def main() -> None:
     validate_network_policies(documents)
     validate_no_committed_secrets(documents)
     validate_aws_overlay()
+    validate_aws_coredns_policy()
     print(
         "Validated Kubernetes namespaces, hardened workloads, internal services, "
         "default-deny policies, and immutable AWS images."
