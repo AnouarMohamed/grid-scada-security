@@ -39,9 +39,10 @@ connection probes behave as specified.
 
 Strict mode also isolates new system pods during bootstrap. The AWS overlay
 therefore gives CoreDNS only the runtime paths it needs: health probes from the
-two private worker CIDRs, Kubernetes API synchronization on TCP/443 within
-those private subnets, and UDP/TCP DNS to the VPC resolver at `10.40.0.2/32`.
-CI pins this policy's selector, CIDRs, and ports so it cannot broaden silently.
+two private worker CIDRs, Kubernetes API synchronization on TCP/443 to the
+cluster service VIP at `172.20.0.1/32`, and UDP/TCP DNS to the VPC resolver at
+`10.40.0.2/32`. CI pins this policy's selector, CIDRs, and ports so it cannot
+broaden silently.
 
 The four application images are pulled from the existing private ECR
 repositories by exact runnable digest. Workloads run as non-root, drop all

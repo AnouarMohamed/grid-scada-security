@@ -223,7 +223,7 @@ def validate_aws_coredns_policy() -> None:
 
     expected_egress = [
         {
-            "to": expected_worker_sources,
+            "to": [{"ipBlock": {"cidr": "172.20.0.1/32"}}],
             "ports": [{"protocol": "TCP", "port": 443}],
         },
         {
@@ -235,7 +235,7 @@ def validate_aws_coredns_policy() -> None:
         },
     ]
     if spec.get("egress") != expected_egress:
-        fail("AWS CoreDNS egress must allow only the private API and VPC resolver")
+        fail("AWS CoreDNS egress must allow only the API VIP and VPC resolver")
 
 
 def main() -> None:
