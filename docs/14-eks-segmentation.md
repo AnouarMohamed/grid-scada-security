@@ -43,6 +43,19 @@ Raw screenshots and command/API output belong under ignored `tmp/` storage.
 The committed deployment record contains only sanitized results, checksums,
 and links to non-secret CI evidence.
 
+## Completed Validation
+
+The cloud exercise completed on 2026-09-21. The live single-cluster run proved
+strict policy enforcement, all intended allow and deny paths, real
+Modbus-to-InfluxDB ingestion, all three scenarios, all 15 Grafana panels, and
+all three alert rules. The final Terraform plan reported no drift.
+
+See the
+[sanitized EKS validation record](deployment-records/2026-09-21-aws-eks-segmentation.md)
+for exact results, evidence hashes, execution remediations, and the remaining
+teardown action. The UI evidence and conclusions are assembled in the
+[technical report](GridGuard-Technical-Report.md).
+
 The full lifecycle, cost boundary, bootstrap changes, commands, and teardown
 criteria are in the
 [EKS Terraform runbook](../infra/terraform/environments/aws-eks-lab/README.md).

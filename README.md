@@ -101,6 +101,8 @@ Important entry points:
 | AWS runtime evidence | [docs/13-aws-runtime-evidence.md](docs/13-aws-runtime-evidence.md) |
 | EKS segmentation evidence | [docs/14-eks-segmentation.md](docs/14-eks-segmentation.md) |
 | Deliverable traceability | [docs/15-deliverable-traceability.md](docs/15-deliverable-traceability.md) |
+| Final technical report | [docs/GridGuard-Technical-Report.pdf](docs/GridGuard-Technical-Report.pdf) |
+| Final report source | [docs/GridGuard-Technical-Report.md](docs/GridGuard-Technical-Report.md) |
 | AWS Terraform runbook | [infra/terraform/environments/aws-sandbox/README.md](infra/terraform/environments/aws-sandbox/README.md) |
 | EKS Terraform runbook | [infra/terraform/environments/aws-eks-lab/README.md](infra/terraform/environments/aws-eks-lab/README.md) |
 | Power track plan | [docs/power-track/execution-plan.md](docs/power-track/execution-plan.md) |
@@ -135,18 +137,21 @@ Source will live in [infra](infra).
 
 ## Current Status
 
-The repository contains a working local red/blue lab. A `pandapower` model of
-the IEEE 13-node feeder runs a deterministic 24-hour demand and PV profile,
-serves live measurements over Modbus TCP, and feeds InfluxDB through the
-receiver-side ingestor. Grafana dashboards and alert rules cover the telemetry,
-while naive and coordinated in-envelope attack replays exercise the detection
-path. The default-off AWS foundation is deployed in a dedicated `us-east-1`
-sandbox with its VPC, flow logs, security groups, private ECR repositories, ECS
-cluster, and bounded IAM roles verified. Billable runtime resources remain
-disabled outside supervised experiments; runtime infrastructure and dormant
-services exist with desired counts at zero. A retained immutable-subject OIDC
-role produced a clean remote Terraform plan; no GitHub workflow can apply
-infrastructure.
+The repository contains a working local red/blue lab and a validated real AWS
+Kubernetes deployment. A `pandapower` model of the IEEE 13-node feeder runs a
+deterministic 24-hour demand and PV profile, serves measurements over Modbus
+TCP, and feeds InfluxDB through the receiver-side ingestor. Grafana dashboards
+and alert rules cover the telemetry, while naive and coordinated in-envelope
+attack replays exercise the detection path.
+
+The single Amazon EKS cluster in `us-east-1` completed end-to-end validation
+with two private workers, strict VPC CNI network-policy enforcement, three
+default-deny namespaces, all intended allow and deny probes, all three
+telemetry scenarios, authenticated AWS Console evidence, and a zero-drift
+Terraform plan. The [final technical report](docs/GridGuard-Technical-Report.pdf)
+and [sanitized execution record](docs/deployment-records/2026-09-21-aws-eks-segmentation.md)
+contain the evidence. The EKS resources remain live and billable only for final
+review; controlled teardown is the next operational action.
 
 Current CI is intentionally future-ready:
 
