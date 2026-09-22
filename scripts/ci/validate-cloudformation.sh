@@ -486,6 +486,7 @@ expected_boundary_sids = {
     "TagEksRuntimeNetworkResources",
     "AuthenticateToEcr",
     "PullGridGuardImages",
+    "PullEksSystemImages",
 }
 if set(boundary_by_sid) != expected_boundary_sids:
     raise SystemExit(f"{name}: unexpected EKS role-boundary statement set")
@@ -516,6 +517,35 @@ expected_runtime_reads = {
 actual_runtime_reads = set(boundary_by_sid["DescribeEksRuntime"]["Action"])
 if actual_runtime_reads != expected_runtime_reads:
     raise SystemExit(f"{name}: reviewed EKS runtime read set changed")
+
+expected_ecr_pull_actions = {
+    "ecr:BatchCheckLayerAvailability",
+    "ecr:BatchGetImage",
+    "ecr:GetDownloadUrlForLayer",
+}
+for sid in ("PullGridGuardImages", "PullEksSystemImages"):
+    if set(boundary_by_sid[sid]["Action"]) != expected_ecr_pull_actions:
+        raise SystemExit(f"{name}: {sid} read-only action set changed")
+
+expected_system_image_resources = [
+    {
+        "!Sub": "arn:${AWS::Partition}:ecr:${AWS::Region}:602401143452:repository/amazon/aws-network-policy-agent"
+    },
+    {
+        "!Sub": "arn:${AWS::Partition}:ecr:${AWS::Region}:602401143452:repository/amazon-k8s-cni"
+    },
+    {
+        "!Sub": "arn:${AWS::Partition}:ecr:${AWS::Region}:602401143452:repository/amazon-k8s-cni-init"
+    },
+    {
+        "!Sub": "arn:${AWS::Partition}:ecr:${AWS::Region}:602401143452:repository/eks/coredns"
+    },
+    {
+        "!Sub": "arn:${AWS::Partition}:ecr:${AWS::Region}:602401143452:repository/eks/kube-proxy"
+    },
+]
+if boundary_by_sid["PullEksSystemImages"].get("Resource") != expected_system_image_resources:
+    raise SystemExit(f"{name}: EKS system-image repository scope changed")
 
 expected_eni_actions = {
     "ec2:AssignPrivateIpAddresses",

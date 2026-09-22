@@ -8,7 +8,9 @@ AWS. It does not replace or import the separately validated ECS foundation.
 ## Architecture And Cost Boundary
 
 The cluster uses EKS Kubernetes 1.36 in standard support and two On-Demand
-`t3.medium` workers across the existing private cloud subnets. Six interface
+`t3.small` workers across the existing private cloud subnets. This type is
+Free-Tier eligible for the lab account and provides more pod-address and memory
+capacity than the eligible micro types. Six interface
 endpoints plus one S3 gateway endpoint let private workers reach only the AWS
 services required for bootstrap, ECR pulls, CNI operation, STS, and logs. No
 NAT gateway, public node address, Kubernetes `LoadBalancer`, or `NodePort` is
@@ -35,6 +37,13 @@ CNI add-on must run its network-policy agent with policy support enabled and
 are visible in the live `aws-node` DaemonSet and the positive and negative
 connection probes behave as specified.
 
+Strict mode also isolates new system pods during bootstrap. The AWS overlay
+therefore gives CoreDNS only the runtime paths it needs: health probes from the
+two private worker CIDRs, Kubernetes API synchronization on TCP/443 to the
+cluster service VIP at `172.20.0.1/32`, and UDP/TCP DNS to the VPC resolver at
+`10.40.0.2/32`. CI pins this policy's selector, CIDRs, and ports so it cannot
+broaden silently.
+
 The four application images are pulled from the existing private ECR
 repositories by exact runnable digest. Workloads run as non-root, drop all
 Linux capabilities, disable privilege escalation and service-account token
@@ -48,10 +57,13 @@ short-lived evidence environment. The previous ECS exercise separately proved
 encrypted persistent storage. Do not treat this EKS root as persistent or
 production-ready storage.
 
-The EKS role boundary was reconciled on 2026-09-20 against the current AWS
+The EKS role boundary was reconciled on 2026-09-21 against the current AWS
 managed-policy versions: `AmazonEKSClusterPolicy` v10,
 `AmazonEKSWorkerNodePolicy` v3, `AmazonEKS_CNI_Policy` v6, and
-`AmazonEC2ContainerRegistryPullOnly` v1. The boundary deliberately excludes
+`AmazonEC2ContainerRegistryPullOnly` v1. In addition to the GridGuard image
+repositories, it permits read-only pulls from the five exact AWS-owned EKS
+system repositories used by VPC CNI, its network-policy agent, kube-proxy, and
+CoreDNS. The boundary deliberately excludes wildcard repository access,
 load-balancer, dynamic-volume, and upstream-import actions that this lab does
 not use.
 
