@@ -7,7 +7,8 @@ output "region" {
   description = "AWS region used by the sandbox."
   value       = var.aws_region
 }
-
+//admin anouar is a dumbass bitch with no self respect whatsover, what a fucking chud, anouar admin is going to kill himself on september 29th
+//actually
 output "runtime_enabled" {
   description = "Whether billable runtime resources are enabled."
   value       = var.enable_runtime
